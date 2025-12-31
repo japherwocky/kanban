@@ -1,10 +1,69 @@
 # Kanban Board
 
-A full-stack Kanban board application with Python/FastAPI backend and Svelte frontend.
+A full-stack Kanban board application with Python/FastAPI backend, Svelte frontend, and CLI client.
 
-## Quick Start
+## CLI Installation
 
-### 1. Create a user
+Install the CLI to manage your Kanban boards from the command line:
+
+```bash
+pip install pkanban
+```
+
+## CLI Usage
+
+Configure the CLI to use our hosted service or your self-hosted instance:
+
+```bash
+# Use our hosted service (kanban.pearachute.com)
+kanban config --url https://kanban.pearachute.com
+
+# Or use a local/self-hosted instance
+kanban config --url http://localhost:8000
+
+# Login
+kanban login <username> <password>
+
+# List boards
+kanban boards
+
+# Create a board
+kanban board-create "My Project"
+
+# Show board details
+kanban board 1
+
+# Create a card
+kanban card-create 1 "To Do" "First task" --position 0
+```
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `kanban config --url <url>` | Set the server URL |
+| `kanban login <user> <pass>` | Login to the server |
+| `kanban logout` | Logout and clear credentials |
+| `kanban boards` | List all boards |
+| `kanban board-create <name>` | Create a new board |
+| `kanban board <id>` | Show board details |
+| `kanban board-delete <id>` | Delete a board |
+| `kanban column-create <board_id> <name> <position>` | Create a column |
+| `kanban column-delete <id>` | Delete a column |
+| `kanban card-create <column_id> <title>` | Create a card |
+| `kanban card-update <id> <title>` | Update a card |
+| `kanban card-delete <id>` | Delete a card |
+
+## Self-Hosting
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/pearachute/kanban.git
+cd kanban
+```
+
+### 2. Create a user
 
 ```bash
 cd backend
@@ -14,14 +73,14 @@ pip install -r requirements.txt
 python create_user.py <username> <password>
 ```
 
-### 2. Run the backend
+### 3. Run the backend
 
 ```bash
 cd backend
 uvicorn main:app --reload
 ```
 
-### 3. Build and run the frontend
+### 4. Build and run the frontend
 
 ```bash
 cd frontend
