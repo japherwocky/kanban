@@ -4,6 +4,7 @@ peewee
 pydantic
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt<4.2
 pytest
 pytest-asyncio
 httpx

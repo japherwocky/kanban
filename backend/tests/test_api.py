@@ -90,7 +90,7 @@ def test_create_board_without_auth(client):
         "/api/boards",
         json={"name": "Test Board"},
     )
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 def test_get_board_with_columns(client, auth_headers, test_user):

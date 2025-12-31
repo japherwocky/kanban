@@ -26,6 +26,8 @@ class TokenData(BaseModel):
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
+    if "sub" in to_encode:
+        to_encode["sub"] = str(to_encode["sub"])
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
@@ -37,7 +39,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 def decode_token(token: str):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    user_id: int = int(payload.get("sub", 0))
+    user_id_str = payload.get("sub", "0")
+    user_id = int(user_id_str) if user_id_str else 0
     username: str = str(payload.get("username", ""))
     if user_id == 0:
         raise HTTPException(
