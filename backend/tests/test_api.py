@@ -42,6 +42,14 @@ def client():
     return TestClient(app)
 
 
+def test_server_launch():
+    from backend.main import app
+    from backend.database import db
+    from backend.models import User, Board, Column, Card
+    assert app is not None
+    assert db is not None
+
+
 def test_root(client):
     response = client.get("/")
     assert response.status_code in [200, 404]
