@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from backend.auth import Token, create_access_token, get_current_user
 from backend.database import db
@@ -25,13 +25,12 @@ class BoardUpdate(BaseModel):
 
 
 class BoardResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     created_at: datetime
     columns: list
-
-    class Config:
-        orm_mode = True
 
 
 class ColumnCreate(BaseModel):
@@ -46,13 +45,12 @@ class ColumnUpdate(BaseModel):
 
 
 class ColumnResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     position: int
     cards: list
-
-    class Config:
-        orm_mode = True
 
 
 class CardCreate(BaseModel):
@@ -70,13 +68,12 @@ class CardUpdate(BaseModel):
 
 
 class CardResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     description: Optional[str]
     position: int
-
-    class Config:
-        orm_mode = True
 
 
 @api.post("/token", response_model=Token)

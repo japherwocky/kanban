@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,7 +7,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.api import api
 from backend.database import init_db
 
-app = FastAPI()
+STATIC_PATH = os.environ.get("STATIC_PATH", os.path.join(os.path.dirname(__file__), "static"))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,17 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STATIC_PATH = os.environ.get("STATIC_PATH", os.path.join(os.path.dirname(__file__), "static"))
-
 if os.path.exists(STATIC_PATH):
     app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
 app.include_router(api, prefix="/api")
-
-
-@app.on_event("startup")
-async def startup():
-    init_db()
 
 
 @app.get("/")

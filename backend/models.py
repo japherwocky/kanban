@@ -1,6 +1,7 @@
 from peewee import CharField, IntegerField, ForeignKeyField, DateTimeField, TextField
 from passlib.context import CryptContext
 from playhouse.sqlite_ext import Model
+from datetime import datetime, timezone
 
 from backend.database import db
 
@@ -32,12 +33,10 @@ class Board(BaseModel):
 
     @classmethod
     def create_with_columns(cls, user, name, column_names=None):
-        from datetime import datetime
-
         if column_names is None:
             column_names = ["To Do", "In Progress", "Done"]
 
-        board = cls.create(user=user, name=name, created_at=datetime.utcnow())
+        board = cls.create(user=user, name=name, created_at=datetime.now(timezone.utc))
         for i, col_name in enumerate(column_names):
             Column.create(board=board, name=col_name, position=i)
         return board
