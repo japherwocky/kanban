@@ -3,6 +3,7 @@
   import { theme } from './lib/theme.js';
   import ThemeToggle from './lib/ThemeToggle.svelte';
   import { api } from './lib/api.js';
+  import BoardView from './lib/BoardView.svelte';
 
   let username = '';
   let password = '';
@@ -118,17 +119,7 @@
       </form>
     </div>
   {:else if selectedBoard}
-    <div class="board-view">
-      <header>
-        <button class="back-btn" on:click={goBack}>← Back to Boards</button>
-        <h1>{selectedBoard.name}</h1>
-        <div class="header-actions">
-          <ThemeToggle />
-          <button class="logout-btn" on:click={logout}>Logout</button>
-        </div>
-      </header>
-      <p>Board detail view coming soon...</p>
-    </div>
+    <BoardView board={selectedBoard} onBack={goBack} />
   {:else}
     <div class="app">
       <header>

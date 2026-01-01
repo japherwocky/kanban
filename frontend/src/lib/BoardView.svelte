@@ -1,0 +1,492 @@
+<script>
+  import { createEventDispatcher } from 'svelte';
+  import { api } from './api.js';
+
+  export let board;
+  export let onBack;
+
+  let columns = board.columns || [];
+  let loading = false;
+  let showCreateCardModal = false;
+  let selectedColumnId = null;
+  let newCardTitle = '';
+  let createLoading = false;
+  let draggedCard = null;
+
+  async function loadBoard() {
+    loading = true;
+    try {
+      const data = await api.boards.get(board.id);
+      columns = data.columns || [];
+    } catch (e) {
+      console.error('Failed to load board:', e);
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function createCard() {
+    if (!newCardTitle.trim() || !selectedColumnId) return;
+    createLoading = true;
+    try {
+      const card = await api.cards.create(selectedColumnId, newCardTitle.trim(), 0);
+      columns = columns.map(col => {
+        if (col.id === selectedColumnId) {
+          return { ...col, cards: [card, ...col.cards] };
+        }
+        return col;
+      });
+      newCardTitle = '';
+      showCreateCardModal = false;
+    } catch (e) {
+      alert('Failed to create card: ' + e.message);
+    } finally {
+      createLoading = false;
+    }
+  }
+
+  async function deleteCard(columnId, cardId, e) {
+    e.stopPropagation();
+    if (!confirm('Delete this card?')) return;
+    try {
+      await api.cards.delete(cardId);
+      columns = columns.map(col => {
+        if (col.id === columnId) {
+          return { ...col, cards: col.cards.filter(c => c.id !== cardId) };
+        }
+        return col;
+      });
+    } catch (e) {
+      alert('Failed to delete card: ' + e.message);
+    }
+  }
+
+  function openCreateCard(columnId) {
+    selectedColumnId = columnId;
+    newCardTitle = '';
+    showCreateCardModal = true;
+  }
+
+  function handleDndConsider(columnId, e) {
+    const { items } = e.detail;
+    columns = columns.map(col => {
+      if (col.id === columnId) {
+        return { ...col, cards: items };
+      }
+      return col;
+    });
+  }
+
+  async function handleDndFinalize(columnId, e) {
+    const { items } = e.detail;
+    columns = columns.map(col => {
+      if (col.id === columnId) {
+        return { ...col, cards: items };
+      }
+      return col;
+    });
+    if (draggedCard && draggedCard.columnId !== columnId) {
+      try {
+        await api.cards.update(draggedCard.id, draggedCard.title, null, 0, columnId);
+      } catch (e) {
+        console.error('Failed to move card:', e);
+        loadBoard();
+      }
+    }
+    draggedCard = null;
+  }
+
+  function handleDragStart(e, card, columnId) {
+    draggedCard = { ...card, columnId };
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+</script>
+
+<div class="board-view">
+  <header>
+    <div class="header-left">
+      <button class="back-btn" on:click={onBack}>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M12 4L6 10L12 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back
+      </button>
+      <h1>{board.name}</h1>
+    </div>
+    <div class="header-actions">
+      <span class="card-count">{columns.reduce((sum, col) => sum + col.cards.length, 0)} cards</span>
+    </div>
+  </header>
+
+  {#if loading}
+    <div class="loading">Loading board...</div>
+  {:else}
+    <div class="columns-container">
+      {#each columns as column (column.id)}
+        <div class="column">
+          <div class="column-header">
+            <h3>{column.name}</h3>
+            <span class="card-count">{column.cards.length}</span>
+          </div>
+          <div class="column-content">
+            {#if column.cards.length > 0}
+              <div
+                class="cards-list"
+                dndzone={{ items: column.cards, flipDurationMs: 200 }}
+                on:consider={(e) => handleDndConsider(column.id, e)}
+                on:finalize={(e) => handleDndFinalize(column.id, e)}
+              >
+                {#each column.cards as card (card.id)}
+                  <div
+                    class="card"
+                    draggable="true"
+                    on:dragstart={(e) => handleDragStart(e, card, column.id)}
+                  >
+                    <div class="card-header">
+                      <span class="card-title">{card.title}</span>
+                      <button class="delete-btn" on:click={(e) => deleteCard(column.id, card.id, e)}>×</button>
+                    </div>
+                    {#if card.description}
+                      <p class="card-description">{card.description}</p>
+                    {/if}
+                    <div class="card-meta">
+                      {#if card.created_at}
+                        <span>{formatDate(card.created_at)}</span>
+                      {/if}
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <div class="empty-column">No cards</div>
+            {/if}
+          </div>
+          <button class="add-card-btn" on:click={() => openCreateCard(column.id)}>
+            <span>+</span> Add card
+          </button>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
+  {#if showCreateCardModal}
+    <div class="modal-overlay" on:click={() => showCreateCardModal = false}>
+      <div class="modal" on:click|stopPropagation>
+        <h2>Add Card</h2>
+        <form on:submit|preventDefault={createCard}>
+          <input
+            bind:value={newCardTitle}
+            placeholder="Card title"
+            required
+            autofocus
+          />
+          <div class="modal-actions">
+            <button type="button" class="cancel-btn" on:click={() => showCreateCardModal = false}>Cancel</button>
+            <button type="submit" class="create-btn" disabled={createLoading}>
+              {createLoading ? 'Adding...' : 'Add Card'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {/if}
+</div>
+
+<style>
+  .board-view {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+    font-size: 0.875rem;
+  }
+
+  .back-btn:hover {
+    background: var(--color-muted);
+  }
+
+  header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin: 0;
+  }
+
+  .card-count {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+  }
+
+  .loading {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-muted-foreground);
+  }
+
+  .columns-container {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    overflow-x: auto;
+    min-height: 0;
+  }
+
+  .column {
+    flex: 0 0 300px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-muted);
+    border-radius: 12px;
+    max-height: 100%;
+  }
+
+  .column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .column-header h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .column-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem;
+    min-height: 100px;
+  }
+
+  .cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 50px;
+  }
+
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    cursor: grab;
+    transition: all 0.15s ease;
+  }
+
+  .card:hover {
+    border-color: var(--color-primary);
+  }
+
+  .card:active {
+    cursor: grabbing;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .card-title {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-foreground);
+    word-break: break-word;
+  }
+
+  .delete-btn {
+    padding: 0.125rem 0.375rem;
+    font-size: 1rem;
+    line-height: 1;
+    background: transparent;
+    color: var(--color-muted-foreground);
+    border: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .card:hover .delete-btn {
+    opacity: 1;
+  }
+
+  .delete-btn:hover {
+    color: var(--color-destructive);
+    background: transparent;
+  }
+
+  .card-description {
+    font-size: 0.8125rem;
+    color: var(--color-muted-foreground);
+    margin: 0.5rem 0 0 0;
+    line-height: 1.5;
+  }
+
+  .card-meta {
+    font-size: 0.75rem;
+    color: var(--color-muted-foreground);
+    margin-top: 0.5rem;
+  }
+
+  .empty-column {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+  }
+
+  .add-card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: transparent;
+    color: var(--color-muted-foreground);
+    border: none;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+  }
+
+  .add-card-btn:hover {
+    background: var(--color-muted);
+    color: var(--color-foreground);
+  }
+
+  .add-card-btn span {
+    font-size: 1.25rem;
+    font-weight: 300;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+  }
+
+  .modal {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal h2 {
+    margin: 0 0 1.25rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+  }
+
+  .modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  input {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-card);
+    color: var(--color-foreground);
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary);
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  button {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .cancel-btn {
+    background: transparent;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+  }
+
+  .cancel-btn:hover {
+    background: var(--color-muted);
+  }
+
+  .create-btn {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border: none;
+  }
+
+  .create-btn:hover {
+    opacity: 0.9;
+  }
+
+  .create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
