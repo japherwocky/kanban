@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [svelte(), tailwindcss()],
-  base: '/static/',
+  base: process.env.NODE_ENV === 'production' ? '/static/' : '/',
   build: {
     outDir: '../backend/static',
     emptyOutDir: true
