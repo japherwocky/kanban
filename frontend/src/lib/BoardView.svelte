@@ -17,6 +17,9 @@
   let editTitle = '';
   let editDescription = '';
   let editLoading = false;
+  let showCreateColumnModal = false;
+  let newColumnName = '';
+  let createColumnLoading = false;
 
   async function loadBoard() {
     loading = true;
@@ -98,6 +101,21 @@
       alert('Failed to update card: ' + e.message);
     } finally {
       editLoading = false;
+    }
+  }
+
+  async function createColumn() {
+    if (!newColumnName.trim()) return;
+    createColumnLoading = true;
+    try {
+      const column = await api.columns.create(board.id, newColumnName.trim(), columns.length);
+      columns = [...columns, { ...column, cards: [] }];
+      newColumnName = '';
+      showCreateColumnModal = false;
+    } catch (e) {
+      alert('Failed to create column: ' + e.message);
+    } finally {
+      createColumnLoading = false;
     }
   }
 
@@ -208,6 +226,9 @@
           </button>
         </div>
       {/each}
+      <button class="add-column-btn" on:click={() => { newColumnName = ''; showCreateColumnModal = true; }}>
+        <span>+</span> Add Column
+      </button>
     </div>
   {/if}
 
@@ -253,6 +274,28 @@
               <button type="button" class="cancel-btn" on:click={() => showEditCardModal = false}>Cancel</button>
               <button type="submit" class="create-btn" disabled={editLoading}>
                 {editLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    {/if}
+
+    {#if showCreateColumnModal}
+      <div class="modal-overlay" on:click={() => showCreateColumnModal = false}>
+        <div class="modal" on:click|stopPropagation>
+          <h2>Add Column</h2>
+          <form on:submit|preventDefault={createColumn}>
+            <input
+              bind:value={newColumnName}
+              placeholder="Column name"
+              required
+              autofocus
+            />
+            <div class="modal-actions">
+              <button type="button" class="cancel-btn" on:click={() => showCreateColumnModal = false}>Cancel</button>
+              <button type="submit" class="create-btn" disabled={createColumnLoading}>
+                {createColumnLoading ? 'Adding...' : 'Add Column'}
               </button>
             </div>
           </form>
@@ -459,6 +502,34 @@
 
   .add-card-btn span {
     font-size: 1.25rem;
+    font-weight: 300;
+  }
+
+  .add-column-btn {
+    flex: 0 0 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: transparent;
+    color: var(--color-muted-foreground);
+    border: 2px dashed var(--color-border);
+    border-radius: 12px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    height: fit-content;
+  }
+
+  .add-column-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-card);
+  }
+
+  .add-column-btn span {
+    font-size: 1.5rem;
     font-weight: 300;
   }
 
