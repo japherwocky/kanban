@@ -87,7 +87,7 @@ class Board(BaseModel):
     @classmethod
     def create_with_columns(cls, owner, name, shared_team=None, column_names=None):
         if column_names is None:
-            column_names = ["To Do", "In Progress", "Done"]
+            column_names = ["To Do", "In Progress", "For Review"]
 
         board = cls.create(
             owner=owner,
