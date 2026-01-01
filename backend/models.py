@@ -1,9 +1,9 @@
-import bcrypt
+import bcrypt  # type: ignore
 from peewee import (
     CharField, IntegerField, ForeignKeyField, DateTimeField, TextField,
     BooleanField
 )
-from playhouse.sqlite_ext import Model
+from playhouse.sqlite_ext import Model  # type: ignore
 from datetime import datetime, timezone
 
 from backend.database import db
@@ -31,7 +31,7 @@ class User(BaseModel):
         return cls.create(username=username, password_hash=password_hash, email=email, admin=admin)
 
     def verify_password(self, password):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))  # type: ignore
 
 
 class Organization(BaseModel):
@@ -50,7 +50,7 @@ class OrganizationMember(BaseModel):
     role = CharField(max_length=20)  # owner | admin | member
     joined_at = DateTimeField()
 
-    class Meta:
+    class Meta:  # type: ignore
         indexes = (
             (("user", "organization"), True),
         )
@@ -72,7 +72,7 @@ class TeamMember(BaseModel):
     role = CharField(max_length=20)  # admin | member
     joined_at = DateTimeField()
 
-    class Meta:
+    class Meta:  # type: ignore
         indexes = (
             (("user", "team"), True),
         )
