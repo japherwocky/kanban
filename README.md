@@ -82,33 +82,22 @@ cd frontend
 npm install
 ```
 
-### 3. Initialize the database
+### 3. Initialize the database and create a user
 
 ```bash
 # From the project root, with venv activated
-python -m backend.manage init
+python manage.py init
+python manage.py user-create admin mypassword --admin
 ```
 
-### 4. Create a user
+### 4. Run the server
 
 ```bash
 # From the project root, with venv activated
-python backend/create_user.py <username> <password> [--email EMAIL] [--admin]
+python manage.py server
 ```
 
-### 5. Run the backend
-
-```bash
-# From the project root, with venv activated
-uvicorn backend.main:app --reload
-```
-
-### 6. Build and run the frontend
-
-```bash
-cd frontend
-npm run build
-```
+The server will start at http://localhost:8000.
 
 The frontend will be built to `backend/static/` and served automatically.
 
@@ -121,9 +110,22 @@ The virtualenv is at `./venv` in the project root.
 source venv/bin/activate  # Linux/Mac
 # or on Windows:
 venv\Scripts\activate
+```
 
-# Run the backend (from project root)
-uvicorn backend.main:app --reload
+### Running the Server
+
+```bash
+# With auto-reload (default)
+python manage.py server
+
+# With custom host/port
+python manage.py server --host 127.0.0.1 --port 9000
+
+# Disable auto-reload
+python manage.py server --no-reload
+
+# Set log level
+python manage.py server --log-level debug
 ```
 
 ### Frontend (with hot reload)
@@ -137,14 +139,27 @@ npm run dev
 
 ```bash
 # Initialize database (create all tables)
-python -m backend.manage init
+python manage.py init
 
 # Wipe database (drop all tables and recreate)
-python -m backend.manage wipe
+python manage.py wipe
 
 # Check database status
-python -m backend.manage status
+python manage.py status
+
+# Create a user
+python manage.py user-create <username> <password> [--email EMAIL] [--admin]
 ```
+
+### Server Options
+
+| Option | Description |
+|--------|-------------|
+| `--host HOST` | Host to bind to (default: 0.0.0.0) |
+| `--port PORT` | Port to bind to (default: 8000) |
+| `--reload` | Enable auto-reload (default) |
+| `--no-reload` | Disable auto-reload |
+| `--log-level LEVEL` | Set logging level (debug, info, warning, error) |
 
 ## Multi-Tenant Organizations
 
