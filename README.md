@@ -66,18 +66,22 @@ cd kanban
 ### 2. Create a user
 
 ```bash
+# Activate the virtualenv (located at ./venv in the project root)
+source venv/bin/activate  # Linux/Mac
+# or on Windows:
+venv\Scripts\activate
+
+# Install dependencies and create a user
+pip install -r backend/requirements.txt
 cd backend
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
 python create_user.py <username> <password>
 ```
 
 ### 3. Run the backend
 
 ```bash
-cd backend
-uvicorn main:app --reload
+# From the project root, with venv activated
+uvicorn backend.main:app --reload
 ```
 
 ### 4. Build and run the frontend
@@ -92,11 +96,16 @@ The frontend will be built to `backend/static/` and served automatically.
 
 ## Development
 
-### Backend
+The virtualenv is at `./venv` in the project root.
 
 ```bash
-cd backend
-uvicorn main:app --reload
+# Activate the virtualenv
+source venv/bin/activate  # Linux/Mac
+# or on Windows:
+venv\Scripts\activate
+
+# Run the backend (from project root)
+uvicorn backend.main:app --reload
 ```
 
 ### Frontend (with hot reload)
