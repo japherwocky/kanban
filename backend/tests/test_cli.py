@@ -15,17 +15,20 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.main import app
 from backend.database import db
-from backend.models import User, Board, Column, Card
+from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
 from backend.auth import create_access_token
 
 
 @pytest.fixture(scope="module")
 def test_db():
     db.connect()
-    db.create_tables([User, Board, Column, Card])
+    db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
     yield db
-    for table in [Card, Column, Board, User]:
-        table.delete().execute()
+    for table in [Card, Column, Board, TeamMember, TeamMember, OrganizationMember, Organization, User]:
+        try:
+            table.delete().execute()
+        except:
+            pass
     db.close()
 
 

@@ -8,7 +8,7 @@ db = SqliteDatabase(DATABASE_PATH)
 
 def init_db():
     db.connect()
-    from backend.models import User, Board, Column, Card
+    from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
 
-    db.create_tables([User, Board, Column, Card])
+    db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
     db.close()

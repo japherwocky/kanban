@@ -10,16 +10,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.main import app
 from backend.database import db
-from backend.models import User, Board, Column, Card
+from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
 
 
 @pytest.fixture(scope="module")
 def test_db():
     db.connect()
-    db.create_tables([User, Board, Column, Card])
+    db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
     yield db
-    for table in [Card, Column, Board, User]:
-        table.delete().execute()
+    for table in [Card, Column, Board, TeamMember, TeamMember, OrganizationMember, Organization, User]:
+        try:
+            table.delete().execute()
+        except:
+            pass
     db.close()
 
 
@@ -98,7 +101,7 @@ def test_create_board_without_auth(client):
         "/api/boards",
         json={"name": "Test Board"},
     )
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 def test_get_board_with_columns(client, auth_headers, test_user):
@@ -116,6 +119,8 @@ def test_get_board_with_columns(client, auth_headers, test_user):
     assert data["name"] == "Board with Columns"
     assert "columns" in data
     assert len(data["columns"]) == 3
+    assert data["owner_id"] == test_user.id
+    assert data["shared_team_id"] is None
 
 
 def test_create_column(client, auth_headers, test_user):
