@@ -12,6 +12,11 @@
   let newCardTitle = '';
   let createLoading = false;
   let draggedCard = null;
+  let showEditCardModal = false;
+  let editingCard = null;
+  let editTitle = '';
+  let editDescription = '';
+  let editLoading = false;
 
   async function loadBoard() {
     loading = true;
@@ -65,6 +70,35 @@
     selectedColumnId = columnId;
     newCardTitle = '';
     showCreateCardModal = true;
+  }
+
+  function openEditCard(card) {
+    editingCard = card;
+    editTitle = card.title || '';
+    editDescription = card.description || '';
+    showEditCardModal = true;
+  }
+
+  async function saveCard() {
+    if (!editTitle.trim() || !editingCard) return;
+    editLoading = true;
+    try {
+      await api.cards.update(editingCard.id, editTitle.trim(), editDescription.trim() || null, null, null);
+      columns = columns.map(col => ({
+        ...col,
+        cards: col.cards.map(c =>
+          c.id === editingCard.id
+            ? { ...c, title: editTitle.trim(), description: editDescription.trim() }
+            : c
+        )
+      }));
+      showEditCardModal = false;
+      editingCard = null;
+    } catch (e) {
+      alert('Failed to update card: ' + e.message);
+    } finally {
+      editLoading = false;
+    }
   }
 
   function handleDndConsider(columnId, e) {
@@ -148,6 +182,7 @@
                     class="card"
                     draggable="true"
                     on:dragstart={(e) => handleDragStart(e, card, column.id)}
+                    on:click={() => openEditCard(card)}
                   >
                     <div class="card-header">
                       <span class="card-title">{card.title}</span>
@@ -192,14 +227,41 @@
             <button type="submit" class="create-btn" disabled={createLoading}>
               {createLoading ? 'Adding...' : 'Add Card'}
             </button>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
-  {/if}
-</div>
+    {/if}
 
-<style>
+    {#if showEditCardModal}
+      <div class="modal-overlay" on:click={() => showEditCardModal = false}>
+        <div class="modal" on:click|stopPropagation>
+          <h2>Edit Card</h2>
+          <form on:submit|preventDefault={saveCard}>
+            <input
+              bind:value={editTitle}
+              placeholder="Card title"
+              required
+              autofocus
+            />
+            <textarea
+              bind:value={editDescription}
+              placeholder="Description (optional)"
+              rows="3"
+            ></textarea>
+            <div class="modal-actions">
+              <button type="button" class="cancel-btn" on:click={() => showEditCardModal = false}>Cancel</button>
+              <button type="submit" class="create-btn" disabled={editLoading}>
+                {editLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    {/if}
+  </div>
+
+  <style>
   .board-view {
     height: 100%;
     display: flex;
@@ -444,6 +506,24 @@
   }
 
   input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary);
+  }
+
+  textarea {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-card);
+    color: var(--color-foreground);
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  textarea:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px var(--color-primary);
