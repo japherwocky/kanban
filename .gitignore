@@ -25,3 +25,5 @@ env/
 *.db
 *.sqlite3
 .DS_Store
+
+!frontend/src/lib
