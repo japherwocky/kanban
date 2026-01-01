@@ -1,16 +1,17 @@
+import bcrypt
 from peewee import CharField, IntegerField, ForeignKeyField, DateTimeField, TextField
-from passlib.context import CryptContext
 from playhouse.sqlite_ext import Model
 from datetime import datetime, timezone
 
 from backend.database import db
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 class BaseModel(Model):
     class Meta:
         database = db
+
+
+PASSWORD_MAX_LENGTH = 72
 
 
 class User(BaseModel):
@@ -19,11 +20,13 @@ class User(BaseModel):
 
     @classmethod
     def create_user(cls, username, password):
-        password_hash = pwd_context.hash(password)
+        if len(password) > PASSWORD_MAX_LENGTH:
+            raise ValueError(f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer")
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         return cls.create(username=username, password_hash=password_hash)
 
     def verify_password(self, password):
-        return pwd_context.verify(password, str(self.password_hash))
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
 
 class Board(BaseModel):

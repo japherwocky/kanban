@@ -3,8 +3,7 @@ uvicorn
 peewee
 pydantic
 python-jose[cryptography]
-passlib[bcrypt]
-bcrypt>=4.0.0
+bcrypt
 pytest
 pytest-asyncio
 httpx
