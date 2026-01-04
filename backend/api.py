@@ -265,6 +265,30 @@ class TeamResponseAdmin(BaseModel):
     created_at: datetime
 
 
+class BoardCreateAdmin(BaseModel):
+    name: str
+    owner_id: int
+
+
+class BoardUpdateAdmin(BaseModel):
+    name: str
+
+
+class BoardResponseAdmin(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    owner_id: int
+    owner_username: str
+    shared_team_id: Optional[int]
+    shared_team_name: Optional[str]
+    is_public_to_org: bool
+    column_count: int
+    card_count: int
+    created_at: datetime
+
+
 @api.post("/token", response_model=Token)
 async def login(request: LoginRequest):
     user = User.get_or_none(User.username == request.username)
@@ -618,6 +642,113 @@ async def delete_admin_team(
         TeamMember.delete().where(TeamMember.team == team)
         # Delete team
         team.delete_instance()
+
+    return {"ok": True}
+
+
+# Admin board management endpoints
+@api.get("/admin/boards", response_model=list)
+async def list_admin_boards(current_admin_user: User = Depends(get_current_admin)):
+    """List all boards (admin only)"""
+    boards = Board.select().order_by(Board.id)
+    result = []
+    for board in boards:
+        column_count = Column.select().where(Column.board == board).count()
+        card_count = Card.select().join(Column).where(Column.board == board).count()
+        shared_team_name = board.shared_team.name if board.shared_team else None
+
+        result.append({
+            "id": board.id,
+            "name": board.name,
+            "owner_id": board.owner_id,
+            "owner_username": board.owner.username,
+            "shared_team_id": board.shared_team_id,
+            "shared_team_name": shared_team_name,
+            "is_public_to_org": board.is_public_to_org,
+            "column_count": column_count,
+            "card_count": card_count,
+            "created_at": board.created_at,
+        })
+    return result
+
+
+@api.post("/admin/boards", response_model=BoardResponseAdmin)
+async def create_admin_board(
+    board_data: BoardCreateAdmin,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Create a board (admin only)"""
+    owner = User.get_or_none(User.id == board_data.owner_id)
+    if not owner:
+        raise HTTPException(status_code=404, detail="Owner user not found")
+
+    board = Board.create_with_columns(owner=owner, name=board_data.name)
+
+    column_count = Column.select().where(Column.board == board).count()
+    card_count = Card.select().join(Column).where(Column.board == board).count()
+
+    return {
+        "id": board.id,
+        "name": board.name,
+        "owner_id": board.owner_id,
+        "owner_username": board.owner.username,
+        "shared_team_id": board.shared_team_id,
+        "shared_team_name": None,
+        "is_public_to_org": board.is_public_to_org,
+        "column_count": column_count,
+        "card_count": card_count,
+        "created_at": board.created_at,
+    }
+
+
+@api.put("/admin/boards/{board_id}", response_model=BoardResponseAdmin)
+async def update_admin_board(
+    board_id: int,
+    board_data: BoardUpdateAdmin,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Update a board (admin only)"""
+    board = Board.get_or_none(Board.id == board_id)
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+
+    board.name = board_data.name
+    board.save()
+
+    column_count = Column.select().where(Column.board == board).count()
+    card_count = Card.select().join(Column).where(Column.board == board).count()
+    shared_team_name = board.shared_team.name if board.shared_team else None
+
+    return {
+        "id": board.id,
+        "name": board.name,
+        "owner_id": board.owner_id,
+        "owner_username": board.owner.username,
+        "shared_team_id": board.shared_team_id,
+        "shared_team_name": shared_team_name,
+        "is_public_to_org": board.is_public_to_org,
+        "column_count": column_count,
+        "card_count": card_count,
+        "created_at": board.created_at,
+    }
+
+
+@api.delete("/admin/boards/{board_id}")
+async def delete_admin_board(
+    board_id: int,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Delete a board (admin only)"""
+    board = Board.get_or_none(Board.id == board_id)
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+
+    with db.atomic():
+        # Delete cards, columns, board
+        for column in board.columns:
+            Card.delete().where(Card.column == column)
+            column.delete_instance()
+        board.delete_instance()
 
     return {"ok": True}
 

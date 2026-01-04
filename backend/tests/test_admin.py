@@ -511,3 +511,125 @@ def test_delete_team_admin(client, admin_token, admin_user):
     from backend.models import Team
     assert Team.get_or_none(Team.id == team_id) is None
 
+
+# Admin board management tests
+def test_list_boards_requires_admin(client, regular_token):
+    """Regular users cannot list all boards"""
+    response = client.get("/api/admin/boards", headers={"Authorization": f"Bearer {regular_token}"})
+    assert response.status_code == 403
+
+
+def test_list_boards_admin(client, admin_token, admin_user):
+    """Admin can list all boards"""
+    # Create a board
+    response = client.post(
+        "/api/admin/boards",
+        json={"name": "Admin Board", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    board1_id = response.json()["id"]
+
+    response = client.get("/api/admin/boards", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+    boards = response.json()
+    assert len(boards) >= 1
+    assert any(b["name"] == "Admin Board" for b in boards)
+    assert all(b["column_count"] == 3 for b in boards)  # Default columns
+
+
+def test_create_board_requires_admin(client, regular_token, admin_user):
+    """Regular users cannot create boards via admin API"""
+    response = client.post(
+        "/api/admin/boards",
+        json={"name": "Admin Board", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_create_board_admin(client, admin_token, regular_user):
+    """Admin can create board for any user"""
+    response = client.post(
+        "/api/admin/boards",
+        json={"name": "Admin Created Board", "owner_id": regular_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    board = response.json()
+    assert board["name"] == "Admin Created Board"
+    assert board["owner_id"] == regular_user.id
+    assert board["owner_username"] == regular_user.username
+    assert board["column_count"] == 3  # Default columns
+
+
+def test_create_board_invalid_owner(client, admin_token):
+    """Board creation fails with invalid owner"""
+    response = client.post(
+        "/api/admin/boards",
+        json={"name": "Bad Board", "owner_id": 99999},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 404
+
+
+def test_update_board_requires_admin(client, regular_token):
+    """Regular users cannot update boards via admin API"""
+    response = client.put(
+        "/api/admin/boards/1",
+        json={"name": "Hacked"},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_update_board_admin(client, admin_token, admin_user):
+    """Admin can update board name"""
+    # Create board
+    response = client.post(
+        "/api/admin/boards",
+        json={"name": "Original Name", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    board_id = response.json()["id"]
+
+    # Update it
+    response = client.put(
+        f"/api/admin/boards/{board_id}",
+        json={"name": "Updated Name"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    board = response.json()
+    assert board["name"] == "Updated Name"
+
+
+def test_delete_board_requires_admin(client, regular_token, admin_user):
+    """Regular users cannot delete boards via admin API"""
+    response = client.delete(
+        "/api/admin/boards/1",
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_delete_board_admin(client, admin_token, admin_user):
+    """Admin can delete board"""
+    # Create board
+    response = client.post(
+        "/api/admin/boards",
+        json={"name": "To Delete", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    board_id = response.json()["id"]
+
+    # Delete it
+    response = client.delete(
+        f"/api/admin/boards/{board_id}",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+
+    # Verify it's deleted
+    from backend.models import Board
+    assert Board.get_or_none(Board.id == board_id) is None
+

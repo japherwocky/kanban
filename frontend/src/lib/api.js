@@ -70,6 +70,20 @@ export const api = {
         method: 'DELETE',
       }),
     },
+    boards: {
+      list: () => apiFetch('/api/admin/boards'),
+      create: (data) => apiFetch('/api/admin/boards', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+      update: (boardId, data) => apiFetch(`/api/admin/boards/${boardId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+      delete: (boardId) => apiFetch(`/api/admin/boards/${boardId}`, {
+        method: 'DELETE',
+      }),
+    },
   },
   boards: {
     list: () => apiFetch('/api/boards'),

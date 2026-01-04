@@ -6,6 +6,7 @@
   import AdminUsers from './AdminUsers.svelte';
   import AdminOrganizations from './AdminOrganizations.svelte';
   import AdminTeams from './AdminTeams.svelte';
+  import AdminBoards from './AdminBoards.svelte';
 
   const { params } = $props();
 
@@ -88,7 +89,6 @@
           <button
             class:active={currentSection === 'boards'}
             onclick={() => navigateTo('boards')}
-            disabled
           >
             Boards
           </button>
@@ -102,6 +102,8 @@
           <AdminOrganizations />
         {:else if currentSection === 'teams'}
           <AdminTeams />
+        {:else if currentSection === 'boards'}
+          <AdminBoards />
         {:else}
           <div class="coming-soon">
             <h2>{currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}</h2>
