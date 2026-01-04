@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
-from backend.auth import Token, create_access_token, get_current_user
+from backend.auth import Token, create_access_token, get_current_user, get_current_admin
 from backend.database import db
 from backend.models import (
     User, Board, Column, Card, Organization, OrganizationMember,
@@ -195,6 +195,32 @@ class TeamMemberResponse(BaseModel):
     joined_at: datetime
 
 
+class UserCreate(BaseModel):
+    username: str
+    email: Optional[str] = None
+    password: str
+    admin: bool = False
+
+
+class UserUpdate(BaseModel):
+    username: str
+    email: Optional[str] = None
+    admin: bool = False
+
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    email: Optional[str]
+    admin: bool
+
+
+class PasswordReset(BaseModel):
+    password: str
+
+
 @api.post("/token", response_model=Token)
 async def login(request: LoginRequest):
     user = User.get_or_none(User.username == request.username)
@@ -206,6 +232,125 @@ async def login(request: LoginRequest):
         )
     access_token = create_access_token(data={"sub": user.id, "username": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@api.get("/admin/status")
+async def admin_status(current_user: User = Depends(get_current_user)):
+    """Check if current user has admin access"""
+    return {"is_admin": current_user.admin}
+
+
+# Admin user management endpoints
+@api.get("/admin/users", response_model=list)
+async def list_admin_users(current_admin_user: User = Depends(get_current_admin)):
+    """List all users (admin only)"""
+    users = User.select().order_by(User.id)
+    return [
+        {"id": u.id, "username": u.username, "email": u.email, "admin": u.admin}
+        for u in users
+    ]
+
+
+@api.post("/admin/users", response_model=UserResponse)
+async def create_admin_user(
+    user_data: UserCreate,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Create a new user (admin only)"""
+    try:
+        user = User.create_user(
+            username=user_data.username,
+            password=user_data.password,
+            email=user_data.email,
+            admin=user_data.admin,
+        )
+        return {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "admin": user.admin,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@api.put("/admin/users/{user_id}", response_model=UserResponse)
+async def update_admin_user(
+    user_id: int,
+    user_data: UserUpdate,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Update a user (admin only)"""
+    user = User.get_or_none(User.id == user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Prevent admin from removing their own admin access
+    if user == current_admin_user and not user_data.admin:
+        raise HTTPException(status_code=400, detail="Cannot remove your own admin access")
+
+    # Check for duplicate username
+    existing = User.get_or_none((User.username == user_data.username) & (User.id != user_id))
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    user.username = user_data.username
+    user.email = user_data.email
+    user.admin = user_data.admin
+    user.save()
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "admin": user.admin,
+    }
+
+
+@api.delete("/admin/users/{user_id}")
+async def delete_admin_user(
+    user_id: int,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Delete a user (admin only)"""
+    user = User.get_or_none(User.id == user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Prevent admin from deleting themselves
+    if user == current_admin_user:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+
+    with db.atomic():
+        # Delete cards, columns, boards, team memberships, org memberships, etc.
+        # This is a cascade delete - Peewee should handle foreign key cascades
+        user.delete_instance(recursive=True)
+
+    return {"ok": True}
+
+
+@api.post("/admin/users/{user_id}/reset-password")
+async def reset_user_password(
+    user_id: int,
+    reset_data: PasswordReset,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Reset a user's password (admin only)"""
+    user = User.get_or_none(User.id == user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Use the same password validation as create_user
+    from bcrypt import hashpw, gensalt
+
+    PASSWORD_MAX_LENGTH = 72
+    if len(reset_data.password) > PASSWORD_MAX_LENGTH:
+        raise HTTPException(status_code=400, detail=f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer")
+
+    user.password_hash = hashpw(reset_data.password.encode('utf-8'), gensalt()).decode('utf-8')
+    user.save()
+
+    return {"ok": True}
 
 
 @api.post("/boards", response_model=dict)

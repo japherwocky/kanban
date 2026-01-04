@@ -8,6 +8,7 @@
   import Board from './routes/Board.svelte';
   import Organizations from './routes/Organizations.svelte';
   import Organization from './routes/Organization.svelte';
+  import Admin from './routes/Admin.svelte';
   import NotFound from './routes/NotFound.svelte';
 
   onMount(() => {
@@ -34,6 +35,10 @@
 
   <Route path="/organizations/:id" let:params>
     <Organization {params} />
+  </Route>
+
+  <Route path="/admin">
+    <Admin />
   </Route>
 
   <Route path="/">

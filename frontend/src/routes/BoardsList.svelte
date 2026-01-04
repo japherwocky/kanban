@@ -11,6 +11,7 @@
   let newBoardName = $state('');
   let createLoading = $state(false);
   let teamsMap = $state({}); // Map team_id -> team object
+  let isAdmin = $state(false);
 
   onMount(async () => {
     const token = localStorage.getItem('token');
@@ -20,7 +21,7 @@
       navigate('/login');
       return;
     }
-    await Promise.all([loadBoards(), loadTeams()]);
+    await Promise.all([loadBoards(), loadTeams(), loadAdminStatus()]);
   });
 
   function logout() {
@@ -54,6 +55,16 @@
       teamsMap = teams;
     } catch (e) {
       console.error('Failed to load teams:', e);
+    }
+  }
+
+  async function loadAdminStatus() {
+    try {
+      const status = await api.admin.status();
+      isAdmin = status.is_admin;
+    } catch (e) {
+      console.error('Failed to load admin status:', e);
+      isAdmin = false;
     }
   }
 
@@ -101,6 +112,9 @@
     <h1>Kanban Board</h1>
     <div class="header-actions">
       <button class="nav-btn" onclick={() => navigate('/organizations')}>Organizations</button>
+      {#if isAdmin}
+        <button class="nav-btn admin-btn" onclick={() => navigate('/admin')}>Admin</button>
+      {/if}
       <ThemeToggle />
       <button class="logout-btn" onclick={logout}>Logout</button>
     </div>
@@ -202,6 +216,16 @@
 
   .nav-btn:hover {
     background: var(--color-muted);
+  }
+
+  .nav-btn.admin-btn {
+    color: var(--color-destructive);
+    border-color: var(--color-destructive);
+  }
+
+  .nav-btn.admin-btn:hover {
+    background: var(--color-destructive);
+    color: var(--color-destructive-foreground);
   }
 
   .logout-btn {

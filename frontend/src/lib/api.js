@@ -22,6 +22,27 @@ export async function apiFetch(endpoint, options = {}) {
 }
 
 export const api = {
+  admin: {
+    status: () => apiFetch('/api/admin/status'),
+    users: {
+      list: () => apiFetch('/api/admin/users'),
+      create: (data) => apiFetch('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+      update: (userId, data) => apiFetch(`/api/admin/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+      delete: (userId) => apiFetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+      }),
+      resetPassword: (userId, password) => apiFetch(`/api/admin/users/${userId}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+      }),
+    },
+  },
   boards: {
     list: () => apiFetch('/api/boards'),
     get: (id) => apiFetch(`/api/boards/${id}`),
