@@ -244,6 +244,27 @@ class OrganizationResponseAdmin(BaseModel):
     created_at: datetime
 
 
+class TeamCreateAdmin(BaseModel):
+    name: str
+    organization_id: int
+
+
+class TeamUpdateAdmin(BaseModel):
+    name: str
+    organization_id: int
+
+
+class TeamResponseAdmin(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    organization_id: int
+    organization_name: str
+    member_count: int
+    created_at: datetime
+
+
 @api.post("/token", response_model=Token)
 async def login(request: LoginRequest):
     user = User.get_or_none(User.username == request.username)
@@ -499,6 +520,104 @@ async def delete_admin_organization(
 
     with db.atomic():
         org.delete_instance(recursive=True)
+
+    return {"ok": True}
+
+
+# Admin team management endpoints
+@api.get("/admin/teams", response_model=list)
+async def list_admin_teams(current_admin_user: User = Depends(get_current_admin)):
+    """List all teams (admin only)"""
+    teams = Team.select().order_by(Team.id)
+    result = []
+    for team in teams:
+        member_count = TeamMember.select().where(TeamMember.team == team).count()
+        result.append({
+            "id": team.id,
+            "name": team.name,
+            "organization_id": team.organization_id,
+            "organization_name": team.organization.name,
+            "member_count": member_count,
+            "created_at": team.created_at,
+        })
+    return result
+
+
+@api.post("/admin/teams", response_model=TeamResponseAdmin)
+async def create_admin_team(
+    team_data: TeamCreateAdmin,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Create a team (admin only)"""
+    org = Organization.get_or_none(Organization.id == team_data.organization_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    team = Team.create_with_columns(name=team_data.name, organization=org)
+
+    member_count = TeamMember.select().where(TeamMember.team == team).count()
+
+    return {
+        "id": team.id,
+        "name": team.name,
+        "organization_id": team.organization_id,
+        "organization_name": team.organization.name,
+        "member_count": member_count,
+        "created_at": team.created_at,
+    }
+
+
+@api.put("/admin/teams/{team_id}", response_model=TeamResponseAdmin)
+async def update_admin_team(
+    team_id: int,
+    team_data: TeamUpdateAdmin,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Update a team (admin only)"""
+    team = Team.get_or_none(Team.id == team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    new_org = Organization.get_or_none(Organization.id == team_data.organization_id)
+    if not new_org:
+        raise HTTPException(status_code=404, detail="New organization not found")
+
+    team.name = team_data.name
+    team.organization = new_org
+    team.save()
+
+    # When transferring to new organization, keep existing members
+    # The membership will persist as it has no org constraint
+
+    member_count = TeamMember.select().where(TeamMember.team == team).count()
+
+    return {
+        "id": team.id,
+        "name": team.name,
+        "organization_id": team.organization_id,
+        "organization_name": team.organization.name,
+        "member_count": member_count,
+        "created_at": team.created_at,
+    }
+
+
+@api.delete("/admin/teams/{team_id}")
+async def delete_admin_team(
+    team_id: int,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Delete a team (admin only)"""
+    team = Team.get_or_none(Team.id == team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    with db.atomic():
+        # Remove team from any boards
+        Board.update(shared_team=None).where(Board.shared_team == team)
+        # Delete team members
+        TeamMember.delete().where(TeamMember.team == team)
+        # Delete team
+        team.delete_instance()
 
     return {"ok": True}
 

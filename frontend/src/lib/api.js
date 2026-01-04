@@ -56,6 +56,20 @@ export const api = {
         method: 'DELETE',
       }),
     },
+    teams: {
+      list: () => apiFetch('/api/admin/teams'),
+      create: (data) => apiFetch('/api/admin/teams', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+      update: (teamId, data) => apiFetch(`/api/admin/teams/${teamId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+      delete: (teamId) => apiFetch(`/api/admin/teams/${teamId}`, {
+        method: 'DELETE',
+      }),
+    },
   },
   boards: {
     list: () => apiFetch('/api/boards'),

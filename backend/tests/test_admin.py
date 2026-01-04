@@ -349,3 +349,165 @@ def test_delete_organization_admin(client, admin_token, regular_user):
     from backend.models import Organization
     assert Organization.get_or_none(Organization.id == org_id) is None
 
+
+# Admin team management tests
+def test_list_teams_requires_admin(client, regular_token):
+    """Regular users cannot list all teams"""
+    response = client.get("/api/admin/teams", headers={"Authorization": f"Bearer {regular_token}"})
+    assert response.status_code == 403
+
+
+def test_list_teams_admin(client, admin_token, admin_user):
+    """Admin can list all teams"""
+    # Create organization and team
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Test Org", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    org_id = response.json()["id"]
+
+    response = client.get("/api/admin/teams", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+    teams = response.json()
+    assert len(teams) >= 1
+    assert any(t["name"] == "Administrators" for t in teams)
+
+
+def test_create_team_requires_admin(client, regular_token, admin_user):
+    """Regular users cannot create teams via admin API"""
+    response = client.post(
+        "/api/admin/teams",
+        json={"name": "Admin Team", "organization_id": admin_user.id},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_create_team_admin(client, admin_token, admin_user):
+    """Admin can create team for any organization"""
+    # Create organization
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Test Org", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    org_id = response.json()["id"]
+
+    # Create team
+    response = client.post(
+        "/api/admin/teams",
+        json={"name": "Admin Created Team", "organization_id": org_id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    team = response.json()
+    assert team["name"] == "Admin Created Team"
+    assert team["organization_id"] == org_id
+
+
+def test_create_team_invalid_organization(client, admin_token):
+    """Team creation fails with invalid organization"""
+    response = client.post(
+        "/api/admin/teams",
+        json={"name": "Bad Team", "organization_id": 99999},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 404
+
+
+def test_update_team_requires_admin(client, regular_token):
+    """Regular users cannot update teams via admin API"""
+    response = client.put(
+        "/api/admin/teams/1",
+        json={"name": "Hacked", "organization_id": 1},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_update_team_admin(client, admin_token, admin_user, regular_user):
+    """Admin can update team and transfer organization"""
+    # Create two orgs
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Org 1", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    org1_id = response.json()["id"]
+
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Org 2", "owner_id": regular_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    org2_id = response.json()["id"]
+
+    # Create team in first org
+    response = client.post(
+        "/api/admin/teams",
+        json={"name": "Original Team", "organization_id": org1_id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    team_id = response.json()["id"]
+
+    # Update to second org
+    response = client.put(
+        f"/api/admin/teams/{team_id}",
+        json={"name": "Updated Team", "organization_id": org2_id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    team = response.json()
+    assert team["name"] == "Updated Team"
+    assert team["organization_id"] == org2_id
+
+
+def test_update_team_invalid_organization(client, admin_token):
+    """Team update fails with invalid organization"""
+    response = client.put(
+        "/api/admin/teams/1",
+        json={"name": "Test", "organization_id": 99999},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 404
+
+
+def test_delete_team_requires_admin(client, regular_token):
+    """Regular users cannot delete teams via admin API"""
+    response = client.delete(
+        "/api/admin/teams/1",
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_delete_team_admin(client, admin_token, admin_user):
+    """Admin can delete team"""
+    # Create organization first
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Test Org for Delete", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    org_id = response.json()["id"]
+
+    # Create team
+    response = client.post(
+        "/api/admin/teams",
+        json={"name": "To Delete", "organization_id": org_id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    team_id = response.json()["id"]
+
+    # Delete it
+    response = client.delete(
+        f"/api/admin/teams/{team_id}",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+
+    # Verify it's deleted
+    from backend.models import Team
+    assert Team.get_or_none(Team.id == team_id) is None
+
