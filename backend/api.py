@@ -102,10 +102,10 @@ class CardCreate(BaseModel):
 
 
 class CardUpdate(BaseModel):
-    title: str
+    title: Optional[str] = None
     description: Optional[str] = None
-    position: int
-    column_id: int
+    position: Optional[int] = None
+    column_id: Optional[int] = None
 
 
 class CardResponse(BaseModel):
@@ -400,16 +400,19 @@ async def update_card(
         raise HTTPException(status_code=404, detail="Card not found")
     if not can_modify_board(current_user, card.column.board):
         raise HTTPException(status_code=403, detail="Not authorized")
-    if card_data.column_id != card.column.id:
+    if card_data.column_id is not None and card_data.column_id != card.column.id:
         new_column = Column.get_or_none(Column.id == card_data.column_id)
         if not new_column:
             raise HTTPException(status_code=404, detail="New column not found")
         if not can_modify_board(current_user, new_column.board):
             raise HTTPException(status_code=403, detail="Not authorized")
         card.column = new_column
-    card.title = card_data.title
-    card.description = card_data.description
-    card.position = card_data.position
+    if card_data.title is not None:
+        card.title = card_data.title
+    if card_data.description is not None:
+        card.description = card_data.description
+    if card_data.position is not None:
+        card.position = card_data.position
     card.save()
     return {"id": card.id, "title": card.title, "description": card.description, "position": card.position}
 
