@@ -37,8 +37,12 @@
     <Organization {params} />
   </Route>
 
-  <Route path="/admin">
-    <Admin />
+  <Route path="/admin" let:params>
+    <Admin {params} />
+  </Route>
+
+  <Route path="/admin/:section" let:params>
+    <Admin {params} />
   </Route>
 
   <Route path="/">
