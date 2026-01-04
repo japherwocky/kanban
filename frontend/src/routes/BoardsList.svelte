@@ -201,6 +201,7 @@
     cursor: pointer;
     transition: all 0.15s ease;
     text-align: left;
+    position: relative;
   }
 
   .board-card:hover {
@@ -210,7 +211,7 @@
 
   .board-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: flex-start;
     margin-bottom: 0.5rem;
   }
@@ -223,8 +224,11 @@
   }
 
   .delete-btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 1.25rem;
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 1rem;
     line-height: 1;
     background: transparent;
     color: var(--color-muted-foreground);
