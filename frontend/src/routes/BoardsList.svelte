@@ -10,6 +10,7 @@
   let showCreateModal = $state(false);
   let newBoardName = $state('');
   let createLoading = $state(false);
+  let teamsMap = $state({}); // Map team_id -> team object
 
   onMount(async () => {
     const token = localStorage.getItem('token');
@@ -19,7 +20,7 @@
       navigate('/login');
       return;
     }
-    await loadBoards();
+    await Promise.all([loadBoards(), loadTeams()]);
   });
 
   function logout() {
@@ -36,6 +37,28 @@
     } finally {
       boardsLoading = false;
     }
+  }
+
+  async function loadTeams() {
+    try {
+      const teams = [];
+      const orgs = await api.organizations.list();
+
+      for (const org of orgs) {
+        const orgTeams = await api.organizations.teams.list(org.id);
+        for (const team of orgTeams) {
+          teams[team.id] = team;
+        }
+      }
+
+      teamsMap = teams;
+    } catch (e) {
+      console.error('Failed to load teams:', e);
+    }
+  }
+
+  function getTeamName(teamId) {
+    return teamsMap[teamId]?.name || null;
   }
 
   async function createBoard() {
@@ -77,6 +100,7 @@
   <header>
     <h1>Kanban Board</h1>
     <div class="header-actions">
+      <button class="nav-btn" onclick={() => navigate('/organizations')}>Organizations</button>
       <ThemeToggle />
       <button class="logout-btn" onclick={logout}>Logout</button>
     </div>
@@ -92,12 +116,22 @@
   {:else}
     <div class="boards-grid">
       {#each boards as board (board.id)}
-        <div class="board-card">
+        <div class="board-card" class:shared={board.shared_team_id}>
           <button class="board-header" onclick={() => navigate(`/boards/${board.id}`)}>
             <h3>{board.name}</h3>
           </button>
           <button class="delete-btn" onclick={(e) => deleteBoard(board.id, e)} title="Delete board">×</button>
-          <div class="board-meta">Created {formatDate(board.created_at)}</div>
+          <div class="board-meta">
+            <span>Created {formatDate(board.created_at)}</span>
+            {#if board.shared_team_id}
+              <span class="shared-badge">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2C6.44772 2 6 2.44772 6 3V5H4C3.44772 5 3 5.44772 3 6V7C3 7.55228 4.44772 9 6 9H6V10C6 10.5523 6.44772 11 7 11H7.5C8.05228 11 8.5 10.5523 8.5 10V9H10C11.5523 9 13 7.55228 13 6V5H8.5V3C8.5 2.44772 8.05228 2 7.5 2H7ZM4.5 6C4.5 5.72386 4.72386 5.5 5 5.5H6.5V6H4.5V6ZM10 6V6.5H11.5V6C11.5 5.72386 11.2761 5.5 11 5.5H10V6Z" stroke="currentColor" stroke-width="1"/>
+                </svg>
+                {getTeamName(board.shared_team_id)}
+              </span>
+            {/if}
+          </div>
         </div>
       {/each}
       <button class="board-card create-card" onclick={() => showCreateModal = true}>
@@ -157,6 +191,19 @@
     gap: 0.75rem;
   }
 
+  .nav-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .nav-btn:hover {
+    background: var(--color-muted);
+  }
+
   .logout-btn {
     padding: 0.5rem 1rem;
     background: var(--color-muted);
@@ -209,6 +256,10 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
+  .board-card.shared {
+    border-left: 4px solid var(--color-primary);
+  }
+
   .board-header {
     display: flex;
     justify-content: flex-start;
@@ -249,6 +300,18 @@
   .board-meta {
     font-size: 0.875rem;
     color: var(--color-muted-foreground);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .shared-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 
   .create-card {

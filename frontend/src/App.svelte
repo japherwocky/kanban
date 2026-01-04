@@ -6,6 +6,8 @@
   import Login from './routes/Login.svelte';
   import BoardsList from './routes/BoardsList.svelte';
   import Board from './routes/Board.svelte';
+  import Organizations from './routes/Organizations.svelte';
+  import Organization from './routes/Organization.svelte';
   import NotFound from './routes/NotFound.svelte';
 
   onMount(() => {
@@ -24,6 +26,14 @@
 
   <Route path="/boards/:id" let:params>
     <Board {params} />
+  </Route>
+
+  <Route path="/organizations">
+    <Organizations />
+  </Route>
+
+  <Route path="/organizations/:id" let:params>
+    <Organization {params} />
   </Route>
 
   <Route path="/">

@@ -2,8 +2,9 @@
   import { onMount } from 'svelte';
   import { api } from './api.js';
   import Modal from './Modal.svelte';
+  import ShareModal from './ShareModal.svelte';
 
-  let { board, onBack } = $props();
+  let { board, onBack, availableTeams = [], onShare } = $props();
 
   let columns = $state([]);
   let loading = $state(false);
@@ -20,6 +21,23 @@
   let showCreateColumnModal = $state(false);
   let newColumnName = $state('');
   let createColumnLoading = $state(false);
+  let showShareModal = $state(false);
+
+  // Get current user's id from token
+  let currentUserId = $state(null);
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const tokenData = JSON.parse(atob(token.split('.')[1]));
+      currentUserId = tokenData.sub;
+    }
+  } catch (e) {
+    console.error('Failed to decode token:', e);
+  }
+
+  function isBoardOwner() {
+    return board?.owner_id === currentUserId;
+  }
 
   async function loadBoard() {
     loading = true;
@@ -180,6 +198,14 @@
       <h1>{board.name}</h1>
     </div>
     <div class="header-actions">
+      {#if isBoardOwner()}
+        <button class="share-btn" onclick={() => showShareModal = true}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 3C8.44772 3 8 3.44772 8 4V8H4C3.44772 8 3 8.44772 3 9V10C3 10.6569 4.34315 12 6 12H8V14C8 14.5523 8.44772 15 9 15H9.5C10.0523 15 10.5 14.5523 10.5 14V12H12C13.6569 12 15 10.6569 15 9V8H10.5V4C10.5 3.44772 10.0523 3 9.5 3H9ZM4.5 9C4.5 8.72386 4.72386 8.5 5 8.5H6.5V9H4.5V9ZM12 9V9.5H13.5V9C13.5 8.72386 13.2761 8.5 13 8.5H12V9Z" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          Share
+        </button>
+      {/if}
       <span class="card-count">{columns.reduce((sum, col) => sum + col.cards.length, 0)} cards</span>
     </div>
   </header>
@@ -315,6 +341,16 @@
         {/snippet}
       </Modal>
     {/if}
+
+    {#if showShareModal}
+      <ShareModal
+        open={showShareModal}
+        onClose={() => showShareModal = false}
+        {board}
+        availableTeams={availableTeams}
+        onShare={onShare}
+      />
+    {/if}
   </div>
 
   <style>
@@ -364,6 +400,22 @@
   .card-count {
     font-size: 0.875rem;
     color: var(--color-muted-foreground);
+  }
+
+  .share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+    font-size: 0.875rem;
+  }
+
+  .share-btn:hover {
+    background: var(--color-muted);
+    border-color: var(--color-primary);
   }
 
   .loading {
