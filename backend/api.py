@@ -198,7 +198,13 @@ async def create_board(
 ):
     with db.atomic():
         board = Board.create_with_columns(owner=current_user, name=board_data.name)
-    return {"id": board.id}
+    return {
+        "id": board.id,
+        "name": board.name,
+        "created_at": board.created_at,
+        "shared_team_id": board.shared_team_id,
+        "owner_id": board.owner_id,
+    }
 
 
 @api.get("/boards", response_model=list)

@@ -87,6 +87,15 @@ def test_create_board(client, auth_headers, test_user):
     data = response.json()
     assert "id" in data
     assert isinstance(data["id"], int)
+    # Verify all required fields are present for frontend display
+    assert "name" in data
+    assert data["name"] == "Test Board"
+    assert "created_at" in data
+    assert data["created_at"] is not None
+    assert "shared_team_id" in data
+    assert data["shared_team_id"] is None
+    assert "owner_id" in data
+    assert data["owner_id"] == test_user.id
 
 
 def test_list_boards(client, auth_headers, test_user):
