@@ -2,8 +2,8 @@
   import { theme, getThemeLabel } from './theme.js';
   import { onMount } from 'svelte';
 
-  let currentTheme = 'system';
-  let mounted = false;
+  let currentTheme = $state('system');
+  let mounted = $state(false);
 
   theme.subscribe(t => {
     currentTheme = t;
@@ -25,7 +25,7 @@
 </script>
 
 <button
-  on:click={cycleTheme}
+  onclick={cycleTheme}
   class="theme-toggle"
   title="Toggle theme: {getThemeLabel(currentTheme)}"
   aria-label="Toggle theme"

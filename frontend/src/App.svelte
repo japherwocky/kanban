@@ -5,16 +5,16 @@
   import { api } from './lib/api.js';
   import BoardView from './lib/BoardView.svelte';
 
-  let username = '';
-  let password = '';
-  let token = localStorage.getItem('token');
-  let view = 'login';
-  let boards = [];
-  let boardsLoading = false;
-  let showCreateModal = false;
-  let newBoardName = '';
-  let createLoading = false;
-  let selectedBoard = null;
+  let username = $state('');
+  let password = $state('');
+  let token = $state(localStorage.getItem('token'));
+  let view = $state('login');
+  let boards = $state([]);
+  let boardsLoading = $state(false);
+  let showCreateModal = $state(false);
+  let newBoardName = $state('');
+  let createLoading = $state(false);
+  let selectedBoard = $state(null);
 
   onMount(() => {
     theme.init();
@@ -34,7 +34,7 @@
       if (res.ok) {
         const data = await res.json();
         token = data.access_token;
-        localStorage.setItem('token', token);
+        localStorage.setItem('token', data.access_token);
         view = 'boards';
         await loadBoards();
       } else {
@@ -112,7 +112,7 @@
   {#if !token}
     <div class="login">
       <h1>Kanban Board</h1>
-      <form on:submit|preventDefault={login}>
+      <form onsubmit={(e) => { e.preventDefault(); login(); }}>
         <input bind:value={username} placeholder="Username" required />
         <input type="password" bind:value={password} placeholder="Password" required />
         <button type="submit">Login</button>
@@ -126,7 +126,7 @@
         <h1>Kanban Board</h1>
         <div class="header-actions">
           <ThemeToggle />
-          <button class="logout-btn" on:click={logout}>Logout</button>
+          <button class="logout-btn" onclick={logout}>Logout</button>
         </div>
       </header>
 
@@ -135,20 +135,20 @@
       {:else if boards.length === 0}
         <div class="empty-state">
           <p>No boards yet</p>
-          <button class="create-btn" on:click={() => showCreateModal = true}>Create your first board</button>
+          <button class="create-btn" onclick={() => showCreateModal = true}>Create your first board</button>
         </div>
       {:else}
         <div class="boards-grid">
           {#each boards as board (board.id)}
-            <button class="board-card" on:click={() => selectBoard(board)}>
-              <div class="board-header">
+            <div class="board-card">
+              <button class="board-header" onclick={() => selectBoard(board)}>
                 <h3>{board.name}</h3>
-                <button class="delete-btn" on:click={(e) => deleteBoard(board.id, e)} title="Delete board">×</button>
-              </div>
+              </button>
+              <button class="delete-btn" onclick={(e) => deleteBoard(board.id, e)} title="Delete board">×</button>
               <div class="board-meta">Created {formatDate(board.created_at)}</div>
-            </button>
+            </div>
           {/each}
-          <button class="board-card create-card" on:click={() => showCreateModal = true}>
+          <button class="board-card create-card" onclick={() => showCreateModal = true}>
             <span class="plus">+</span>
             <span>New Board</span>
           </button>
@@ -157,10 +157,10 @@
     </div>
 
     {#if showCreateModal}
-      <div class="modal-overlay" on:click={() => showCreateModal = false}>
-        <div class="modal" on:click|stopPropagation>
+      <div class="modal-overlay" onclick={() => showCreateModal = false}>
+        <div class="modal" onclick={(e) => e.stopPropagation()}>
           <h2>Create New Board</h2>
-          <form on:submit|preventDefault={createBoard}>
+          <form onsubmit={(e) => { e.preventDefault(); createBoard(); }}>
             <input
               bind:value={newBoardName}
               placeholder="Board name"
@@ -168,7 +168,7 @@
               autofocus
             />
             <div class="modal-actions">
-              <button type="button" class="cancel-btn" on:click={() => showCreateModal = false}>Cancel</button>
+              <button type="button" class="cancel-btn" onclick={() => showCreateModal = false}>Cancel</button>
               <button type="submit" class="create-btn" disabled={createLoading}>
                 {createLoading ? 'Creating...' : 'Create Board'}
               </button>
@@ -250,12 +250,6 @@
     margin: 0 auto;
   }
 
-  .board-view {
-    padding: 1.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
   header {
     display: flex;
     justify-content: space-between;
@@ -286,18 +280,6 @@
 
   .logout-btn:hover {
     background: var(--color-border);
-  }
-
-  .back-btn {
-    padding: 0.5rem 1rem;
-    background: transparent;
-    color: var(--color-foreground);
-    border: 1px solid var(--color-border);
-    margin-right: 1rem;
-  }
-
-  .back-btn:hover {
-    background: var(--color-muted);
   }
 
   .loading {

@@ -1,25 +1,24 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { onMount } from 'svelte';
   import { api } from './api.js';
 
-  export let board;
-  export let onBack;
+  let { board, onBack } = $props();
 
-  let columns = board.columns || [];
-  let loading = false;
-  let showCreateCardModal = false;
-  let selectedColumnId = null;
-  let newCardTitle = '';
-  let createLoading = false;
-  let draggedCard = null;
-  let showEditCardModal = false;
-  let editingCard = null;
-  let editTitle = '';
-  let editDescription = '';
-  let editLoading = false;
-  let showCreateColumnModal = false;
-  let newColumnName = '';
-  let createColumnLoading = false;
+  let columns = $state([]);
+  let loading = $state(false);
+  let showCreateCardModal = $state(false);
+  let selectedColumnId = $state(null);
+  let newCardTitle = $state('');
+  let createLoading = $state(false);
+  let draggedCard = $state(null);
+  let showEditCardModal = $state(false);
+  let editingCard = $state(null);
+  let editTitle = $state('');
+  let editDescription = $state('');
+  let editLoading = $state(false);
+  let showCreateColumnModal = $state(false);
+  let newColumnName = $state('');
+  let createColumnLoading = $state(false);
 
   async function loadBoard() {
     loading = true;
@@ -152,6 +151,13 @@
     draggedCard = { ...card, columnId };
   }
 
+  // Sync columns with board changes
+  $effect(() => {
+    if (board?.columns) {
+      columns = [...board.columns];
+    }
+  });
+
   function formatDate(dateStr) {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -164,7 +170,7 @@
 <div class="board-view">
   <header>
     <div class="header-left">
-      <button class="back-btn" on:click={onBack}>
+      <button class="back-btn" onclick={onBack}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M12 4L6 10L12 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -192,19 +198,19 @@
               <div
                 class="cards-list"
                 dndzone={{ items: column.cards, flipDurationMs: 200 }}
-                on:consider={(e) => handleDndConsider(column.id, e)}
-                on:finalize={(e) => handleDndFinalize(column.id, e)}
+                onconsider={(e) => handleDndConsider(column.id, e)}
+                onfinalize={(e) => handleDndFinalize(column.id, e)}
               >
                 {#each column.cards as card (card.id)}
                   <div
                     class="card"
                     draggable="true"
-                    on:dragstart={(e) => handleDragStart(e, card, column.id)}
-                    on:click={() => openEditCard(card)}
+                    ondragstart={(e) => handleDragStart(e, card, column.id)}
+                    onclick={() => openEditCard(card)}
                   >
                     <div class="card-header">
                       <span class="card-title">{card.title}</span>
-                      <button class="delete-btn" on:click={(e) => deleteCard(column.id, card.id, e)}>×</button>
+                      <button class="delete-btn" onclick={(e) => deleteCard(column.id, card.id, e)}>×</button>
                     </div>
                     {#if card.description}
                       <p class="card-description">{card.description}</p>
@@ -221,22 +227,22 @@
               <div class="empty-column">No cards</div>
             {/if}
           </div>
-          <button class="add-card-btn" on:click={() => openCreateCard(column.id)}>
+          <button class="add-card-btn" onclick={() => openCreateCard(column.id)}>
             <span>+</span> Add card
           </button>
         </div>
       {/each}
-      <button class="add-column-btn" on:click={() => { newColumnName = ''; showCreateColumnModal = true; }}>
+      <button class="add-column-btn" onclick={() => { newColumnName = ''; showCreateColumnModal = true; }}>
         <span>+</span> Add Column
       </button>
     </div>
   {/if}
 
-  {#if showCreateCardModal}
-    <div class="modal-overlay" on:click={() => showCreateCardModal = false}>
-      <div class="modal" on:click|stopPropagation>
-        <h2>Add Card</h2>
-        <form on:submit|preventDefault={createCard}>
+    {#if showCreateCardModal}
+      <div class="modal-overlay" onclick={() => showCreateCardModal = false}>
+        <div class="modal" onclick={(e) => e.stopPropagation()}>
+          <h2>Add Card</h2>
+          <form onsubmit={(e) => { e.preventDefault(); createCard(); }}>
           <input
             bind:value={newCardTitle}
             placeholder="Card title"
@@ -244,7 +250,7 @@
             autofocus
           />
           <div class="modal-actions">
-            <button type="button" class="cancel-btn" on:click={() => showCreateCardModal = false}>Cancel</button>
+            <button type="button" class="cancel-btn" onclick={() => showCreateCardModal = false}>Cancel</button>
             <button type="submit" class="create-btn" disabled={createLoading}>
               {createLoading ? 'Adding...' : 'Add Card'}
             </button>
@@ -255,10 +261,10 @@
     {/if}
 
     {#if showEditCardModal}
-      <div class="modal-overlay" on:click={() => showEditCardModal = false}>
-        <div class="modal" on:click|stopPropagation>
+      <div class="modal-overlay" onclick={() => showEditCardModal = false}>
+        <div class="modal" onclick={(e) => e.stopPropagation()}>
           <h2>Edit Card</h2>
-          <form on:submit|preventDefault={saveCard}>
+          <form onsubmit={(e) => { e.preventDefault(); saveCard(); }}>
             <input
               bind:value={editTitle}
               placeholder="Card title"
@@ -271,7 +277,7 @@
               rows="3"
             ></textarea>
             <div class="modal-actions">
-              <button type="button" class="cancel-btn" on:click={() => showEditCardModal = false}>Cancel</button>
+              <button type="button" class="cancel-btn" onclick={() => showEditCardModal = false}>Cancel</button>
               <button type="submit" class="create-btn" disabled={editLoading}>
                 {editLoading ? 'Saving...' : 'Save Changes'}
               </button>
@@ -282,10 +288,10 @@
     {/if}
 
     {#if showCreateColumnModal}
-      <div class="modal-overlay" on:click={() => showCreateColumnModal = false}>
-        <div class="modal" on:click|stopPropagation>
+      <div class="modal-overlay" onclick={() => showCreateColumnModal = false}>
+        <div class="modal" onclick={(e) => e.stopPropagation()}>
           <h2>Add Column</h2>
-          <form on:submit|preventDefault={createColumn}>
+          <form onsubmit={(e) => { e.preventDefault(); createColumn(); }}>
             <input
               bind:value={newColumnName}
               placeholder="Column name"
@@ -293,7 +299,7 @@
               autofocus
             />
             <div class="modal-actions">
-              <button type="button" class="cancel-btn" on:click={() => showCreateColumnModal = false}>Cancel</button>
+              <button type="button" class="cancel-btn" onclick={() => showCreateColumnModal = false}>Cancel</button>
               <button type="submit" class="create-btn" disabled={createColumnLoading}>
                 {createColumnLoading ? 'Adding...' : 'Add Column'}
               </button>
