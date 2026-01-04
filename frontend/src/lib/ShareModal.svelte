@@ -28,62 +28,71 @@
    });
  </script>
 
- {#if open}
-   <Modal open={open} onClose={onClose} title="Share Board">
-     {#snippet children()}
-       <h2 id="modal-title">Share Board: {board?.name}</h2>
+{#if open}
+  <Modal open={open} onClose={onClose} title="Share Board">
+    {#snippet children()}
+      <h2 id="modal-title">Share Board: {board?.name}</h2>
 
-       <div class="share-content">
-         <div class="share-option">
-           <label class="checkbox-label">
-             <input
-               type="checkbox"
-               bind:checked={isPublicToOrg}
-               id="public-checkbox"
-             />
-             <span>Public to organization</span>
-           </label>
-           <p class="share-help">When public, all organization members can view and edit this board.</p>
-         </div>
+      {#if availableTeams.length === 0}
+        <div class="no-teams-message">
+          <div class="message-icon">📋</div>
+          <h3>Create an organization first</h3>
+          <p>To share this board with others, you need to create an organization and add members.</p>
+          <button class="create-org-btn" onclick={onClose}>Go to Organizations</button>
+        </div>
+      {:else}
+        <div class="share-content">
+          <div class="share-option">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                bind:checked={isPublicToOrg}
+                id="public-checkbox"
+              />
+              <span>Public to organization</span>
+            </label>
+            <p class="share-help">When public, all organization members can view and edit this board.</p>
+          </div>
 
-         {#if !isPublicToOrg}
-           <label class="share-label">Share with team:</label>
-           <select
-             class="team-select"
-             bind:value={selectedTeamId}
-             disabled={isPublicToOrg}
-           >
-             <option value={null}>Not shared</option>
-             {#each availableTeams as team}
-               <option value={team.id}>{team.name} ({team.organization})</option>
-             {/each}
-           </select>
-         {/if}
+          {#if !isPublicToOrg}
+            <label class="share-label">Share with team:</label>
+            <select
+              class="team-select"
+              bind:value={selectedTeamId}
+              disabled={isPublicToOrg}
+            >
+              <option value={null}>Not shared</option>
+              {#each availableTeams as team}
+                <option value={team.id}>{team.name} ({team.organization})</option>
+              {/each}
+            </select>
+          {/if}
 
-         <div class="share-info">
-           {#if isPublicToOrg && !board?.is_public_to_org}
-             <p class="info">ℹ️ This will make the board accessible to all organization members.</p>
-           {:else if !isPublicToOrg && board?.shared_team_id && !selectedTeamId}
-             <p class="warning">⚠️ This will unshare the board from its current team.</p>
-           {:else if !isPublicToOrg && selectedTeamId && selectedTeamId !== board?.shared_team_id}
-             <p class="info">ℹ️ This will share the board with the selected team. All team members will be able to view and edit.</p>
-           {:else if !isPublicToOrg && !board?.shared_team_id && !selectedTeamId}
-             <p class="info">ℹ️ Sharing a board allows all team members to view and edit it.</p>
-           {:else}
-             <p class="info">ℹ️ This board is currently {board?.is_public_to_org ? 'public to the organization' : 'shared with ' + availableTeams.find(t => t.id === board.shared_team_id)?.name + '.'}</p>
-           {/if}
-         </div>
-       </div>
+          <div class="share-info">
+            {#if isPublicToOrg && !board?.is_public_to_org}
+              <p class="info">ℹ️ This will make the board accessible to all organization members.</p>
+            {:else if !isPublicToOrg && board?.shared_team_id && !selectedTeamId}
+              <p class="warning">⚠️ This will unshare the board from its current team.</p>
+            {:else if !isPublicToOrg && selectedTeamId && selectedTeamId !== board?.shared_team_id}
+              <p class="info">ℹ️ This will share the board with the selected team. All team members will be able to view and edit.</p>
+            {:else if !isPublicToOrg && !board?.shared_team_id && !selectedTeamId}
+              <p class="info">ℹ️ Sharing a board allows all team members to view and edit it.</p>
+            {:else}
+              <p class="info">ℹ️ This board is currently {board?.is_public_to_org ? 'public to the organization' : 'shared with ' + availableTeams.find(t => t.id === board.shared_team_id)?.name + '.'}</p>
+            {/if}
+          </div>
+        </div>
 
-       <div class="modal-actions">
-         <button type="button" class="cancel-btn" onclick={onClose}>Cancel</button>
-         <button type="button" class="create-btn" onclick={handleShare} disabled={loading}>
-           {loading ? 'Saving...' : 'Save'}
-         </button>
-       </div>
-     {/snippet}
-   </Modal>
- {/if}
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" onclick={onClose}>Cancel</button>
+          <button type="button" class="create-btn" onclick={handleShare} disabled={loading}>
+            {loading ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      {/if}
+    {/snippet}
+  </Modal>
+{/if}
 
 <style>
    #modal-title {
@@ -170,12 +179,54 @@
      border:1px solid var(--color-destructive, #fecaca);
    }
 
-   .share-info .info {
-     background: var(--color-muted);
-     color: var(--color-foreground);
-   }
+    .share-info .info {
+      background: var(--color-muted);
+      color: var(--color-foreground);
+    }
 
-   .modal-actions {
+    .no-teams-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .message-icon {
+      font-size: 3rem;
+      opacity: 0.5;
+    }
+
+    .no-teams-message h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--color-foreground);
+      margin: 0;
+    }
+
+    .no-teams-message p {
+      font-size: 0.9rem;
+      color: var(--color-muted-foreground);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .create-org-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--color-primary);
+      color: var(--color-primary-foreground);
+      border: none;
+      font-size: 0.875rem;
+      border-radius: 8px;
+    }
+
+    .create-org-btn:hover {
+      opacity: 0.9;
+    }
+
+    .modal-actions {
      display: flex;
      justify-content: flex-end;
      gap: 0.75rem;
