@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { api } from './api.js';
+  import Modal from './Modal.svelte';
 
   let { board, onBack } = $props();
 
@@ -207,6 +208,15 @@
                     draggable="true"
                     ondragstart={(e) => handleDragStart(e, card, column.id)}
                     onclick={() => openEditCard(card)}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openEditCard(card);
+                      }
+                    }}
+                    role="button"
+                    tabindex="0"
+                    aria-label={card.description ? `Edit card: ${card.title}. ${card.description}` : `Edit card: ${card.title}`}
                   >
                     <div class="card-header">
                       <span class="card-title">{card.title}</span>
@@ -239,37 +249,35 @@
   {/if}
 
     {#if showCreateCardModal}
-      <div class="modal-overlay" onclick={() => showCreateCardModal = false}>
-        <div class="modal" onclick={(e) => e.stopPropagation()}>
-          <h2>Add Card</h2>
+      <Modal open={showCreateCardModal} onClose={() => showCreateCardModal = false} title="Add Card">
+        {#snippet children()}
+          <h2 id="modal-title">Add Card</h2>
           <form onsubmit={(e) => { e.preventDefault(); createCard(); }}>
-          <input
-            bind:value={newCardTitle}
-            placeholder="Card title"
-            required
-            autofocus
-          />
-          <div class="modal-actions">
-            <button type="button" class="cancel-btn" onclick={() => showCreateCardModal = false}>Cancel</button>
-            <button type="submit" class="create-btn" disabled={createLoading}>
-              {createLoading ? 'Adding...' : 'Add Card'}
-            </button>
+            <input
+              bind:value={newCardTitle}
+              placeholder="Card title"
+              required
+            />
+            <div class="modal-actions">
+              <button type="button" class="cancel-btn" onclick={() => showCreateCardModal = false}>Cancel</button>
+              <button type="submit" class="create-btn" disabled={createLoading}>
+                {createLoading ? 'Adding...' : 'Add Card'}
+              </button>
             </div>
           </form>
-        </div>
-      </div>
+        {/snippet}
+      </Modal>
     {/if}
 
     {#if showEditCardModal}
-      <div class="modal-overlay" onclick={() => showEditCardModal = false}>
-        <div class="modal" onclick={(e) => e.stopPropagation()}>
-          <h2>Edit Card</h2>
+      <Modal open={showEditCardModal} onClose={() => showEditCardModal = false} title="Edit Card">
+        {#snippet children()}
+          <h2 id="modal-title">Edit Card</h2>
           <form onsubmit={(e) => { e.preventDefault(); saveCard(); }}>
             <input
               bind:value={editTitle}
               placeholder="Card title"
               required
-              autofocus
             />
             <textarea
               bind:value={editDescription}
@@ -283,20 +291,19 @@
               </button>
             </div>
           </form>
-        </div>
-      </div>
+        {/snippet}
+      </Modal>
     {/if}
 
     {#if showCreateColumnModal}
-      <div class="modal-overlay" onclick={() => showCreateColumnModal = false}>
-        <div class="modal" onclick={(e) => e.stopPropagation()}>
-          <h2>Add Column</h2>
+      <Modal open={showCreateColumnModal} onClose={() => showCreateColumnModal = false} title="Add Column">
+        {#snippet children()}
+          <h2 id="modal-title">Add Column</h2>
           <form onsubmit={(e) => { e.preventDefault(); createColumn(); }}>
             <input
               bind:value={newColumnName}
               placeholder="Column name"
               required
-              autofocus
             />
             <div class="modal-actions">
               <button type="button" class="cancel-btn" onclick={() => showCreateColumnModal = false}>Cancel</button>
@@ -305,8 +312,8 @@
               </button>
             </div>
           </form>
-        </div>
-      </div>
+        {/snippet}
+      </Modal>
     {/if}
   </div>
 
@@ -539,38 +546,11 @@
     font-weight: 300;
   }
 
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    z-index: 50;
-  }
-
-  .modal {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  }
-
-  .modal h2 {
+  #modal-title {
     margin: 0 0 1.25rem 0;
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--color-foreground);
-  }
-
-  .modal form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
   }
 
   input {
