@@ -37,17 +37,17 @@ class User(BaseModel):
 class Organization(BaseModel):
     name = CharField(max_length=200)
     slug = CharField(max_length=200, unique=True)
+    owner = ForeignKeyField(User, backref="owned_organizations")
     created_at = DateTimeField()
 
     @classmethod
-    def create_with_columns(cls, name, slug):
-        return cls.create(name=name, slug=slug, created_at=datetime.now(timezone.utc))
+    def create_with_columns(cls, name, slug, owner):
+        return cls.create(name=name, slug=slug, owner=owner, created_at=datetime.now(timezone.utc))
 
 
 class OrganizationMember(BaseModel):
     user = ForeignKeyField(User, backref="organization_memberships")
     organization = ForeignKeyField(Organization, backref="members")
-    role = CharField(max_length=20)  # owner | admin | member
     joined_at = DateTimeField()
 
     class Meta:  # type: ignore
@@ -69,7 +69,6 @@ class Team(BaseModel):
 class TeamMember(BaseModel):
     user = ForeignKeyField(User, backref="team_memberships")
     team = ForeignKeyField(Team, backref="members")
-    role = CharField(max_length=20)  # admin | member
     joined_at = DateTimeField()
 
     class Meta:  # type: ignore
@@ -82,10 +81,11 @@ class Board(BaseModel):
     owner = ForeignKeyField(User, backref="boards")
     name = CharField(max_length=200)
     shared_team = ForeignKeyField(Team, null=True, backref="boards")
+    is_public_to_org = BooleanField(default=False)
     created_at = DateTimeField()
 
     @classmethod
-    def create_with_columns(cls, owner, name, shared_team=None, column_names=None):
+    def create_with_columns(cls, owner, name, shared_team=None, is_public_to_org=False, column_names=None):
         if column_names is None:
             column_names = ["To Do", "In Progress", "For Review"]
 
@@ -93,6 +93,7 @@ class Board(BaseModel):
             owner=owner,
             name=name,
             shared_team=shared_team,
+            is_public_to_org=is_public_to_org,
             created_at=datetime.now(timezone.utc)
         )
         for i, col_name in enumerate(column_names):

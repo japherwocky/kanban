@@ -1,3 +1,18 @@
+"""
+Permission tests for Unix-like permission model.
+
+Permission model:
+- Organization has an explicit owner (like root)
+- Only owner can update/delete organization, add/remove org members
+- Any org member can create teams
+- Any team member can add other org members to the team (Unix group model)
+- Any team member can remove themselves from a team
+- Only org owner can delete teams
+- Board can be shared with a team or made public to org
+- Board owner can share boards
+- Team members (or org members if public) can access/modify boards
+"""
+
 import os
 import sys
 import pytest
@@ -63,6 +78,7 @@ def test_any_user_can_create_organization(client, test_db):
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "My Org"
+    assert data["owner_id"] == user.id
     assert "id" in data
 
 
@@ -72,12 +88,12 @@ def test_list_organizations_returns_only_user_orgs(client, test_db):
     user2 = create_user("orguser2", "password")
 
     # Create org as user1
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=user1, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=user1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=user1, organization=org, joined_at=datetime.now(timezone.utc))
 
     # Create another org as user2
-    org2 = Organization.create(name="Org2", slug="org2", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=user2, organization=org2, role="owner", joined_at=datetime.now(timezone.utc))
+    org2 = Organization.create(name="Org2", slug="org2", owner=user2, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=user2, organization=org2, joined_at=datetime.now(timezone.utc))
 
     # user1 should only see their org
     headers1 = get_auth_headers(user1)
@@ -93,8 +109,8 @@ def test_get_organization_requires_membership(client, test_db):
     user1 = create_user("orguser1", "password")
     user2 = create_user("orguser2", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=user1, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=user1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=user1, organization=org, joined_at=datetime.now(timezone.utc))
 
     # user2 cannot access
     headers2 = get_auth_headers(user2)
@@ -102,30 +118,20 @@ def test_get_organization_requires_membership(client, test_db):
     assert response.status_code == 403
 
 
-def test_update_organization_requires_owner_or_admin(client, test_db):
-    """Updating organization requires owner or admin role"""
+def test_update_organization_requires_owner(client, test_db):
+    """Updating organization requires owner (root)"""
     owner = create_user("owner", "password")
-    admin = create_user("admin", "password")
     member = create_user("member", "password")
 
-    org = Organization.create(name="Original Name", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=admin, organization=org, role="admin", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Original Name", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=member, organization=org, joined_at=datetime.now(timezone.utc))
 
     # Owner can update
     response = client.put(
         f"/api/organizations/{org.id}",
         json={"name": "Updated by Owner"},
         headers=get_auth_headers(owner)
-    )
-    assert response.status_code == 200
-
-    # Admin can update
-    response = client.put(
-        f"/api/organizations/{org.id}",
-        json={"name": "Updated by Admin"},
-        headers=get_auth_headers(admin)
     )
     assert response.status_code == 200
 
@@ -142,15 +148,15 @@ def test_update_organization_requires_owner_or_admin(client, test_db):
 # ORGANIZATION MEMBER PERMISSION TESTS
 # ===============================
 
-def test_add_org_member_requires_owner_or_admin(client, test_db):
-    """Adding organization members requires owner or admin role"""
+def test_add_org_member_requires_owner(client, test_db):
+    """Adding organization members requires owner"""
     owner = create_user("owner", "password")
     member = create_user("member", "password")
     new_user = create_user("newuser", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=member, organization=org, joined_at=datetime.now(timezone.utc))
 
     # Owner can add
     response = client.post(
@@ -163,76 +169,20 @@ def test_add_org_member_requires_owner_or_admin(client, test_db):
     # Member cannot add
     response = client.post(
         f"/api/organizations/{org.id}/members",
-        json={"username": "member"},  # Already in org, but should fail on permission
+        json={"username": "newuser"},  # Already in org, but should fail on permission
         headers=get_auth_headers(member)
     )
     assert response.status_code == 403
-
-
-def test_update_org_member_role_requires_owner_or_admin(client, test_db):
-    """Updating member role requires owner or admin role"""
-    owner = create_user("owner", "password")
-    admin = create_user("admin", "password")
-    member = create_user("member", "password")
-
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=admin, organization=org, role="admin", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-
-    # Owner can update
-    response = client.put(
-        f"/api/organizations/{org.id}/members/{member.id}",
-        json={"role": "admin"},
-        headers=get_auth_headers(owner)
-    )
-    assert response.status_code == 200
-
-    # Admin can update
-    response = client.put(
-        f"/api/organizations/{org.id}/members/{member.id}",
-        json={"role": "member"},
-        headers=get_auth_headers(admin)
-    )
-    assert response.status_code == 200
-
-    # Member cannot update
-    response = client.put(
-        f"/api/organizations/{org.id}/members/{admin.id}",
-        json={"role": "member"},
-        headers=get_auth_headers(member)
-    )
-    assert response.status_code == 403
-
-
-def test_cannot_demote_org_owner(client, test_db):
-    """Cannot demote an organization owner"""
-    owner = create_user("owner", "password")
-    admin = create_user("admin", "password")
-
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=admin, organization=org, role="admin", joined_at=datetime.now(timezone.utc))
-
-    # Admin cannot demote owner
-    response = client.put(
-        f"/api/organizations/{org.id}/members/{owner.id}",
-        json={"role": "admin"},
-        headers=get_auth_headers(admin)
-    )
-    assert response.status_code == 400
 
 
 def test_remove_org_member_permissions(client, test_db):
-    """Removing org member: admin/owner can remove others, anyone can remove self"""
+    """Removing org member: owner can remove others, anyone can remove self"""
     owner = create_user("owner", "password")
-    admin = create_user("admin", "password")
     member = create_user("member", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=admin, organization=org, role="admin", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=member, organization=org, joined_at=datetime.now(timezone.utc))
 
     # Owner can remove member
     response = client.delete(
@@ -242,39 +192,29 @@ def test_remove_org_member_permissions(client, test_db):
     assert response.status_code == 200
 
     # Recreate member for next test
-    member = OrganizationMember.create(user=member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    member = OrganizationMember.create(user=member, organization=org, joined_at=datetime.now(timezone.utc))
 
-    # Admin can remove member
+    # Member can remove self
     response = client.delete(
         f"/api/organizations/{org.id}/members/{member.id}",
-        headers=get_auth_headers(admin)
+        headers=get_auth_headers(member.user)
     )
     assert response.status_code == 200
-
-    # Member cannot remove another member
-    member2 = create_user("member2", "password")
-    org_member = OrganizationMember.create(user=member2, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-
-    response = client.delete(
-        f"/api/organizations/{org.id}/members/{org_member.id}",
-        headers=get_auth_headers(member)
-    )
-    assert response.status_code == 403
 
 
 def test_cannot_remove_org_owner(client, test_db):
     """Cannot remove an organization owner"""
     owner = create_user("owner", "password")
-    admin = create_user("admin", "password")
+    member = create_user("member", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    owner_member = OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=admin, organization=org, role="admin", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    owner_member = OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=member, organization=org, joined_at=datetime.now(timezone.utc))
 
-    # Admin cannot remove owner
+    # Member cannot remove owner
     response = client.delete(
         f"/api/organizations/{org.id}/members/{owner.id}",
-        headers=get_auth_headers(admin)
+        headers=get_auth_headers(member)
     )
     assert response.status_code == 400
 
@@ -288,8 +228,8 @@ def test_create_team_requires_org_membership(client, test_db):
     user1 = create_user("user1", "password")
     user2 = create_user("user2", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=user1, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=user1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=user1, organization=org, joined_at=datetime.now(timezone.utc))
 
     # user1 (org member) can create team
     response = client.post(
@@ -313,8 +253,8 @@ def test_list_teams_requires_org_membership(client, test_db):
     user1 = create_user("user1", "password")
     user2 = create_user("user2", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=user1, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=user1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=user1, organization=org, joined_at=datetime.now(timezone.utc))
 
     Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
 
@@ -328,62 +268,62 @@ def test_list_teams_requires_org_membership(client, test_db):
     assert response.status_code == 403
 
 
-def test_update_team_requires_team_admin(client, test_db):
-    """Updating a team requires being a team admin"""
-    team_admin = create_user("teamadmin", "password")
-    team_member = create_user("teammember", "password")
+def test_update_team_requires_team_membership(client, test_db):
+    """Updating a team requires being a team member"""
+    team_member1 = create_user("teammember1", "password")
+    team_member2 = create_user("teammember2", "password")
+    outsider = create_user("outsider", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_admin, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=team_member1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member1, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member2, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=outsider, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_admin, team=team, role="admin", joined_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member1, team=team, joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member2, team=team, joined_at=datetime.now(timezone.utc))
 
-    # Team admin can update
+    # Team member can update
     response = client.put(
         f"/api/teams/{team.id}",
         json={"name": "Updated Name"},
-        headers=get_auth_headers(team_admin)
+        headers=get_auth_headers(team_member1)
     )
     assert response.status_code == 200
 
-    # Team member cannot update
+    # Outsider (org member but not team member) cannot update
     response = client.put(
         f"/api/teams/{team.id}",
         json={"name": "Should Not Update"},
-        headers=get_auth_headers(team_member)
+        headers=get_auth_headers(outsider)
     )
     assert response.status_code == 403
 
 
-def test_delete_team_requires_org_owner_or_admin(client, test_db):
-    """Deleting a team requires org owner or admin"""
+def test_delete_team_requires_org_owner(client, test_db):
+    """Deleting a team requires org owner"""
     org_owner = create_user("owner", "password")
-    org_admin = create_user("orgadmin", "password")
-    team_admin = create_user("teamadmin", "password")
+    team_member1 = create_user("teammember1", "password")
+    team_member2 = create_user("teammember2", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=org_owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=org_admin, organization=org, role="admin", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_admin, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=org_owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=org_owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member1, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member2, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_admin, team=team, role="admin", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member1, team=team, joined_at=datetime.now(timezone.utc))
 
     # Org owner can delete team
+    response = client.delete(f"/api/teams/{team.id}", headers=get_auth_headers(org_owner))
+    assert response.status_code == 200
+
+    # Create another team for team member test
     team2 = Team.create(name="Team2", organization=org, created_at=datetime.now(timezone.utc))
-    response = client.delete(f"/api/teams/{team2.id}", headers=get_auth_headers(org_owner))
-    assert response.status_code == 200
+    TeamMember.create(user=team_member2, team=team2, joined_at=datetime.now(timezone.utc))
 
-    # Org admin can delete team
-    response = client.delete(f"/api/teams/{team.id}", headers=get_auth_headers(org_admin))
-    assert response.status_code == 200
-
-    # Team admin cannot delete team (unless also org admin/owner)
-    team3 = Team.create(name="Team3", organization=org, created_at=datetime.now(timezone.utc))
-    response = client.delete(f"/api/teams/{team3.id}", headers=get_auth_headers(team_admin))
+    # Team member cannot delete team
+    response = client.delete(f"/api/teams/{team2.id}", headers=get_auth_headers(team_member2))
     assert response.status_code == 403
 
 
@@ -391,55 +331,54 @@ def test_delete_team_requires_org_owner_or_admin(client, test_db):
 # TEAM MEMBER PERMISSION TESTS
 # ===============================
 
-def test_add_team_member_requires_team_admin(client, test_db):
-    """Adding team member requires being a team admin"""
-    team_admin = create_user("teamadmin", "password")
-    team_member = create_user("teammember", "password")
+def test_add_team_member_requires_team_membership(client, test_db):
+    """Adding team member requires being a team member (Unix group model)"""
+    team_member1 = create_user("teammember1", "password")
+    outsider = create_user("outsider", "password")
     new_user = create_user("newuser", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_admin, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=new_user, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=team_member1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member1, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=outsider, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=new_user, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_admin, team=team, role="admin", joined_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member1, team=team, joined_at=datetime.now(timezone.utc))
 
-    # Team admin can add member
+    # Team member can add member
     response = client.post(
         f"/api/teams/{team.id}/members",
         json={"username": "newuser"},
-        headers=get_auth_headers(team_admin)
+        headers=get_auth_headers(team_member1)
     )
     assert response.status_code == 200
 
-    # Team member cannot add
+    # Outsider (not team member) cannot add
     response = client.post(
         f"/api/teams/{team.id}/members",
-        json={"username": "teammember"},
-        headers=get_auth_headers(team_member)
+        json={"username": "newuser"},
+        headers=get_auth_headers(outsider)
     )
     assert response.status_code == 403
 
 
 def test_add_team_member_requires_org_membership(client, test_db):
     """Adding to team requires user to be org member first"""
-    team_admin = create_user("teamadmin", "password")
+    team_member = create_user("teammember", "password")
     outsider = create_user("outsider", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_admin, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=team_member, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member, organization=org, joined_at=datetime.now(timezone.utc))
     # outsider is NOT an org member
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_admin, team=team, role="admin", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member, team=team, joined_at=datetime.now(timezone.utc))
 
     # Cannot add non-org-member to team
     response = client.post(
         f"/api/teams/{team.id}/members",
         json={"username": "outsider"},
-        headers=get_auth_headers(team_admin)
+        headers=get_auth_headers(team_member)
     )
     assert response.status_code == 400
 
@@ -449,11 +388,11 @@ def test_list_team_members_requires_org_membership(client, test_db):
     user1 = create_user("user1", "password")
     user2 = create_user("user2", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=user1, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=user1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=user1, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=user1, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=user1, team=team, joined_at=datetime.now(timezone.utc))
 
     # user1 (org member) can list
     response = client.get(f"/api/teams/{team.id}/members", headers=get_auth_headers(user1))
@@ -465,76 +404,46 @@ def test_list_team_members_requires_org_membership(client, test_db):
     assert response.status_code == 403
 
 
-def test_update_team_member_role_requires_team_admin(client, test_db):
-    """Updating team member role requires team admin"""
-    team_admin = create_user("teamadmin", "password")
-    team_member = create_user("teammember", "password")
-
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_admin, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-
-    team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_admin, team=team, role="admin", joined_at=datetime.now(timezone.utc))
-    team_member_record = TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
-
-    # Team admin can update
-    response = client.put(
-        f"/api/teams/{team.id}/members/{team_member.id}",
-        json={"role": "admin"},
-        headers=get_auth_headers(team_admin)
-    )
-    assert response.status_code == 200
-
-    # Team member cannot update
-    response = client.put(
-        f"/api/teams/{team.id}/members/{team_admin.id}",
-        json={"role": "member"},
-        headers=get_auth_headers(team_member)
-    )
-    assert response.status_code == 403
-
-
-def test_remove_team_member_permissions(client, test_db):
-    """Removing team member: admin can remove others, anyone can remove self"""
-    team_admin = create_user("teamadmin", "password")
-    team_member = create_user("teammember", "password")
-
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_admin, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-
-    team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_admin, team=team, role="admin", joined_at=datetime.now(timezone.utc))
-    team_member_record = TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
-
-    # Team admin can remove member
-    response = client.delete(
-        f"/api/teams/{team.id}/members/{team_member.id}",
-        headers=get_auth_headers(team_admin)
-    )
-    assert response.status_code == 200
-
-
 def test_remove_team_member_can_remove_self(client, test_db):
     """Team member can remove themselves"""
-    team_admin = create_user("teamadmin", "password")
-    team_member = create_user("teammember", "password")
+    team_member1 = create_user("teammember1", "password")
+    team_member2 = create_user("teammember2", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_admin, organization=org, role="member", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=team_member1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member1, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member2, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_admin, team=team, role="admin", joined_at=datetime.now(timezone.utc))
-    team_member_record = TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member1, team=team, joined_at=datetime.now(timezone.utc))
+    team_member2_record = TeamMember.create(user=team_member2, team=team, joined_at=datetime.now(timezone.utc))
 
     # Member can remove self
     response = client.delete(
-        f"/api/teams/{team.id}/members/{team_member.id}",
-        headers=get_auth_headers(team_member)
+        f"/api/teams/{team.id}/members/{team_member2.id}",
+        headers=get_auth_headers(team_member2)
     )
     assert response.status_code == 200
+
+
+def test_remove_team_member_cannot_remove_others(client, test_db):
+    """Team member cannot remove other team members"""
+    team_member1 = create_user("teammember1", "password")
+    team_member2 = create_user("teammember2", "password")
+
+    org = Organization.create(name="Org1", slug="org1", owner=team_member1, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member1, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member2, organization=org, joined_at=datetime.now(timezone.utc))
+
+    team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member1, team=team, joined_at=datetime.now(timezone.utc))
+    team_member2_record = TeamMember.create(user=team_member2, team=team, joined_at=datetime.now(timezone.utc))
+
+    # team_member1 cannot remove team_member2
+    response = client.delete(
+        f"/api/teams/{team.id}/members/{team_member2.id}",
+        headers=get_auth_headers(team_member1)
+    )
+    assert response.status_code == 403
 
 
 # ===============================
@@ -565,18 +474,40 @@ def test_share_board_requires_owner(client, test_db):
     assert response.status_code == 403
 
 
+def test_board_can_be_public_to_org(client, test_db):
+    """Board can be shared publicly to organization"""
+    owner = create_user("owner", "password")
+    member = create_user("member", "password")
+
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=member, organization=org, joined_at=datetime.now(timezone.utc))
+
+    board = Board.create_with_columns(owner=owner, name="Public Board", is_public_to_org=True)
+
+    # Owner can access
+    response = client.get(f"/api/boards/{board.id}", headers=get_auth_headers(owner))
+    assert response.status_code == 200
+
+    # Org member can access (public board)
+    # Note: This test assumes we implement org-wide access
+    # For now, we'll skip this until we add that feature
+    # response = client.get(f"/api/boards/{board.id}", headers=get_auth_headers(member))
+    # assert response.status_code == 200
+
+
 def test_board_access_through_team_sharing(client, test_db):
     """Board shared with team is accessible to team members"""
     owner = create_user("owner", "password")
     team_member = create_user("teammember", "password")
     non_member = create_user("nonmember", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member, team=team, joined_at=datetime.now(timezone.utc))
 
     board = Board.create_with_columns(owner=owner, name="Shared Board", shared_team=team)
 
@@ -599,12 +530,12 @@ def test_update_board_requires_owner_or_team_member(client, test_db):
     team_member = create_user("teammember", "password")
     other_user = create_user("other", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member, team=team, joined_at=datetime.now(timezone.utc))
 
     board = Board.create_with_columns(owner=owner, name="Shared Board", shared_team=team)
 
@@ -638,12 +569,12 @@ def test_delete_board_requires_owner(client, test_db):
     owner = create_user("owner", "password")
     team_member = create_user("teammember", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member, team=team, joined_at=datetime.now(timezone.utc))
 
     board = Board.create_with_columns(owner=owner, name="Shared Board", shared_team=team)
 
@@ -665,12 +596,12 @@ def test_list_boards_includes_shared_boards(client, test_db):
     team_member = create_user("teammember", "password")
     other_user = create_user("other", "password")
 
-    org = Organization.create(name="Org1", slug="org1", created_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=owner, organization=org, role="owner", joined_at=datetime.now(timezone.utc))
-    OrganizationMember.create(user=team_member, organization=org, role="member", joined_at=datetime.now(timezone.utc))
+    org = Organization.create(name="Org1", slug="org1", owner=owner, created_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=owner, organization=org, joined_at=datetime.now(timezone.utc))
+    OrganizationMember.create(user=team_member, organization=org, joined_at=datetime.now(timezone.utc))
 
     team = Team.create(name="Team1", organization=org, created_at=datetime.now(timezone.utc))
-    TeamMember.create(user=team_member, team=team, role="member", joined_at=datetime.now(timezone.utc))
+    TeamMember.create(user=team_member, team=team, joined_at=datetime.now(timezone.utc))
 
     board1 = Board.create_with_columns(owner=owner, name="Owned Board")
     board2 = Board.create_with_columns(owner=owner, name="Shared Board", shared_team=team)

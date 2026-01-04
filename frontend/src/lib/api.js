@@ -30,9 +30,9 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
     delete: (id) => apiFetch(`/api/boards/${id}`, { method: 'DELETE' }),
-    share: (id, teamId) => apiFetch(`/api/boards/${id}/share`, {
+    share: (id, teamId, isPublicToOrg = false) => apiFetch(`/api/boards/${id}/share`, {
       method: 'POST',
-      body: JSON.stringify({ team_id: teamId }),
+      body: JSON.stringify({ team_id: teamId, is_public_to_org: isPublicToOrg }),
     }),
   },
   columns: {
@@ -70,10 +70,6 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ username }),
       }),
-      updateRole: (orgId, userId, role) => apiFetch(`/api/organizations/${orgId}/members/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ role }),
-      }),
       remove: (orgId, userId) => apiFetch(`/api/organizations/${orgId}/members/${userId}`, {
         method: 'DELETE',
       }),
@@ -97,10 +93,6 @@ export const api = {
       add: (teamId, username) => apiFetch(`/api/teams/${teamId}/members`, {
         method: 'POST',
         body: JSON.stringify({ username }),
-      }),
-      updateRole: (teamId, userId, role) => apiFetch(`/api/teams/${teamId}/members/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ role }),
       }),
       remove: (teamId, userId) => apiFetch(`/api/teams/${teamId}/members/${userId}`, {
         method: 'DELETE',

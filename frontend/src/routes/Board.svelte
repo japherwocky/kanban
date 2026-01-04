@@ -60,9 +60,9 @@
     navigate('/boards');
   }
 
-  async function handleShare(teamId) {
-    await api.boards.share(board.id, teamId);
-    // Reload board to get updated shared_team_id
+  async function handleShare(teamId, isPublicToOrg) {
+    await api.boards.share(board.id, teamId, isPublicToOrg);
+    // Reload board to get updated shared_team_id and is_public_to_org
     board = await api.boards.get(board.id);
   }
 </script>

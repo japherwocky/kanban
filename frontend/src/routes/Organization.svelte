@@ -60,13 +60,8 @@
     }
   }
 
-  function getMyRole() {
-    return members.find(m => m.username === currentUsername)?.role || null;
-  }
-
-  function canManageMembers() {
-    const role = getMyRole();
-    return role === 'owner' || role === 'admin';
+  function isOwner() {
+    return organization?.owner_id && members.find(m => m.user_id === organization.owner_id && m.username === currentUsername);
   }
 
   async function addMember() {
@@ -84,19 +79,8 @@
     }
   }
 
-  async function updateMemberRole(userId, newRole) {
-    try {
-      await api.organizations.members.updateRole(params.id, userId, newRole);
-      members = members.map(m =>
-        m.user_id === userId ? { ...m, role: newRole } : m
-      );
-    } catch (e) {
-      alert('Failed to update role: ' + e.message);
-    }
-  }
-
   async function removeMember(userId, username) {
-    if (!confirm(`Remove ${username} from the organization?`)) return;
+    if (!confirm(`Remove ${username} from organization?`)) return;
     try {
       await api.organizations.members.remove(params.id, userId);
       members = members.filter(m => m.user_id !== userId);
@@ -143,8 +127,8 @@
     }
   }
 
-  function canManageTeam(teamId) {
-    return teamMembers.find(m => m.username === currentUsername)?.role === 'admin';
+  function isTeamMember() {
+    return teamMembers.find(m => m.username === currentUsername);
   }
 
   async function addTeamMember() {
@@ -161,32 +145,13 @@
     }
   }
 
-  async function updateTeamMemberRole(userId, newRole) {
-    try {
-      await api.teams.members.updateRole(selectedTeam.id, userId, newRole);
-      teamMembers = teamMembers.map(m =>
-        m.user_id === userId ? { ...m, role: newRole } : m
-      );
-    } catch (e) {
-      alert('Failed to update role: ' + e.message);
-    }
-  }
-
   async function removeTeamMember(userId, username) {
-    if (!confirm(`Remove ${username} from the team?`)) return;
+    if (!confirm(`Remove ${username} from team?`)) return;
     try {
       await api.teams.members.remove(selectedTeam.id, userId);
       teamMembers = teamMembers.filter(m => m.user_id !== userId);
     } catch (e) {
       alert('Failed to remove team member: ' + e.message);
-    }
-  }
-
-  function getRoleBadgeColor(role) {
-    switch (role) {
-      case 'owner': return 'var(--color-primary)';
-      case 'admin': return 'var(--color-secondary)';
-      default: return 'var(--color-muted-foreground)';
     }
   }
 
@@ -240,7 +205,7 @@
         <div class="section">
           <div class="section-header">
             <h2>Members</h2>
-            {#if canManageMembers()}
+            {#if isOwner()}
               <button class="add-btn" onclick={() => showAddMemberModal = true}>+ Add Member</button>
             {/if}
           </div>
@@ -253,27 +218,19 @@
                 <div class="member-item">
                   <div class="member-info">
                     <span class="member-username">{member.username}</span>
-                    <span class="member-role" style="color: {getRoleBadgeColor(member.role)}">
-                      {member.role}
-                    </span>
+                    {#if member.user_id === organization?.owner_id}
+                      <span class="owner-badge">Owner</span>
+                    {/if}
                   </div>
                   <div class="member-actions">
-                    {#if canManageMembers() && member.role !== 'owner'}
-                      <select
-                        class="role-select"
-                        value={member.role}
-                        onchange={(e) => updateMemberRole(member.user_id, e.target.value)}
-                      >
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                    {#if isOwner() && member.user_id !== organization?.owner_id}
                       <button
                         class="remove-btn"
                         onclick={() => removeMember(member.user_id, member.username)}
                       >
                         Remove
                       </button>
-                    {:else if member.username === currentUsername}
+                    {:else if member.username === currentUsername && member.user_id !== organization?.owner_id}
                       <button
                         class="leave-btn"
                         onclick={() => removeMember(member.user_id, member.username)}
@@ -308,7 +265,7 @@
                     <button class="members-btn" onclick={() => openTeamMembers(team)}>
                       Members
                     </button>
-                    {#if canManageMembers()}
+                    {#if isOwner()}
                       <button
                         class="delete-team-btn"
                         onclick={() => deleteTeam(team.id, team.name)}
@@ -332,6 +289,7 @@
   <Modal open={showAddMemberModal} onClose={() => showAddMemberModal = false} title="Add Member">
     {#snippet children()}
       <h2 id="modal-title">Add Member</h2>
+      <p class="modal-help">Enter the username of the person you want to add to this organization.</p>
       <form onsubmit={(e) => { e.preventDefault(); addMember(); }}>
         <input
           bind:value={newMemberUsername}
@@ -354,6 +312,7 @@
   <Modal open={showCreateTeamModal} onClose={() => showCreateTeamModal = false} title="Create Team">
     {#snippet children()}
       <h2 id="modal-title">Create Team</h2>
+      <p class="modal-help">Teams allow you to share boards with a subset of organization members.</p>
       <form onsubmit={(e) => { e.preventDefault(); createTeam(); }}>
         <input
           bind:value={newTeamName}
@@ -387,20 +346,9 @@
             <div class="team-member-item">
               <div class="member-info">
                 <span class="member-username">{member.username}</span>
-                <span class="member-role" style="color: var(--color-secondary)">
-                  {member.role}
-                </span>
               </div>
               <div class="member-actions">
-                {#if canManageTeam(selectedTeam?.id) && member.username !== currentUsername}
-                  <select
-                    class="role-select"
-                    value={member.role}
-                    onchange={(e) => updateTeamMemberRole(member.user_id, e.target.value)}
-                  >
-                    <option value="member">Member</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                {#if member.username !== currentUsername && isTeamMember()}
                   <button
                     class="remove-btn"
                     onclick={() => removeTeamMember(member.user_id, member.username)}
@@ -421,19 +369,23 @@
         {/if}
       </div>
 
-      {#if canManageTeam(selectedTeam?.id)}
-        <form class="add-member-form" onsubmit={(e) => { e.preventDefault(); addTeamMember(); }}>
-          <div class="input-group">
-            <input
-              bind:value={newMemberUsername}
-              placeholder="Username"
-              required
-            />
-            <button type="submit" class="create-btn" disabled={addTeamMemberLoading}>
-              {addTeamMemberLoading ? 'Adding...' : 'Add'}
-            </button>
-          </div>
-        </form>
+      {#if isTeamMember()}
+        <div class="add-member-section">
+          <h3>Add Member</h3>
+          <p class="modal-help">Enter the username of an organization member to add them to this team.</p>
+          <form class="add-member-form" onsubmit={(e) => { e.preventDefault(); addTeamMember(); }}>
+            <div class="input-group">
+              <input
+                bind:value={newMemberUsername}
+                placeholder="Username"
+                required
+              />
+              <button type="submit" class="create-btn" disabled={addTeamMemberLoading}>
+                {addTeamMemberLoading ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+          </form>
+        </div>
       {/if}
 
       <div class="modal-actions">
@@ -591,9 +543,14 @@
     color: var(--color-foreground);
   }
 
-  .member-role {
-    font-size: 0.875rem;
-    text-transform: capitalize;
+  .owner-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
   }
 
   .member-actions {
@@ -653,15 +610,6 @@
     opacity: 0.9;
   }
 
-  .role-select {
-    padding: 0.375rem 0.75rem;
-    border-radius: 6px;
-    border: 1px solid var(--color-border);
-    background: var(--color-card);
-    color: var(--color-foreground);
-    font-size: 0.875rem;
-  }
-
   .remove-btn, .delete-team-btn {
     padding: 0.5rem 1rem;
     background: var(--color-destructive, #ef4444);
@@ -705,10 +653,21 @@
     border-radius: 6px;
   }
 
-  .add-member-form {
+  .add-member-section {
     border-top: 1px solid var(--color-border);
     padding-top: 1.5rem;
     margin-bottom: 1.5rem;
+  }
+
+  .add-member-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin: 0 0 0.5rem 0;
+  }
+
+  .add-member-form {
+    margin-top: 1rem;
   }
 
   .input-group {
@@ -718,6 +677,12 @@
 
   .input-group input {
     flex: 1;
+  }
+
+  .modal-help {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    margin: 0 0 1rem 0;
   }
 
   #modal-title {
@@ -731,7 +696,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
-    margin-top: 0.5rem;
+    margin-top: 1.5rem;
   }
 
   .cancel-btn {

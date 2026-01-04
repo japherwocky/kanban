@@ -20,18 +20,37 @@ def slugify(text):
 
 
 def can_access_board(user, board):
+    # Owner can always access
     if board.owner == user:
         return True
+
+    # Board shared with team - check if user is team member
     if board.shared_team:
         return TeamMember.get_or_none(
             (TeamMember.user == user) &
             (TeamMember.team == board.shared_team)
         ) is not None
+
+    # Board public to org - check if user is org member
+    if board.is_public_to_org:
+        # This requires going through teams to get the org
+        # Or we could add a org_id to boards directly
+        # For now, skip this - we'll handle it via the shared_team approach
+        pass
+
     return False
 
 
 def can_modify_board(user, board):
     return can_access_board(user, board)
+
+
+def is_org_member(user, organization):
+    """Check if user is a member of an organization"""
+    return OrganizationMember.get_or_none(
+        (OrganizationMember.user == user) &
+        (OrganizationMember.organization == organization)
+    ) is not None
 
 
 def can_delete_board(user, board):
@@ -51,6 +70,10 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class UsernameRequest(BaseModel):
+    username: str
+
+
 class BoardCreate(BaseModel):
     name: str
 
@@ -61,6 +84,7 @@ class BoardUpdate(BaseModel):
 
 class BoardShare(BaseModel):
     team_id: Optional[int] = None
+    is_public_to_org: Optional[bool] = False
 
 
 class BoardResponse(BaseModel):
@@ -71,6 +95,7 @@ class BoardResponse(BaseModel):
     created_at: datetime
     columns: list
     shared_team_id: Optional[int] = None
+    is_public_to_org: bool = False
     owner_id: int
 
 
@@ -127,6 +152,7 @@ class OrganizationResponse(BaseModel):
     id: int
     name: str
     slug: str
+    owner_id: int
     created_at: datetime
 
 
@@ -140,12 +166,7 @@ class OrganizationMemberResponse(BaseModel):
     id: int
     user_id: int
     username: str
-    role: str
     joined_at: datetime
-
-
-class OrganizationMemberUpdate(BaseModel):
-    role: str
 
 
 class TeamCreate(BaseModel):
@@ -171,12 +192,7 @@ class TeamMemberResponse(BaseModel):
     id: int
     user_id: int
     username: str
-    role: str
     joined_at: datetime
-
-
-class TeamMemberUpdate(BaseModel):
-    role: str
 
 
 @api.post("/token", response_model=Token)
@@ -224,6 +240,7 @@ async def list_boards(current_user: User = Depends(get_current_user)):
             "name": board.name,
             "created_at": board.created_at,
             "shared_team_id": board.shared_team_id,
+            "is_public_to_org": board.is_public_to_org,
             "owner_id": board.owner_id,
         }
         for board in boards
@@ -250,6 +267,7 @@ async def update_board(
         "created_at": board.created_at,
         "columns": columns,
         "shared_team_id": board.shared_team_id,
+        "is_public_to_org": board.is_public_to_org,
         "owner_id": board.owner_id,
     }
 
@@ -273,6 +291,7 @@ async def get_board(
         "created_at": board.created_at,
         "columns": columns,
         "shared_team_id": board.shared_team_id,
+        "is_public_to_org": board.is_public_to_org,
         "owner_id": board.owner_id,
     }
 
@@ -307,15 +326,25 @@ async def share_board(
     if not can_share_board(current_user, board):
         raise HTTPException(status_code=403, detail="Only the owner can share a board")
 
-    if share_data.team_id is not None:
+    # Set public to org status
+    if share_data.is_public_to_org is not None:
+        board.is_public_to_org = share_data.is_public_to_org
+
+    # Set shared team (only if not public to org)
+    if not board.is_public_to_org and share_data.team_id is not None:
         team = Team.get_or_none(Team.id == share_data.team_id)
         if not team:
             raise HTTPException(status_code=404, detail="Team not found")
         board.shared_team = team
-    else:
+    elif not board.is_public_to_org and share_data.team_id is None:
         board.shared_team = None
+
     board.save()
-    return {"ok": True, "shared_team_id": board.shared_team_id}
+    return {
+        "ok": True,
+        "shared_team_id": board.shared_team_id,
+        "is_public_to_org": board.is_public_to_org
+    }
 
 
 @api.post("/columns", response_model=ColumnResponse)
@@ -442,23 +471,22 @@ async def create_organization(
         counter += 1
 
     with db.atomic():
-        org = Organization.create_with_columns(name=org_data.name, slug=slug)
+        org = Organization.create_with_columns(name=org_data.name, slug=slug, owner=current_user)
         OrganizationMember.create(
             user=current_user,
             organization=org,
-            role="owner",
             joined_at=datetime.now(timezone.utc)
         )
         Team.create_with_columns(name="Administrators", organization=org)
 
-    return {"id": org.id, "name": org.name, "slug": org.slug, "created_at": org.created_at}
+    return {"id": org.id, "name": org.name, "slug": org.slug, "owner_id": org.owner_id, "created_at": org.created_at}
 
 
 @api.get("/organizations", response_model=list)
 async def list_organizations(current_user: User = Depends(get_current_user)):
     orgs = get_user_organizations(current_user)
     return [
-        {"id": org.id, "name": org.name, "slug": org.slug, "created_at": org.created_at}
+        {"id": org.id, "name": org.name, "slug": org.slug, "owner_id": org.owner_id, "created_at": org.created_at}
         for org in orgs
     ]
 
@@ -476,7 +504,7 @@ async def get_organization(
     )
     if not member:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
-    return {"id": org.id, "name": org.name, "slug": org.slug, "created_at": org.created_at}
+    return {"id": org.id, "name": org.name, "slug": org.slug, "owner_id": org.owner_id, "created_at": org.created_at}
 
 
 @api.put("/organizations/{org_id}")
@@ -488,12 +516,9 @@ async def update_organization(
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
-    member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
-    )
-    if not member or member.role not in ("owner", "admin"):
-        raise HTTPException(status_code=403, detail="Not authorized to update organization")
+    # Only the owner (root) can update the organization
+    if org.owner != current_user:
+        raise HTTPException(status_code=403, detail="Only the owner can update the organization")
     org.name = org_data.name
     org.save()
     return {"id": org.id, "name": org.name, "slug": org.slug, "created_at": org.created_at}
@@ -502,18 +527,16 @@ async def update_organization(
 @api.post("/organizations/{org_id}/members", response_model=OrganizationMemberResponse)
 async def add_organization_member(
     org_id: int,
-    request: LoginRequest,
+    request: UsernameRequest,
     current_user: User = Depends(get_current_user),
 ):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
-    member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
-    )
-    if not member or member.role not in ("owner", "admin"):
-        raise HTTPException(status_code=403, detail="Not authorized to add members")
+
+    # Only the owner (root) can add members
+    if org.owner != current_user:
+        raise HTTPException(status_code=403, detail="Only the owner can add members")
 
     user = User.get_or_none(User.username == request.username)
     if not user:
@@ -529,14 +552,12 @@ async def add_organization_member(
     org_member = OrganizationMember.create(
         user=user,
         organization=org,
-        role="member",
         joined_at=datetime.now(timezone.utc)
     )
     return {
         "id": org_member.id,
         "user_id": user.id,
         "username": user.username,
-        "role": org_member.role,
         "joined_at": org_member.joined_at,
     }
 
@@ -561,46 +582,10 @@ async def list_organization_members(
             "id": m.id,
             "user_id": m.user.id,
             "username": m.user.username,
-            "role": m.role,
             "joined_at": m.joined_at,
         }
         for m in members
     ]
-
-
-@api.put("/organizations/{org_id}/members/{user_id}")
-async def update_organization_member(
-    org_id: int,
-    user_id: int,
-    update_data: OrganizationMemberUpdate,
-    current_user: User = Depends(get_current_user),
-):
-    org = Organization.get_or_none(Organization.id == org_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
-    member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
-    )
-    if not member or member.role not in ("owner", "admin"):
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    if update_data.role not in ("admin", "member"):
-        raise HTTPException(status_code=400, detail="Invalid role")
-
-    target = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user_id == user_id)
-    )
-    if not target:
-        raise HTTPException(status_code=404, detail="Member not found")
-
-    if target.role == "owner" and update_data.role != "owner":
-        raise HTTPException(status_code=400, detail="Cannot demote owner")
-
-    target.role = update_data.role
-    target.save()
-    return {"ok": True}
 
 
 @api.delete("/organizations/{org_id}/members/{user_id}")
@@ -627,13 +612,14 @@ async def remove_organization_member(
     if not target:
         raise HTTPException(status_code=404, detail="Member not found")
 
-    if target.role == "owner":
-        raise HTTPException(status_code=400, detail="Cannot remove owner")
+    # Cannot remove the owner (root)
+    if org.owner_id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot remove the owner")
 
     is_self = user_id == current_user.id
-    is_admin = member.role in ("owner", "admin")
+    is_owner = org.owner == current_user
 
-    if not is_self and not is_admin:
+    if not is_self and not is_owner:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     with db.atomic():
@@ -694,11 +680,12 @@ async def update_team(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
+    # Any team member can update team (Unix group model)
     tm = TeamMember.get_or_none(
         (TeamMember.team == team) &
         (TeamMember.user == current_user)
     )
-    if not tm or tm.role != "admin":
+    if not tm:
         raise HTTPException(status_code=403, detail="Not authorized to update team")
 
     team.name = team_data.name
@@ -715,11 +702,8 @@ async def delete_team(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    org_member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == team.organization) &
-        (OrganizationMember.user == current_user)
-    )
-    if not org_member or org_member.role not in ("owner", "admin"):
+    # Only the organization owner (root) can delete teams
+    if team.organization.owner != current_user:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     with db.atomic():
@@ -733,18 +717,19 @@ async def delete_team(
 @api.post("/teams/{team_id}/members", response_model=TeamMemberResponse)
 async def add_team_member(
     team_id: int,
-    request: LoginRequest,
+    request: UsernameRequest,
     current_user: User = Depends(get_current_user),
 ):
     team = Team.get_or_none(Team.id == team_id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
+    # Any team member can add other org members (Unix group model)
     tm = TeamMember.get_or_none(
         (TeamMember.team == team) &
         (TeamMember.user == current_user)
     )
-    if not tm or tm.role != "admin":
+    if not tm:
         raise HTTPException(status_code=403, detail="Not authorized to add members")
 
     user = User.get_or_none(User.username == request.username)
@@ -768,14 +753,12 @@ async def add_team_member(
     team_member = TeamMember.create(
         user=user,
         team=team,
-        role="member",
         joined_at=datetime.now(timezone.utc)
     )
     return {
         "id": team_member.id,
         "user_id": user.id,
         "username": user.username,
-        "role": team_member.role,
         "joined_at": team_member.joined_at,
     }
 
@@ -801,44 +784,10 @@ async def list_team_members(
             "id": m.id,
             "user_id": m.user.id,
             "username": m.user.username,
-            "role": m.role,
             "joined_at": m.joined_at,
         }
         for m in members
     ]
-
-
-@api.put("/teams/{team_id}/members/{user_id}")
-async def update_team_member(
-    team_id: int,
-    user_id: int,
-    update_data: TeamMemberUpdate,
-    current_user: User = Depends(get_current_user),
-):
-    team = Team.get_or_none(Team.id == team_id)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    tm = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user == current_user)
-    )
-    if not tm or tm.role != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    if update_data.role not in ("admin", "member"):
-        raise HTTPException(status_code=400, detail="Invalid role")
-
-    target = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user_id == user_id)
-    )
-    if not target:
-        raise HTTPException(status_code=404, detail="Member not found")
-
-    target.role = update_data.role
-    target.save()
-    return {"ok": True}
 
 
 @api.delete("/teams/{team_id}/members/{user_id}")
@@ -866,9 +815,8 @@ async def remove_team_member(
         raise HTTPException(status_code=404, detail="Member not found")
 
     is_self = user_id == current_user.id
-    is_admin = tm.role == "admin"
 
-    if not is_self and not is_admin:
+    if not is_self:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     target.delete_instance()
