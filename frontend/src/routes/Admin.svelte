@@ -4,6 +4,7 @@
   import { api } from '../lib/api.js';
   import ThemeToggle from '../lib/ThemeToggle.svelte';
   import AdminUsers from './AdminUsers.svelte';
+  import AdminOrganizations from './AdminOrganizations.svelte';
 
   const { params } = $props();
 
@@ -74,7 +75,6 @@
           <button
             class:active={currentSection === 'organizations'}
             onclick={() => navigateTo('organizations')}
-            disabled
           >
             Organizations
           </button>
@@ -98,6 +98,8 @@
       <main class="content">
         {#if currentSection === 'users'}
           <AdminUsers />
+        {:else if currentSection === 'organizations'}
+          <AdminOrganizations />
         {:else}
           <div class="coming-soon">
             <h2>{currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}</h2>

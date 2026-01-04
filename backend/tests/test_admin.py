@@ -217,3 +217,135 @@ def test_reset_password_too_long(client, admin_token, regular_user):
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 400
+
+
+# Admin organization management tests
+def test_list_organizations_requires_admin(client, regular_token):
+    """Regular users cannot list all organizations"""
+    response = client.get("/api/admin/organizations", headers={"Authorization": f"Bearer {regular_token}"})
+    assert response.status_code == 403
+
+
+def test_list_organizations_admin(client, admin_token, regular_token):
+    """Admin can list all organizations"""
+    # Create some test organizations
+    response = client.post(
+        "/api/organizations",
+        json={"name": "Test Org 1"},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    org1_id = response.json()["id"]
+
+    response = client.get("/api/admin/organizations", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+    orgs = response.json()
+    assert len(orgs) >= 1
+    assert any(o["name"] == "Test Org 1" for o in orgs)
+
+
+def test_create_organization_requires_admin(client, regular_token, admin_user):
+    """Regular users cannot create organizations for others via admin API"""
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Admin Org", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_create_organization_admin(client, admin_token, regular_user):
+    """Admin can create organization for any user"""
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Admin Created Org", "owner_id": regular_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    org = response.json()
+    assert org["name"] == "Admin Created Org"
+    assert org["owner_id"] == regular_user.id
+    assert org["owner_username"] == regular_user.username
+
+
+def test_create_organization_invalid_owner(client, admin_token):
+    """Organization creation fails with invalid owner"""
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Bad Org", "owner_id": 99999},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 404
+
+
+def test_update_organization_requires_admin(client, regular_token, admin_user):
+    """Regular users cannot update organizations via admin API"""
+    response = client.put(
+        f"/api/admin/organizations/{admin_user.id}",
+        json={"name": "Hacked", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_update_organization_admin(client, admin_token, regular_user, admin_user):
+    """Admin can update organization"""
+    # Create organization
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "Original Name", "owner_id": admin_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    org_id = response.json()["id"]
+
+    # Update it
+    response = client.put(
+        f"/api/admin/organizations/{org_id}",
+        json={"name": "Updated Name", "owner_id": regular_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    org = response.json()
+    assert org["name"] == "Updated Name"
+    assert org["owner_id"] == regular_user.id
+
+
+def test_update_organization_invalid_owner(client, admin_token, admin_user):
+    """Organization update fails with invalid owner"""
+    response = client.put(
+        f"/api/admin/organizations/{admin_user.id}",
+        json={"name": "Test", "owner_id": 99999},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 404
+
+
+def test_delete_organization_requires_admin(client, regular_token, admin_user):
+    """Regular users cannot delete organizations via admin API"""
+    response = client.delete(
+        f"/api/admin/organizations/{admin_user.id}",
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_delete_organization_admin(client, admin_token, regular_user):
+    """Admin can delete organization"""
+    # Create organization
+    response = client.post(
+        "/api/admin/organizations",
+        json={"name": "To Delete", "owner_id": regular_user.id},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    org_id = response.json()["id"]
+
+    # Delete it
+    response = client.delete(
+        f"/api/admin/organizations/{org_id}",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+
+    # Verify it's deleted
+    from backend.models import Organization
+    assert Organization.get_or_none(Organization.id == org_id) is None
+

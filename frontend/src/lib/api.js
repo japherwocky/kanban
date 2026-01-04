@@ -42,6 +42,20 @@ export const api = {
         body: JSON.stringify({ password }),
       }),
     },
+    organizations: {
+      list: () => apiFetch('/api/admin/organizations'),
+      create: (data) => apiFetch('/api/admin/organizations', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+      update: (orgId, data) => apiFetch(`/api/admin/organizations/${orgId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+      delete: (orgId) => apiFetch(`/api/admin/organizations/${orgId}`, {
+        method: 'DELETE',
+      }),
+    },
   },
   boards: {
     list: () => apiFetch('/api/boards'),

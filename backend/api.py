@@ -221,6 +221,29 @@ class PasswordReset(BaseModel):
     password: str
 
 
+class OrganizationCreateAdmin(BaseModel):
+    name: str
+    owner_id: int
+
+
+class OrganizationUpdateAdmin(BaseModel):
+    name: str
+    owner_id: int
+
+
+class OrganizationResponseAdmin(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    slug: str
+    owner_id: int
+    owner_username: str
+    member_count: int
+    team_count: int
+    created_at: datetime
+
+
 @api.post("/token", response_model=Token)
 async def login(request: LoginRequest):
     user = User.get_or_none(User.username == request.username)
@@ -349,6 +372,133 @@ async def reset_user_password(
 
     user.password_hash = hashpw(reset_data.password.encode('utf-8'), gensalt()).decode('utf-8')
     user.save()
+
+    return {"ok": True}
+
+
+# Admin organization management endpoints
+@api.get("/admin/organizations", response_model=list)
+async def list_admin_organizations(current_admin_user: User = Depends(get_current_admin)):
+    """List all organizations (admin only)"""
+    organizations = Organization.select().order_by(Organization.id)
+    result = []
+    for org in organizations:
+        member_count = OrganizationMember.select().where(OrganizationMember.organization == org).count()
+        team_count = Team.select().where(Team.organization == org).count()
+        result.append({
+            "id": org.id,
+            "name": org.name,
+            "slug": org.slug,
+            "owner_id": org.owner_id,
+            "owner_username": org.owner.username,
+            "member_count": member_count,
+            "team_count": team_count,
+            "created_at": org.created_at,
+        })
+    return result
+
+
+@api.post("/admin/organizations", response_model=OrganizationResponseAdmin)
+async def create_admin_organization(
+    org_data: OrganizationCreateAdmin,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Create an organization (admin only)"""
+    owner = User.get_or_none(User.id == org_data.owner_id)
+    if not owner:
+        raise HTTPException(status_code=404, detail="Owner user not found")
+
+    base_slug = slugify(org_data.name)
+    slug = base_slug
+    counter = 1
+    while Organization.get_or_none(Organization.slug == slug):
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
+    with db.atomic():
+        org = Organization.create_with_columns(name=org_data.name, slug=slug, owner=owner)
+        # Auto-add owner as member
+        OrganizationMember.create(
+            user=owner,
+            organization=org,
+            joined_at=datetime.now(timezone.utc)
+        )
+        # Create default team
+        Team.create_with_columns(name="Administrators", organization=org)
+
+    member_count = OrganizationMember.select().where(OrganizationMember.organization == org).count()
+    team_count = Team.select().where(Team.organization == org).count()
+
+    return {
+        "id": org.id,
+        "name": org.name,
+        "slug": org.slug,
+        "owner_id": org.owner_id,
+        "owner_username": org.owner.username,
+        "member_count": member_count,
+        "team_count": team_count,
+        "created_at": org.created_at,
+    }
+
+
+@api.put("/admin/organizations/{org_id}", response_model=OrganizationResponseAdmin)
+async def update_admin_organization(
+    org_id: int,
+    org_data: OrganizationUpdateAdmin,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Update an organization (admin only)"""
+    org = Organization.get_or_none(Organization.id == org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    new_owner = User.get_or_none(User.id == org_data.owner_id)
+    if not new_owner:
+        raise HTTPException(status_code=404, detail="New owner user not found")
+
+    org.name = org_data.name
+    org.owner = new_owner
+    org.save()
+
+    # If owner changed, add new owner as member if not already
+    existing_member = OrganizationMember.get_or_none(
+        (OrganizationMember.organization == org) &
+        (OrganizationMember.user == new_owner)
+    )
+    if not existing_member:
+        OrganizationMember.create(
+            user=new_owner,
+            organization=org,
+            joined_at=datetime.now(timezone.utc)
+        )
+
+    member_count = OrganizationMember.select().where(OrganizationMember.organization == org).count()
+    team_count = Team.select().where(Team.organization == org).count()
+
+    return {
+        "id": org.id,
+        "name": org.name,
+        "slug": org.slug,
+        "owner_id": org.owner_id,
+        "owner_username": org.owner.username,
+        "member_count": member_count,
+        "team_count": team_count,
+        "created_at": org.created_at,
+    }
+
+
+@api.delete("/admin/organizations/{org_id}")
+async def delete_admin_organization(
+    org_id: int,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Delete an organization (admin only)"""
+    org = Organization.get_or_none(Organization.id == org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    with db.atomic():
+        org.delete_instance(recursive=True)
 
     return {"ok": True}
 
