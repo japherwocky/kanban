@@ -1,5 +1,7 @@
 import os
 import pytest
+import random
+import string
 from backend.database import db
 from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
 
@@ -56,6 +58,15 @@ def test_db(setup_test_db):
 
 
 @pytest.fixture
+def test_user(test_db):
+    """Create a unique test user"""
+    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=8))
+    username = f"testuser_{random_suffix}"
+    user = User.create_user(username, "testpassword")
+    return user
+
+
+@pytest.fixture
 def test_cli_db(setup_test_db):
     """CLI test database fixture"""
     # Override for CLI tests
@@ -88,3 +99,12 @@ def test_cli_db(setup_test_db):
     
     # Restore to regular test database
     os.environ["DATABASE_PATH"] = "test_kanban.db"
+
+
+@pytest.fixture
+def test_cli_user(test_cli_db):
+    """Create a unique CLI test user"""
+    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=8))
+    username = f"testuser_{random_suffix}"
+    user = User.create_user(username, "testpassword")
+    return user

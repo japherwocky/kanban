@@ -22,10 +22,7 @@ from backend.auth import create_access_token
 
 
 
-@pytest.fixture
-def test_user(test_cli_db):
-    user = User.create_user("testuser", "testpassword")
-    return user
+
 
 
 @pytest.fixture
@@ -55,7 +52,7 @@ def test_token_storage():
     assert get_token() is None
 
 
-def test_cli_login_command(client, test_user):
+def test_cli_login_command(client, test_cli_user):
     from kanban.cli import cmd_login
     from kanban.config import get_token
     from kanban.client import KanbanClient
