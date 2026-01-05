@@ -31,18 +31,17 @@ from backend.auth import create_access_token
 
 @pytest.fixture
 def test_db():
+    # Clean up any existing test database
+    if os.path.exists("test_kanban.db"):
+        os.remove("test_kanban.db")
+    
     db.connect()
-    # Drop and recreate tables to ensure clean state
-    db.drop_tables([Card, Column, Board, TeamMember, Team, OrganizationMember, Organization, User])
     db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
     yield db
-    # Cleanup after each test
-    for table in [Card, Column, Board, TeamMember, Team, OrganizationMember, Organization, User]:
-        try:
-            table.delete().execute()
-        except:
-            pass
     db.close()
+    # Clean up test database
+    if os.path.exists("test_kanban.db"):
+        os.remove("test_kanban.db")
 
 
 @pytest.fixture
