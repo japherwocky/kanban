@@ -12,14 +12,14 @@ NC='\033[0m' # No Color
 # Configuration
 DEPLOY_USER="kanban"
 DEPLOY_DIR="/opt/kanban"
+SOURCE_DIR="${SOURCE_DIR:-/tmp/kanban}"
 SERVICE_NAME="kanban"
 DOMAIN="kanban.pearachute.com"
-REPO_URL="git@github.com:pearachute/kanban.git"
 
 echo -e "${GREEN}🚀 Installing Kanban Board to production${NC}"
+echo "Source: $SOURCE_DIR"
+echo "Deploy: $DEPLOY_DIR"
 echo "Domain: $DOMAIN"
-echo "Deploy Directory: $DEPLOY_DIR"
-echo "Service: $SERVICE_NAME"
 echo "User: $DEPLOY_USER"
 echo ""
 
@@ -61,30 +61,27 @@ create_user() {
     echo ""
     echo -e "${GREEN}📋 Add this public key to GitHub as a deploy key:${NC}"
     echo ""
-    cat $DEPLOY_DIR/.ssh/id_ed25519.pub
-    echo ""
+    cat $SSH_KEY.pub
     echo ""
 }
 
-# Function to create directories
-create_directories() {
-    echo -e "${YELLOW}📁 Creating directories...${NC}"
-    mkdir -p $DEPLOY_DIR/{data,logs,backend/static}
-    mkdir -p /var/www/certbot
-    chown -R $DEPLOY_USER:$DEPLOY_USER $DEPLOY_DIR
-    echo "Directories created and owned by $DEPLOY_USER"
-}
+# Function to copy repo from source
+copy_repo() {
+    echo -e "${YELLOW}📥 Copying repository from $SOURCE_DIR...${NC}"
 
-# Function to clone repo
-clone_repo() {
-    echo -e "${YELLOW}📥 Cloning repository...${NC}"
-
-    if [ -d "$DEPLOY_DIR/.git" ]; then
-        echo "Repository already cloned at $DEPLOY_DIR"
-    else
-        sudo -u $DEPLOY_USER git clone $REPO_URL $DEPLOY_DIR
-        echo "Repository cloned"
+    if [ ! -d "$SOURCE_DIR" ]; then
+        echo -e "${RED}Source directory $SOURCE_DIR does not exist${NC}"
+        exit 1
     fi
+
+    if [ -d "$DEPLOY_DIR" ]; then
+        echo "Removing existing $DEPLOY_DIR..."
+        rm -rf $DEPLOY_DIR
+    fi
+
+    cp -r $SOURCE_DIR $DEPLOY_DIR
+    chown -R $DEPLOY_USER:$DEPLOY_USER $DEPLOY_DIR
+    echo "Repository copied to $DEPLOY_DIR"
 }
 
 # Function to setup virtual environment
@@ -183,7 +180,7 @@ create_admin_user() {
     read -p "Enter admin username: " ADMIN_USER
     read -s -p "Enter admin password: " ADMIN_PASS
     echo
-    sudo -u $DEPLOY_USER $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py user-create $ADMIN_USER $ADMIN_PASS --admin
+    sudo -u $DEPLOY_USER DATABASE_PATH=$DEPLOY_DIR/data/kanban.db $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py user-create $ADMIN_USER $ADMIN_PASS --admin
 }
 
 # Function to start service
@@ -200,32 +197,29 @@ main() {
     echo -e "${GREEN}Step 1: User setup with SSH key${NC}"
     create_user
 
-    echo -e "${GREEN}Step 2: Directories${NC}"
-    create_directories
+    echo -e "${GREEN}Step 2: Copy repository${NC}"
+    copy_repo
 
-    echo -e "${GREEN}Step 3: Clone repository${NC}"
-    clone_repo
-
-    echo -e "${GREEN}Step 4: Application setup${NC}"
+    echo -e "${GREEN}Step 3: Application setup${NC}"
     setup_virtualenv
     install_dependencies
     build_frontend
 
-    echo -e "${GREEN}Step 5: Database setup${NC}"
+    echo -e "${GREEN}Step 4: Database setup${NC}"
     setup_database
 
-    echo -e "${GREEN}Step 6: Service configuration${NC}"
+    echo -e "${GREEN}Step 5: Service configuration${NC}"
     setup_systemd
     setup_nginx
     setup_sudoers
 
-    echo -e "${GREEN}Step 7: SSL setup${NC}"
+    echo -e "${GREEN}Step 6: SSL setup${NC}"
     setup_ssl
 
-    echo -e "${GREEN}Step 8: Admin user${NC}"
+    echo -e "${GREEN}Step 7: Admin user${NC}"
     create_admin_user
 
-    echo -e "${GREEN}Step 9: Start service${NC}"
+    echo -e "${GREEN}Step 8: Start service${NC}"
     start_service
 
     echo ""
