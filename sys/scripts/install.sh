@@ -148,11 +148,10 @@ setup_systemd() {
 # Function to setup nginx
 setup_nginx() {
     echo -e "${YELLOW}🌐 Setting up nginx...${NC}"
+    # Install nginx config but don't test/reload yet (certs don't exist)
     cp $DEPLOY_DIR/sys/nginx/kanban.pearachute.com.conf /etc/nginx/sites-available/
     ln -sf /etc/nginx/sites-available/kanban.pearachute.com.conf /etc/nginx/sites-enabled/
-    nginx -t
-    systemctl reload nginx
-    echo "Nginx configured"
+    echo "Nginx config installed (SSL pending certbot)"
 }
 
 # Function to setup sudoers for kanban user
@@ -169,7 +168,10 @@ setup_sudoers() {
 # Function to setup SSL with Let's Encrypt
 setup_ssl() {
     echo -e "${YELLOW}🔒 Setting up SSL with Let's Encrypt...${NC}"
-    certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN || {
+    certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN && {
+        echo "SSL certificates obtained and nginx configured"
+        nginx -t && systemctl reload nginx
+    } || {
         echo -e "${RED}SSL setup failed. You may need to run certbot manually:${NC}"
         echo "certbot --nginx -d $DOMAIN"
     }
