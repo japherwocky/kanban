@@ -13,19 +13,7 @@ from backend.database import db
 from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
 
 
-@pytest.fixture
-def test_db():
-    # Clean up any existing test database
-    if os.path.exists("test_kanban.db"):
-        os.remove("test_kanban.db")
-    
-    db.connect()
-    db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
-    yield db
-    db.close()
-    # Clean up test database
-    if os.path.exists("test_kanban.db"):
-        os.remove("test_kanban.db")
+
 
 
 @pytest.fixture
