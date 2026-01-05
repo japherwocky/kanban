@@ -8,11 +8,15 @@
   let organizations = $state([]);
   let showCreateTeamModal = $state(false);
   let showEditTeamModal = $state(false);
+  let showMembersModal = $state(false);
   let selectedTeam = $state(null);
   let newTeamName = $state('');
   let newTeamOrgId = $state('');
   let editTeamName = $state('');
   let editTeamOrgId = $state('');
+  let teamMembers = $state([]);
+  let availableMembers = $state([]);
+  let addMemberUsername = $state('');
 
   onMount(async () => {
     await Promise.all([loadTeams(), loadOrganizations()]);
@@ -93,6 +97,53 @@
       alert('Failed to delete team: ' + e.message);
     }
   }
+
+  async function openMembersModal(team) {
+    selectedTeam = team;
+    await Promise.all([loadTeamMembers(team.id), loadAvailableMembers(team.id)]);
+    showMembersModal = true;
+  }
+
+  async function loadTeamMembers(teamId) {
+    try {
+      teamMembers = await api.admin.teams.members.list(teamId);
+    } catch (e) {
+      console.error('Failed to load team members:', e);
+      alert('Failed to load team members: ' + e.message);
+    }
+  }
+
+  async function loadAvailableMembers(teamId) {
+    try {
+      availableMembers = await api.admin.teams.members.available(teamId);
+    } catch (e) {
+      console.error('Failed to load available members:', e);
+    }
+  }
+
+  async function addMember() {
+    if (!addMemberUsername.trim()) return;
+
+    try {
+      await api.admin.teams.members.add(selectedTeam.id, addMemberUsername.trim());
+      addMemberUsername = '';
+      await Promise.all([loadTeamMembers(selectedTeam.id), loadAvailableMembers(selectedTeam.id)]);
+    } catch (e) {
+      alert('Failed to add member: ' + e.message);
+    }
+  }
+
+  async function removeMember(userId, username) {
+    if (!confirm(`Remove ${username} from this team?`)) return;
+
+    try {
+      await api.admin.teams.members.remove(selectedTeam.id, userId);
+      teamMembers = teamMembers.filter(m => m.user_id !== userId);
+      await loadAvailableMembers(selectedTeam.id);
+    } catch (e) {
+      alert('Failed to remove member: ' + e.message);
+    }
+  }
 </script>
 
 <div class="tab-header">
@@ -119,6 +170,7 @@
           </div>
         </div>
         <div class="team-actions">
+          <button class="action-btn" onclick={() => openMembersModal(team)}>Members</button>
           <button class="action-btn" onclick={() => openEditTeam(team)}>Edit</button>
           <button class="action-btn delete" onclick={() => deleteTeam(team.id)}>Delete</button>
         </div>
@@ -187,6 +239,52 @@
           <button type="submit" class="create-btn">Save Changes</button>
         </div>
       </form>
+    {/snippet}
+  </Modal>
+{/if}
+
+{#if showMembersModal}
+  <Modal open={showMembersModal} onClose={() => showMembersModal = false} title="Manage Members">
+    {#snippet children()}
+      <h2>Team Members: {selectedTeam?.name}</h2>
+
+      <div class="members-section">
+        <h3>Add Member</h3>
+        <form onsubmit={(e) => { e.preventDefault(); addMember(); }}>
+          <div class="add-member-form">
+            <select bind:value={addMemberUsername} required>
+              <option value="">Select user to add...</option>
+              {#each availableMembers as member}
+                <option value={member.username}>{member.username}</option>
+              {/each}
+              {#if availableMembers.length === 0}
+                <option disabled value="">No available users (all org members are already on this team)</option>
+              {/if}
+            </select>
+            <button type="submit" class="add-btn" disabled={!addMemberUsername || availableMembers.length === 0}>Add</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="members-section">
+        <h3>Current Members ({teamMembers.length})</h3>
+        {#if teamMembers.length === 0}
+          <p class="no-members">No members yet</p>
+        {:else}
+          <div class="members-list">
+            {#each teamMembers as member (member.id)}
+              <div class="member-item">
+                <span class="member-username">@{member.username}</span>
+                <button class="remove-btn" onclick={() => removeMember(member.user_id, member.username)}>Remove</button>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" onclick={() => showMembersModal = false}>Close</button>
+      </div>
     {/snippet}
   </Modal>
 {/if}
@@ -282,8 +380,11 @@
     margin-top: 1rem;
   }
 
-  .action-btn {
+  .team-actions button {
     flex: 1;
+  }
+
+  .action-btn {
     padding: 0.5rem;
     font-size: 0.875rem;
     background: var(--color-muted);
@@ -302,6 +403,88 @@
   }
 
   .action-btn.delete:hover {
+    background: var(--color-destructive);
+    color: var(--color-destructive-foreground);
+  }
+
+  .members-section {
+    margin-bottom: 2rem;
+  }
+
+  .members-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin: 0 0 0.75rem 0;
+  }
+
+  .add-member-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .add-member-form select {
+    flex: 1;
+  }
+
+  .add-btn {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .add-btn:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .add-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .no-members {
+    color: var(--color-muted-foreground);
+    font-style: italic;
+  }
+
+  .members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--color-muted);
+    border-radius: 6px;
+  }
+
+  .member-username {
+    font-weight: 500;
+    color: var(--color-foreground);
+  }
+
+  .remove-btn {
+    background: transparent;
+    color: var(--color-destructive);
+    border: 1px solid var(--color-destructive);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .remove-btn:hover {
     background: var(--color-destructive);
     color: var(--color-destructive-foreground);
   }

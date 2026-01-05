@@ -69,6 +69,17 @@ export const api = {
       delete: (teamId) => apiFetch(`/api/admin/teams/${teamId}`, {
         method: 'DELETE',
       }),
+      members: {
+        list: (teamId) => apiFetch(`/api/admin/teams/${teamId}/members`),
+        available: (teamId) => apiFetch(`/api/admin/teams/${teamId}/available-members`),
+        add: (teamId, username) => apiFetch(`/api/admin/teams/${teamId}/members`, {
+          method: 'POST',
+          body: JSON.stringify({ username }),
+        }),
+        remove: (teamId, userId) => apiFetch(`/api/admin/teams/${teamId}/members/${userId}`, {
+          method: 'DELETE',
+        }),
+      },
     },
     boards: {
       list: () => apiFetch('/api/admin/boards'),

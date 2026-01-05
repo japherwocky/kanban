@@ -646,6 +646,131 @@ async def delete_admin_team(
     return {"ok": True}
 
 
+# Admin team member management endpoints
+@api.get("/admin/teams/{team_id}/members", response_model=list)
+async def list_admin_team_members(
+    team_id: int,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """List all members of a team (admin only)"""
+    team = Team.get_or_none(Team.id == team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    members = TeamMember.select().where(TeamMember.team == team)
+    return [
+        {
+            "id": m.id,
+            "user_id": m.user.id,
+            "username": m.user.username,
+            "joined_at": m.joined_at,
+        }
+        for m in members
+    ]
+
+
+@api.get("/admin/teams/{team_id}/available-members", response_model=list)
+async def list_available_team_members(
+    team_id: int,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """List org members who are not yet on this team (admin only)"""
+    team = Team.get_or_none(Team.id == team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    # Get all org members
+    org_members = OrganizationMember.select().where(
+        OrganizationMember.organization == team.organization
+    )
+
+    # Get existing team member user IDs
+    team_member_ids = set(
+        tm.user.id for tm in TeamMember.select().where(TeamMember.team == team)
+    )
+
+    # Filter out users already on the team
+    available = []
+    for om in org_members:
+        if om.user.id not in team_member_ids:
+            available.append({
+                "id": om.user.id,
+                "user_id": om.user.id,
+                "username": om.user.username,
+            })
+
+    return available
+
+
+@api.post("/admin/teams/{team_id}/members", response_model=dict)
+async def add_admin_team_member(
+    team_id: int,
+    request: UsernameRequest,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Add a member to a team (admin only)"""
+    team = Team.get_or_none(Team.id == team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = User.get_or_none(User.username == request.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Ensure user is a member of the organization
+    org_member = OrganizationMember.get_or_none(
+        (OrganizationMember.organization == team.organization) &
+        (OrganizationMember.user == user)
+    )
+    if not org_member:
+        raise HTTPException(
+            status_code=400,
+            detail=f"User '{user.username}' is not a member of the organization '{team.organization.name}'"
+        )
+
+    # Check if already a team member
+    existing = TeamMember.get_or_none(
+        (TeamMember.team == team) &
+        (TeamMember.user == user)
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="User is already in this team")
+
+    team_member = TeamMember.create(
+        user=user,
+        team=team,
+        joined_at=datetime.now(timezone.utc)
+    )
+    return {
+        "id": team_member.id,
+        "user_id": user.id,
+        "username": user.username,
+        "joined_at": team_member.joined_at,
+    }
+
+
+@api.delete("/admin/teams/{team_id}/members/{user_id}")
+async def remove_admin_team_member(
+    team_id: int,
+    user_id: int,
+    current_admin_user: User = Depends(get_current_admin),
+):
+    """Remove a member from a team (admin only)"""
+    team = Team.get_or_none(Team.id == team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    target = TeamMember.get_or_none(
+        (TeamMember.team == team) &
+        (TeamMember.user_id == user_id)
+    )
+    if not target:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    target.delete_instance()
+    return {"ok": True}
+
+
 # Admin board management endpoints
 @api.get("/admin/boards", response_model=list)
 async def list_admin_boards(current_admin_user: User = Depends(get_current_admin)):

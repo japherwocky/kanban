@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime, timezone
 import pytest
 from fastapi.testclient import TestClient
 
@@ -632,4 +633,165 @@ def test_delete_board_admin(client, admin_token, admin_user):
     # Verify it's deleted
     from backend.models import Board
     assert Board.get_or_none(Board.id == board_id) is None
+
+
+# Admin team member management tests
+
+def test_list_team_members_requires_admin(client, regular_token, admin_token, admin_user):
+    """Regular users cannot list team members via admin API"""
+    # Create organization and team
+    org = Organization.create_with_columns(name="Test Org", slug="test-org", owner=admin_user)
+    team = Team.create_with_columns(name="Test Team", organization=org)
+    OrganizationMember.create(user=admin_user, organization=org, joined_at=datetime.now())
+
+    response = client.get(
+        f"/api/admin/teams/{team.id}/members",
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_list_team_members_admin(client, admin_token, admin_user, regular_user):
+    """Admin can list team members"""
+    # Create organization and team
+    org = Organization.create_with_columns(name="Test Org", slug="test-org", owner=admin_user)
+    team = Team.create_with_columns(name="Test Team", organization=org)
+    OrganizationMember.create(user=admin_user, organization=org, joined_at=datetime.now())
+    OrganizationMember.create(user=regular_user, organization=org, joined_at=datetime.now())
+    TeamMember.create(user=admin_user, team=team, joined_at=datetime.now())
+    TeamMember.create(user=regular_user, team=team, joined_at=datetime.now())
+
+    response = client.get(
+        f"/api/admin/teams/{team.id}/members",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    members = response.json()
+    assert len(members) == 2
+    usernames = {m["username"] for m in members}
+    assert usernames == {"admin", "user"}
+
+
+def test_list_available_team_members_requires_admin(client, regular_token):
+    """Regular users cannot list available team members via admin API"""
+    response = client.get(
+        "/api/admin/teams/1/available-members",
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_list_available_team_members_admin(client, admin_token, admin_user, regular_user):
+    """Admin can list available team members"""
+    # Create organization and team
+    org = Organization.create_with_columns(name="Test Org", slug="test-org", owner=admin_user)
+    team = Team.create_with_columns(name="Test Team", organization=org)
+    OrganizationMember.create(user=admin_user, organization=org, joined_at=datetime.now())
+    OrganizationMember.create(user=regular_user, organization=org, joined_at=datetime.now())
+    TeamMember.create(user=admin_user, team=team, joined_at=datetime.now())  # admin is already on the team
+
+    response = client.get(
+        f"/api/admin/teams/{team.id}/available-members",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    available = response.json()
+    assert len(available) == 1
+    assert available[0]["username"] == "user"
+
+
+def test_add_team_member_requires_admin(client, regular_token):
+    """Regular users cannot add team members via admin API"""
+    response = client.post(
+        "/api/admin/teams/1/members",
+        json={"username": "user"},
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_add_team_member_admin(client, admin_token, admin_user, regular_user):
+    """Admin can add a member to a team"""
+    # Create organization and team
+    org = Organization.create_with_columns(name="Test Org", slug="test-org", owner=admin_user)
+    team = Team.create_with_columns(name="Test Team", organization=org)
+    OrganizationMember.create(user=admin_user, organization=org, joined_at=datetime.now())
+    OrganizationMember.create(user=regular_user, organization=org, joined_at=datetime.now())
+    TeamMember.create(user=admin_user, team=team, joined_at=datetime.now())
+
+    # Add regular user to team
+    response = client.post(
+        f"/api/admin/teams/{team.id}/members",
+        json={"username": "user"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    member = response.json()
+    assert member["username"] == "user"
+
+
+def test_add_team_member_not_in_org(client, admin_token, admin_user, regular_user):
+    """Cannot add user to team if they're not in the organization"""
+    org = Organization.create_with_columns(name="Test Org", slug="test-org", owner=admin_user)
+    team = Team.create_with_columns(name="Test Team", organization=org)
+    OrganizationMember.create(user=admin_user, organization=org, joined_at=datetime.now())
+    TeamMember.create(user=admin_user, team=team, joined_at=datetime.now())
+
+    # Try to add a user who is not in the org
+    response = client.post(
+        f"/api/admin/teams/{team.id}/members",
+        json={"username": "user"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 400
+    assert "not a member of the organization" in response.json()["detail"]
+
+
+def test_add_team_member_already_in_team(client, admin_token, admin_user, regular_user):
+    """Cannot add a user who is already on the team"""
+    org = Organization.create_with_columns(name="Test Org", slug="test-org", owner=admin_user)
+    team = Team.create_with_columns(name="Test Team", organization=org)
+    OrganizationMember.create(user=admin_user, organization=org, joined_at=datetime.now())
+    OrganizationMember.create(user=regular_user, organization=org, joined_at=datetime.now())
+    TeamMember.create(user=admin_user, team=team, joined_at=datetime.now())
+    TeamMember.create(user=regular_user, team=team, joined_at=datetime.now())
+
+    # Try to add regular user again
+    response = client.post(
+        f"/api/admin/teams/{team.id}/members",
+        json={"username": "user"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "User is already in this team"
+
+
+def test_remove_team_member_requires_admin(client, regular_token):
+    """Regular users cannot remove team members via admin API"""
+    response = client.delete(
+        "/api/admin/teams/1/members/1",
+        headers={"Authorization": f"Bearer {regular_token}"}
+    )
+    assert response.status_code == 403
+
+
+def test_remove_team_member_admin(client, admin_token, admin_user, regular_user):
+    """Admin can remove a member from a team"""
+    org = Organization.create_with_columns(name="Test Org", slug="test-org", owner=admin_user)
+    team = Team.create_with_columns(name="Test Team", organization=org)
+    OrganizationMember.create(user=admin_user, organization=org, joined_at=datetime.now())
+    OrganizationMember.create(user=regular_user, organization=org, joined_at=datetime.now())
+    TeamMember.create(user=admin_user, team=team, joined_at=datetime.now())
+    TeamMember.create(user=regular_user, team=team, joined_at=datetime.now())
+
+    # Remove regular user from team
+    response = client.delete(
+        f"/api/admin/teams/{team.id}/members/{regular_user.id}",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+
+    # Verify they're removed
+    remaining = TeamMember.select().where(TeamMember.team == team)
+    assert remaining.count() == 1
 
