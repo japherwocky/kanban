@@ -128,8 +128,8 @@ build_frontend() {
 # Function to setup database
 setup_database() {
     echo -e "${YELLOW}🗄️ Setting up database...${NC}"
-    if [ ! -f "$DEPLOY_DIR/data/kanban.db" ]; then
-        sudo -u $DEPLOY_USER DATABASE_PATH=$DEPLOY_DIR/data/kanban.db $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py init
+    if [ ! -f "$DEPLOY_DIR/kanban.db" ]; then
+        sudo -u $DEPLOY_USER DATABASE_PATH=$DEPLOY_DIR/kanban.db $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py init
         echo "Database initialized"
     else
         echo "Database already exists"
@@ -181,7 +181,7 @@ create_admin_user() {
     read -p "Enter admin username: " ADMIN_USER
     read -s -p "Enter admin password: " ADMIN_PASS
     echo
-    sudo -u $DEPLOY_USER DATABASE_PATH=$DEPLOY_DIR/data/kanban.db $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py user-create $ADMIN_USER $ADMIN_PASS --admin
+    sudo -u $DEPLOY_USER DATABASE_PATH=$DEPLOY_DIR/kanban.db $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py user-create $ADMIN_USER $ADMIN_PASS --admin
 }
 
 # Function to start service
