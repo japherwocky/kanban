@@ -131,7 +131,7 @@ build_frontend() {
 setup_database() {
     echo -e "${YELLOW}🗄️ Setting up database...${NC}"
     if [ ! -f "$DEPLOY_DIR/data/kanban.db" ]; then
-        sudo -u $DEPLOY_USER $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py init
+        sudo -u $DEPLOY_USER DATABASE_PATH=$DEPLOY_DIR/data/kanban.db $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py init
         echo "Database initialized"
     else
         echo "Database already exists"
