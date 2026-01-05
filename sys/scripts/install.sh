@@ -103,7 +103,17 @@ setup_virtualenv() {
 install_dependencies() {
     echo -e "${YELLOW}📦 Installing system dependencies...${NC}"
     apt-get update
-    apt-get install -y python3-venv python3-pip nginx certbot python3-certbot-nginx git
+    apt-get install -y python3-venv python3-pip nginx certbot python3-certbot-nginx git curl
+
+    # Install Node.js 20 (required for frontend)
+    echo -e "${YELLOW}📦 Installing Node.js 20...${NC}"
+    if ! command -v node &>/dev/null || [ "$(node --version | cut -d'v' -f2 | cut -d'.' -f1)" -lt 20 ]; then
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+        echo "Node.js $(node --version) installed"
+    else
+        echo "Node.js $(node --version) already installed"
+    fi
 
     echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
     sudo -u $DEPLOY_USER $DEPLOY_DIR/venv/bin/pip install --upgrade pip
