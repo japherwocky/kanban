@@ -120,6 +120,7 @@ install_dependencies() {
 # Function to build frontend
 build_frontend() {
     echo -e "${YELLOW}🏗️ Building frontend...${NC}"
+    sudo -u $DEPLOY_USER bash -c "cd $DEPLOY_DIR/frontend && rm -rf node_modules package-lock.json"
     sudo -u $DEPLOY_USER bash -c "cd $DEPLOY_DIR/frontend && npm install"
     sudo -u $DEPLOY_USER bash -c "cd $DEPLOY_DIR/frontend && npm run build"
 }
