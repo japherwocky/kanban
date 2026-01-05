@@ -25,7 +25,7 @@ echo ""
 
 # Function to check if running as root
 check_root() {
-    if [ "$EUID" -ne 0 ]; then
+    if [ "$(id -u)" -ne 0 ]; then
         echo -e "${RED}This script must be run as root (use sudo)${NC}"
         exit 1
     fi
