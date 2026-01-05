@@ -17,7 +17,8 @@ echo ""
 
 # Check if running as kanban user
 check_user() {
-    if [[ "$(whoami)" != "kanban" ]]; then
+    CURRENT_USER=$(whoami)
+    if [ "$CURRENT_USER" != "kanban" ]; then
         echo -e "${RED}This script must be run as the kanban user:${NC}"
         echo "  sudo -u kanban $DEPLOY_DIR/sys/scripts/deploy.sh"
         exit 1
