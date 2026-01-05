@@ -17,6 +17,8 @@ from backend.auth import create_access_token
 @pytest.fixture(autouse=True)
 def setup_database():
     """Reset database before each test"""
+    if not db.is_connection_usable():
+        db.connect()
     db.drop_tables([Board, Column, TeamMember, Team, OrganizationMember, Organization, User])
     db.create_tables([User, Organization, OrganizationMember, Team, TeamMember, Board, Column])
 

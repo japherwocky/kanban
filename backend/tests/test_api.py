@@ -13,26 +13,28 @@ from backend.database import db
 from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def test_db():
+    # Clean up any existing test database
+    if os.path.exists("test_kanban.db"):
+        os.remove("test_kanban.db")
+    
     db.connect()
     db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
     yield db
-    for table in [Card, Column, Board, TeamMember, TeamMember, OrganizationMember, Organization, User]:
-        try:
-            table.delete().execute()
-        except:
-            pass
     db.close()
+    # Clean up test database
+    if os.path.exists("test_kanban.db"):
+        os.remove("test_kanban.db")
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def test_user(test_db):
     user = User.create_user("testuser", "testpassword")
     return user
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def auth_headers(test_user):
     from backend.auth import create_access_token
 
