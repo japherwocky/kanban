@@ -74,7 +74,7 @@ def get_auth_headers(user):
 def test_create_organization_requires_auth(client):
     """Creating an organization requires authentication"""
     response = client.post("/api/organizations", json={"name": "Test Org"})
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 def test_any_user_can_create_organization(client, test_db):
