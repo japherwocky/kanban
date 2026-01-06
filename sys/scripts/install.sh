@@ -189,29 +189,43 @@ setup_ssl() {
     
     # First, temporarily disable nginx config to get certificates
     echo "Temporarily disabling nginx SSL config for certificate generation..."
-    if [ -f "/etc/nginx/sites-enabled/$DOMAIN.conf" ]; then
-        mv /etc/nginx/sites-enabled/$DOMAIN.conf /etc/nginx/sites-enabled/$DOMAIN.conf.bak
+
+    # Start nginx if it's not running
+    if ! systemctl is-active --quiet nginx; then
+        systemctl start nginx
     fi
-    
+
+    # Disable any existing kanban configs
+    if [ -L "/etc/nginx/sites-enabled/$DOMAIN.conf" ] || [ -f "/etc/nginx/sites-enabled/$DOMAIN.conf" ]; then
+        rm -f /etc/nginx/sites-enabled/$DOMAIN.conf
+        echo "Disabled existing kanban nginx config"
+    fi
+
     # Create a simple nginx config for HTTP only to pass certbot challenges
     cat > /etc/nginx/sites-available/$DOMAIN-http.conf << EOF
 server {
     listen 80;
     server_name $DOMAIN;
-    
+
     location /.well-known/acme-challenge/ {
         root /var/www/html;
     }
-    
+
     location / {
         return 301 https://\$server_name\$request_uri;
     }
 }
 EOF
     ln -sf /etc/nginx/sites-available/$DOMAIN-http.conf /etc/nginx/sites-enabled/
-    
+
     # Test and reload nginx
-    nginx -t && systemctl reload nginx
+    if nginx -t; then
+        systemctl reload nginx
+        echo "Nginx reloaded successfully"
+    else
+        echo "Nginx configuration test failed"
+        return 1
+    fi
     
     # Get certificates using webroot method (more reliable than nginx plugin)
     echo "Obtaining SSL certificates..."
@@ -233,10 +247,13 @@ EOF
     # Remove temporary HTTP config
     rm -f /etc/nginx/sites-enabled/$DOMAIN-http.conf
     rm -f /etc/nginx/sites-available/$DOMAIN-http.conf
-    
+
     # Restore original nginx config with SSL
     if [ -f "/etc/nginx/sites-enabled/$DOMAIN.conf.bak" ]; then
         mv /etc/nginx/sites-enabled/$DOMAIN.conf.bak /etc/nginx/sites-enabled/$DOMAIN.conf
+    else
+        # Re-enable the kanban config if it wasn't backed up
+        ln -sf /etc/nginx/sites-available/$DOMAIN.conf /etc/nginx/sites-enabled/
     fi
     
     # Test and reload nginx with SSL config
