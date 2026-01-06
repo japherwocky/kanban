@@ -677,7 +677,7 @@ def test_list_team_members_admin(client, admin_token, admin_user, regular_user):
     members = response.json()
     assert len(members) == 2
     usernames = {m["username"] for m in members}
-    assert usernames == {"admin", "user"}
+    assert usernames == {admin_user.username, regular_user.username}
 
 
 def test_list_available_team_members_requires_admin(client, regular_token):
@@ -705,7 +705,7 @@ def test_list_available_team_members_admin(client, admin_token, admin_user, regu
     assert response.status_code == 200
     available = response.json()
     assert len(available) == 1
-    assert available[0]["username"] == "user"
+    assert available[0]["username"] == regular_user.username
 
 
 def test_add_team_member_requires_admin(client, regular_token):
@@ -730,12 +730,12 @@ def test_add_team_member_admin(client, admin_token, admin_user, regular_user):
     # Add regular user to team
     response = client.post(
         f"/api/admin/teams/{team.id}/members",
-        json={"username": "user"},
+        json={"username": regular_user.username},
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
     member = response.json()
-    assert member["username"] == "user"
+    assert member["username"] == regular_user.username
 
 
 def test_add_team_member_not_in_org(client, admin_token, admin_user, regular_user):
@@ -748,7 +748,7 @@ def test_add_team_member_not_in_org(client, admin_token, admin_user, regular_use
     # Try to add a user who is not in the org
     response = client.post(
         f"/api/admin/teams/{team.id}/members",
-        json={"username": "user"},
+        json={"username": regular_user.username},
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 400
@@ -767,7 +767,7 @@ def test_add_team_member_already_in_team(client, admin_token, admin_user, regula
     # Try to add regular user again
     response = client.post(
         f"/api/admin/teams/{team.id}/members",
-        json={"username": "user"},
+        json={"username": regular_user.username},
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 400
@@ -802,4 +802,3 @@ def test_remove_team_member_admin(client, admin_token, admin_user, regular_user)
     # Verify they're removed
     remaining = TeamMember.select().where(TeamMember.team == team)
     assert remaining.count() == 1
-
