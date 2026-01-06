@@ -33,7 +33,7 @@ def cmd_config(url: Optional[str] = typer.Option(None, "--url", "-u", help="Set 
 @app.command("login")
 def cmd_login(
     username: str = typer.Argument(..., help="Username"),
-    password: str = typer.Argument(..., help="Password", hide_input=True),
+    password: str = typer.Option(..., "--password", "-p", help="Password", hide_input=True),
     server: str = typer.Option("http://localhost:8000", "--server", "-s", help="Server URL"),
 ):
     """Login to the Kanban server."""
