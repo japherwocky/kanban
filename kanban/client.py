@@ -61,3 +61,61 @@ class KanbanClient:
     def card_delete(self, card_id):
         self._request("DELETE", f"/api/cards/{card_id}")
         return True
+
+    # Organization methods
+    def organizations(self):
+        return self._request("GET", "/api/organizations")
+
+    def organization_create(self, name):
+        return self._request("POST", "/api/organizations", json={"name": name})
+
+    def organization_get(self, org_id):
+        return self._request("GET", f"/api/organizations/{org_id}")
+
+    def organization_update(self, org_id, name):
+        return self._request("PUT", f"/api/organizations/{org_id}", json={"name": name})
+
+    def organization_members(self, org_id):
+        return self._request("GET", f"/api/organizations/{org_id}/members")
+
+    def organization_member_add(self, org_id, username):
+        return self._request("POST", f"/api/organizations/{org_id}/members", json={"username": username})
+
+    def organization_member_update(self, org_id, user_id, role):
+        return self._request("PUT", f"/api/organizations/{org_id}/members/{user_id}", json={"role": role})
+
+    def organization_member_remove(self, org_id, user_id):
+        self._request("DELETE", f"/api/organizations/{org_id}/members/{user_id}")
+        return True
+
+    # Team methods
+    def organization_teams(self, org_id):
+        return self._request("GET", f"/api/organizations/{org_id}/teams")
+
+    def team_create(self, org_id, name):
+        return self._request("POST", f"/api/organizations/{org_id}/teams", json={"name": name})
+
+    def team_get(self, team_id):
+        return self._request("GET", f"/api/teams/{team_id}")
+
+    def team_update(self, team_id, name):
+        return self._request("PUT", f"/api/teams/{team_id}", json={"name": name})
+
+    def team_delete(self, team_id):
+        self._request("DELETE", f"/api/teams/{team_id}")
+        return True
+
+    def team_members(self, team_id):
+        return self._request("GET", f"/api/teams/{team_id}/members")
+
+    def team_member_add(self, team_id, username):
+        return self._request("POST", f"/api/teams/{team_id}/members", json={"username": username})
+
+    def team_member_remove(self, team_id, user_id):
+        self._request("DELETE", f"/api/teams/{team_id}/members/{user_id}")
+        return True
+
+    # Board sharing
+    def board_share(self, board_id, team_id=None):
+        data = {"team_id": team_id}
+        return self._request("POST", f"/api/boards/{board_id}/share", json=data)

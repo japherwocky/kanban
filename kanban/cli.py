@@ -44,7 +44,12 @@ def cmd_boards(args):
         print("No boards found")
         return
     for b in boards:
-        print(f"{b['id']:4}  {b['name']}")
+        shared_info = ""
+        if b.get('shared_team_id'):
+            shared_info = f" (shared with team {b['shared_team_id']})"
+        elif b.get('is_public_to_org'):
+            shared_info = " (public to organization)"
+        print(f"{b['id']:4}  {b['name']}{shared_info}")
 
 
 def cmd_board_create(args):
@@ -97,6 +102,112 @@ def cmd_card_delete(args):
     client = make_client()
     client.card_delete(args.id)
     print("Card deleted")
+
+
+def cmd_organizations(args):
+    client = make_client()
+    orgs = client.organizations()
+    if not orgs:
+        print("No organizations found")
+        return
+    for org in orgs:
+        print(f"{org['id']:4}  {org['name']} (owner: {org.get('owner_username', 'Unknown')})")
+
+
+def cmd_organization_create(args):
+    client = make_client()
+    result = client.organization_create(args.name)
+    print(f"Organization created with id={result['id']}")
+
+
+def cmd_organization_get(args):
+    client = make_client()
+    org = client.organization_get(args.id)
+    print(f"Organization: {org['name']}")
+    print(f"Owner: {org.get('owner_username', 'Unknown')}")
+    print("Members:")
+    for member in org.get("members", []):
+        role_info = f" ({member.get('role', 'member')})" if member.get('role') else ""
+        print(f"  - {member['username']}{role_info}")
+
+
+def cmd_organization_members(args):
+    client = make_client()
+    members = client.organization_members(args.id)
+    for member in members:
+        role_info = f" ({member.get('role', 'member')})" if member.get('role') else ""
+        print(f"{member['id']:4}  {member['username']}{role_info}")
+
+
+def cmd_organization_member_add(args):
+    client = make_client()
+    result = client.organization_member_add(args.org_id, args.username)
+    print(f"Added {args.username} to organization")
+
+
+def cmd_organization_member_remove(args):
+    client = make_client()
+    client.organization_member_remove(args.org_id, args.user_id)
+    print(f"Removed user {args.user_id} from organization")
+
+
+def cmd_teams(args):
+    client = make_client()
+    if args.org_id:
+        teams = client.organization_teams(args.org_id)
+    else:
+        print("Organization ID required. Use --org-id to specify.")
+        return
+    if not teams:
+        print("No teams found")
+        return
+    for team in teams:
+        print(f"{team['id']:4}  {team['name']} (org: {team.get('organization_name', 'Unknown')})")
+
+
+def cmd_team_create(args):
+    client = make_client()
+    result = client.team_create(args.org_id, args.name)
+    print(f"Team created with id={result['id']}")
+
+
+def cmd_team_get(args):
+    client = make_client()
+    team = client.team_get(args.id)
+    print(f"Team: {team['name']}")
+    print(f"Organization: {team.get('organization_name', 'Unknown')}")
+    print("Members:")
+    for member in team.get("members", []):
+        print(f"  - {member['username']}")
+
+
+def cmd_team_members(args):
+    client = make_client()
+    members = client.team_members(args.id)
+    for member in members:
+        print(f"{member['id']:4}  {member['username']}")
+
+
+def cmd_team_member_add(args):
+    client = make_client()
+    result = client.team_member_add(args.team_id, args.username)
+    print(f"Added {args.username} to team")
+
+
+def cmd_team_member_remove(args):
+    client = make_client()
+    client.team_member_remove(args.team_id, args.user_id)
+    print(f"Removed user {args.user_id} from team")
+
+
+def cmd_board_share(args):
+    client = make_client()
+    team_id = args.team_id if args.team_id != "private" else None
+    result = client.board_share(args.board_id, team_id)
+    if team_id:
+        print(f"Board {args.board_id} shared with team {team_id}")
+    else:
+        print(f"Board {args.board_id} made private")
 
 
 def main():
@@ -158,6 +269,66 @@ def main():
     sp_card_delete = subparsers.add_parser("card-delete", help="Delete a card")
     sp_card_delete.add_argument("id", type=int, help="Card ID")
     sp_card_delete.set_defaults(func=cmd_card_delete)
+
+    # Organization commands
+    sp_organizations = subparsers.add_parser("organizations", help="List organizations")
+    sp_organizations.set_defaults(func=cmd_organizations)
+
+    sp_organization_create = subparsers.add_parser("org-create", help="Create an organization")
+    sp_organization_create.add_argument("name", help="Organization name")
+    sp_organization_create.set_defaults(func=cmd_organization_create)
+
+    sp_organization_get = subparsers.add_parser("org", help="Show organization details")
+    sp_organization_get.add_argument("id", type=int, help="Organization ID")
+    sp_organization_get.set_defaults(func=cmd_organization_get)
+
+    sp_organization_members = subparsers.add_parser("org-members", help="List organization members")
+    sp_organization_members.add_argument("id", type=int, help="Organization ID")
+    sp_organization_members.set_defaults(func=cmd_organization_members)
+
+    sp_organization_member_add = subparsers.add_parser("org-member-add", help="Add member to organization")
+    sp_organization_member_add.add_argument("org_id", type=int, help="Organization ID")
+    sp_organization_member_add.add_argument("username", help="Username to add")
+    sp_organization_member_add.set_defaults(func=cmd_organization_member_add)
+
+    sp_organization_member_remove = subparsers.add_parser("org-member-remove", help="Remove member from organization")
+    sp_organization_member_remove.add_argument("org_id", type=int, help="Organization ID")
+    sp_organization_member_remove.add_argument("user_id", type=int, help="User ID to remove")
+    sp_organization_member_remove.set_defaults(func=cmd_organization_member_remove)
+
+    # Team commands
+    sp_teams = subparsers.add_parser("teams", help="List teams")
+    sp_teams.add_argument("--org-id", type=int, help="Organization ID (required)")
+    sp_teams.set_defaults(func=cmd_teams)
+
+    sp_team_create = subparsers.add_parser("team-create", help="Create a team")
+    sp_team_create.add_argument("org_id", type=int, help="Organization ID")
+    sp_team_create.add_argument("name", help="Team name")
+    sp_team_create.set_defaults(func=cmd_team_create)
+
+    sp_team_get = subparsers.add_parser("team", help="Show team details")
+    sp_team_get.add_argument("id", type=int, help="Team ID")
+    sp_team_get.set_defaults(func=cmd_team_get)
+
+    sp_team_members = subparsers.add_parser("team-members", help="List team members")
+    sp_team_members.add_argument("id", type=int, help="Team ID")
+    sp_team_members.set_defaults(func=cmd_team_members)
+
+    sp_team_member_add = subparsers.add_parser("team-member-add", help="Add member to team")
+    sp_team_member_add.add_argument("team_id", type=int, help="Team ID")
+    sp_team_member_add.add_argument("username", help="Username to add")
+    sp_team_member_add.set_defaults(func=cmd_team_member_add)
+
+    sp_team_member_remove = subparsers.add_parser("team-member-remove", help="Remove member from team")
+    sp_team_member_remove.add_argument("team_id", type=int, help="Team ID")
+    sp_team_member_remove.add_argument("user_id", type=int, help="User ID to remove")
+    sp_team_member_remove.set_defaults(func=cmd_team_member_remove)
+
+    # Board sharing
+    sp_board_share = subparsers.add_parser("board-share", help="Share board with team or make private")
+    sp_board_share.add_argument("board_id", type=int, help="Board ID")
+    sp_board_share.add_argument("team_id", help="Team ID or 'private' to make board private")
+    sp_board_share.set_defaults(func=cmd_board_share)
 
     args = parser.parse_args()
 
