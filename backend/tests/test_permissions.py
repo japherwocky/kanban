@@ -195,7 +195,7 @@ def test_remove_org_member_permissions(client, test_db):
 
     # Owner can remove member
     response = client.delete(
-        f"/api/organizations/{org.id}/members/{member.id}",
+        f"/api/organizations/{org.id}/members/{member_user.id}",
         headers=get_auth_headers(owner)
     )
     assert response.status_code == 200
@@ -205,7 +205,7 @@ def test_remove_org_member_permissions(client, test_db):
 
     # Member can remove self
     response = client.delete(
-        f"/api/organizations/{org.id}/members/{member.id}",
+        f"/api/organizations/{org.id}/members/{member_user.id}",
         headers=get_auth_headers(member_user)
     )
     assert response.status_code == 200

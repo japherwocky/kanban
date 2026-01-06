@@ -320,5 +320,10 @@ def cmd_board_share(
         rprint(f"Board [green]{board_id}[/green] made private")
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the CLI."""
     app()
+
+
+if __name__ == "__main__":
+    main()
