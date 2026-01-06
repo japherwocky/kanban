@@ -100,7 +100,7 @@ setup_virtualenv() {
 install_dependencies() {
     echo -e "${YELLOW}📦 Installing system dependencies...${NC}"
     apt-get update
-    apt-get install -y python3-venv python3-pip nginx certbot python3-certbot-nginx git curl
+    apt-get install -y python3-venv python3-pip nginx git curl
 
     # Install Node.js 20 (required for frontend)
     echo -e "${YELLOW}📦 Installing Node.js 20...${NC}"
@@ -110,6 +110,24 @@ install_dependencies() {
         echo "Node.js $(node --version) installed"
     else
         echo "Node.js $(node --version) already installed"
+    fi
+
+    # Install certbot via snap (recommended by certbot)
+    echo -e "${YELLOW}📦 Installing certbot via snap...${NC}"
+    if ! command -v snap &>/dev/null; then
+        apt-get install -y snapd
+    fi
+    
+    # Ensure snap is up to date
+    snap install core; snap refresh core
+    
+    # Install certbot
+    if ! command -v certbot &>/dev/null; then
+        snap install --classic certbot
+        ln -sf /snap/bin/certbot /usr/bin/certbot
+        echo "Certbot installed via snap"
+    else
+        echo "Certbot already installed"
     fi
 
     echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
@@ -168,13 +186,72 @@ setup_sudoers() {
 # Function to setup SSL with Let's Encrypt
 setup_ssl() {
     echo -e "${YELLOW}🔒 Setting up SSL with Let's Encrypt...${NC}"
-    certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN && {
-        echo "SSL certificates obtained and nginx configured"
-        nginx -t && systemctl reload nginx
-    } || {
-        echo -e "${RED}SSL setup failed. You may need to run certbot manually:${NC}"
-        echo "certbot --nginx -d $DOMAIN"
+    
+    # First, temporarily disable nginx config to get certificates
+    echo "Temporarily disabling nginx SSL config for certificate generation..."
+    if [ -f "/etc/nginx/sites-enabled/$DOMAIN.conf" ]; then
+        mv /etc/nginx/sites-enabled/$DOMAIN.conf /etc/nginx/sites-enabled/$DOMAIN.conf.bak
+    fi
+    
+    # Create a simple nginx config for HTTP only to pass certbot challenges
+    cat > /etc/nginx/sites-available/$DOMAIN-http.conf << EOF
+server {
+    listen 80;
+    server_name $DOMAIN;
+    
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
     }
+    
+    location / {
+        return 301 https://\$server_name\$request_uri;
+    }
+}
+EOF
+    ln -sf /etc/nginx/sites-available/$DOMAIN-http.conf /etc/nginx/sites-enabled/
+    
+    # Test and reload nginx
+    nginx -t && systemctl reload nginx
+    
+    # Get certificates using webroot method (more reliable than nginx plugin)
+    echo "Obtaining SSL certificates..."
+    certbot certonly --webroot -w /var/www/html \
+        --non-interactive --agree-tos --email admin@$DOMAIN \
+        -d $DOMAIN && {
+        echo "SSL certificates obtained successfully"
+    } || {
+        echo -e "${RED}Certificate setup failed. You may need to run certbot manually:${NC}"
+        echo "certbot certonly --webroot -w /var/www/html -d $DOMAIN"
+        # Restore original config and exit
+        rm -f /etc/nginx/sites-enabled/$DOMAIN-http.conf
+        if [ -f "/etc/nginx/sites-enabled/$DOMAIN.conf.bak" ]; then
+            mv /etc/nginx/sites-enabled/$DOMAIN.conf.bak /etc/nginx/sites-enabled/$DOMAIN.conf
+        fi
+        return 1
+    }
+    
+    # Remove temporary HTTP config
+    rm -f /etc/nginx/sites-enabled/$DOMAIN-http.conf
+    rm -f /etc/nginx/sites-available/$DOMAIN-http.conf
+    
+    # Restore original nginx config with SSL
+    if [ -f "/etc/nginx/sites-enabled/$DOMAIN.conf.bak" ]; then
+        mv /etc/nginx/sites-enabled/$DOMAIN.conf.bak /etc/nginx/sites-enabled/$DOMAIN.conf
+    fi
+    
+    # Test and reload nginx with SSL config
+    nginx -t && systemctl reload nginx && {
+        echo "Nginx reloaded with SSL configuration"
+    } || {
+        echo -e "${RED}Nginx configuration test failed after SSL setup${NC}"
+        return 1
+    }
+    
+    # Setup automatic certificate renewal
+    echo "Setting up automatic certificate renewal..."
+    (crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet --deploy-hook 'systemctl reload nginx'") | crontab -
+    
+    echo "SSL setup complete!"
 }
 
 # Function to create admin user
