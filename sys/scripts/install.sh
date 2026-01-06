@@ -160,6 +160,11 @@ setup_systemd() {
     cp $DEPLOY_DIR/sys/systemd/kanban.service /etc/systemd/system/
     systemctl daemon-reload
     systemctl enable kanban
+    # Restart service if it's already running to pick up config changes
+    if systemctl is-active --quiet kanban; then
+        systemctl restart kanban
+        echo "Kanban service restarted with new configuration"
+    fi
     echo "Systemd service configured"
 }
 
@@ -283,7 +288,7 @@ create_admin_user() {
 # Function to start service
 start_service() {
     echo -e "${GREEN}🚀 Starting kanban service...${NC}"
-    systemctl start kanban
+    systemctl restart kanban  # Use restart to ensure it picks up any config changes
     systemctl status kanban --no-pager
 }
 
