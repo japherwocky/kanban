@@ -130,7 +130,7 @@ def main():
 
     sp_server = subparsers.add_parser("server", help="Run the development server")
     sp_server.add_argument("--host", default="0.0.0.0", help="Host to bind to")
-    sp_server.add_argument("--port", type=int, default=8000, help="Port to bind to")
+    sp_server.add_argument("--port", type=int, default=8080, help="Port to bind to")
     sp_server.add_argument("--reload", action="store_true", default=True, help="Enable auto-reload (default)")
     sp_server.add_argument("--no-reload", dest="reload", action="store_false", help="Disable auto-reload")
     sp_server.set_defaults(func=cmd_server)
@@ -150,7 +150,7 @@ def main():
         print("  status             Show database status")
         print("\nServer options:")
         print("  --host HOST        Host to bind to (default: 0.0.0.0)")
-        print("  --port PORT        Port to bind to (default: 8000)")
+        print("  --port PORT        Port to bind to (default: 8080)")
         print("  --reload           Enable auto-reload (default)")
         print("  --no-reload        Disable auto-reload")
         print("  --log-level LEVEL  Set logging level (debug, info, warning, error)")

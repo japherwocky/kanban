@@ -10,7 +10,7 @@ WorkingDirectory=/opt/kanban
 Environment=PATH=/opt/kanban/venv/bin
 Environment=DATABASE_PATH=/opt/kanban/kanban.db
 Environment=STATIC_PATH=/opt/kanban/backend/static
-ExecStart=/opt/kanban/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000 --app-dir /opt/kanban
+ExecStart=/opt/kanban/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8080 --app-dir /opt/kanban
 Restart=always
 RestartSec=10
 
