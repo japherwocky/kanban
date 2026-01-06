@@ -17,10 +17,10 @@ import subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from backend.database import db
-from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
+from backend.models import User, Board, Column, Card, Comment, Organization, OrganizationMember, Team, TeamMember
 
 
-TABLES = [User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember]
+TABLES = [User, Board, Column, Card, Comment, Organization, OrganizationMember, Team, TeamMember]
 
 
 def cmd_init(args=None):

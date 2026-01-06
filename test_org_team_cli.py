@@ -13,7 +13,7 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from backend.database import db
-from backend.models import User, Organization, OrganizationMember, Team, TeamMember, Board, Column, Card
+from backend.models import User, Organization, OrganizationMember, Team, TeamMember, Board, Column, Card, Comment
 from backend.auth import create_access_token
 from kanban.client import KanbanClient
 from kanban.config import set_token, clear_token
@@ -31,7 +31,7 @@ def test_organization_and_team_apis():
     
     # Set up test database
     db.connect()
-    db.create_tables([User, Organization, OrganizationMember, Team, TeamMember, Board, Column, Card])
+    db.create_tables([User, Organization, OrganizationMember, Team, TeamMember, Board, Column, Card, Comment])
     
     try:
         # Create test users
