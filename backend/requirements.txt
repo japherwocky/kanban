@@ -7,3 +7,5 @@ bcrypt
 pytest
 pytest-asyncio
 httpx
+typer
+rich

@@ -1,47 +1,68 @@
-import argparse
 import sys
+from typing import Optional
+
+import typer
+from rich import print as rprint
 
 from kanban.config import get_server_url, set_server_url, get_token, set_token, clear_token
 from kanban.client import KanbanClient
+
+app = typer.Typer(help="Kanban board CLI", no_args_is_help=True)
 
 
 def make_client():
     token = get_token()
     if not token:
-        print("Not logged in. Run 'kanban login' first.", file=sys.stderr)
-        sys.exit(1)
+        rprint("[red]Not logged in. Run 'kanban login' first.[/red]")
+        raise typer.Exit(1)
     return KanbanClient()
 
 
-def cmd_config(args):
-    if args.url:
-        set_server_url(args.url)
-        print(f"Server URL set to: {args.url}")
+# === Auth Commands ===
+
+@app.command("config")
+def cmd_config(url: Optional[str] = typer.Option(None, "--url", "-u", help="Set the server URL")):
+    """Configure the CLI or show current settings."""
+    if url:
+        set_server_url(url)
+        rprint(f"Server URL set to: [green]{url}[/green]")
     else:
-        print(f"Server URL: {get_server_url()}")
+        rprint(f"Server URL: [cyan]{get_server_url()}[/cyan]")
 
 
-def cmd_login(args):
-    client = KanbanClient(server_url=args.server)
+@app.command("login")
+def cmd_login(
+    username: str = typer.Argument(..., help="Username"),
+    password: str = typer.Argument(..., help="Password", hide_input=True),
+    server: str = typer.Option("http://localhost:8000", "--server", "-s", help="Server URL"),
+):
+    """Login to the Kanban server."""
+    client = KanbanClient(server_url=server)
     try:
-        token = client.login(args.username, args.password)
+        token = client.login(username, password)
         set_token(token)
-        print(f"Logged in as {args.username}")
+        rprint(f"Logged in as [green]{username}[/green]")
     except Exception as e:
-        print(f"Login failed: {e}", file=sys.stderr)
-        sys.exit(1)
+        rprint(f"[red]Login failed: {e}[/red]")
+        raise typer.Exit(1)
 
 
-def cmd_logout(args):
+@app.command("logout")
+def cmd_logout():
+    """Logout and clear credentials."""
     clear_token()
-    print("Logged out")
+    rprint("Logged out")
 
 
-def cmd_boards(args):
+# === Board Commands ===
+
+@app.command("boards")
+def cmd_boards():
+    """List all boards."""
     client = make_client()
     boards = client.boards()
     if not boards:
-        print("No boards found")
+        rprint("No boards found")
         return
     for b in boards:
         shared_info = ""
@@ -49,306 +70,255 @@ def cmd_boards(args):
             shared_info = f" (shared with team {b['shared_team_id']})"
         elif b.get('is_public_to_org'):
             shared_info = " (public to organization)"
-        print(f"{b['id']:4}  {b['name']}{shared_info}")
+        rprint(f"{b['id']:4}  [bold]{b['name']}[/bold]{shared_info}")
 
 
-def cmd_board_create(args):
+@app.command("board-create")
+def cmd_board_create(name: str = typer.Argument(..., help="Board name")):
+    """Create a new board."""
     client = make_client()
-    result = client.board_create(args.name)
-    print(f"Board created with id={result['id']}")
+    result = client.board_create(name)
+    rprint(f"Board created with [green]id={result['id']}[/green]")
 
 
-def cmd_board_get(args):
+@app.command("board")
+def cmd_board_get(board_id: int = typer.Argument(..., help="Board ID")):
+    """Show board details."""
     client = make_client()
-    board = client.board_get(args.id)
-    print(f"Board: {board['name']}")
+    board = client.board_get(board_id)
+    rprint(f"Board: [bold]{board['name']}[/bold]")
     for col in board.get("columns", []):
-        print(f"  {col['name']} ({len(col['cards'])} cards)")
+        rprint(f"  [cyan]{col['name']}[/cyan] ({len(col['cards'])} cards)")
         for card in col.get("cards", []):
-            print(f"    - {card['title']}")
+            rprint(f"    - {card['title']}")
 
 
-def cmd_board_delete(args):
+@app.command("board-delete")
+def cmd_board_delete(board_id: int = typer.Argument(..., help="Board ID")):
+    """Delete a board."""
     client = make_client()
-    client.board_delete(args.id)
-    print("Board deleted")
+    client.board_delete(board_id)
+    rprint("[green]Board deleted[/green]")
 
 
-def cmd_column_create(args):
+# === Column Commands ===
+
+@app.command("column-create")
+def cmd_column_create(
+    board_id: int = typer.Argument(..., help="Board ID"),
+    name: str = typer.Argument(..., help="Column name"),
+    position: int = typer.Argument(..., help="Position"),
+):
+    """Create a new column."""
     client = make_client()
-    result = client.column_create(args.board_id, args.name, args.position)
-    print(f"Column created with id={result['id']}")
+    result = client.column_create(board_id, name, position)
+    rprint(f"Column created with [green]id={result['id']}[/green]")
 
 
-def cmd_column_delete(args):
+@app.command("column-delete")
+def cmd_column_delete(column_id: int = typer.Argument(..., help="Column ID")):
+    """Delete a column."""
     client = make_client()
-    client.column_delete(args.id)
-    print("Column deleted")
+    client.column_delete(column_id)
+    rprint("[green]Column deleted[/green]")
 
 
-def cmd_card_create(args):
+# === Card Commands ===
+
+@app.command("card-create")
+def cmd_card_create(
+    column_id: int = typer.Argument(..., help="Column ID"),
+    title: str = typer.Argument(..., help="Card title"),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="Card description"),
+    position: int = typer.Option(0, "--position", "-p", help="Position"),
+):
+    """Create a new card."""
     client = make_client()
-    result = client.card_create(args.column_id, args.title, args.description, args.position)
-    print(f"Card created with id={result['id']}")
+    result = client.card_create(column_id, title, description, position)
+    rprint(f"Card created with [green]id={result['id']}[/green]")
 
 
-def cmd_card_update(args):
+@app.command("card-update")
+def cmd_card_update(
+    card_id: int = typer.Argument(..., help="Card ID"),
+    title: str = typer.Argument(..., help="Card title"),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="Card description"),
+    position: Optional[int] = typer.Option(None, "--position", "-p", help="Position"),
+    column: Optional[int] = typer.Option(None, "--column", "-c", help="New column ID"),
+):
+    """Update a card."""
     client = make_client()
-    result = client.card_update(args.id, args.title, args.description, args.position, args.column)
-    print(f"Card updated")
+    client.card_update(card_id, title, description, position, column)
+    rprint("[green]Card updated[/green]")
 
 
-def cmd_card_delete(args):
+@app.command("card-delete")
+def cmd_card_delete(card_id: int = typer.Argument(..., help="Card ID")):
+    """Delete a card."""
     client = make_client()
-    client.card_delete(args.id)
-    print("Card deleted")
+    client.card_delete(card_id)
+    rprint("[green]Card deleted[/green]")
 
 
-def cmd_organizations(args):
+# === Organization Commands ===
+
+org_app = typer.Typer(help="Organization management commands", no_args_is_help=True)
+app.add_typer(org_app, name="org")
+
+
+@org_app.command("list")
+def cmd_organizations():
+    """List all organizations."""
     client = make_client()
     orgs = client.organizations()
     if not orgs:
-        print("No organizations found")
+        rprint("No organizations found")
         return
     for org in orgs:
-        print(f"{org['id']:4}  {org['name']} (owner: {org.get('owner_username', 'Unknown')})")
+        rprint(f"{org['id']:4}  [bold]{org['name']}[/bold] (owner: {org.get('owner_username', 'Unknown')})")
 
 
-def cmd_organization_create(args):
+@org_app.command("create")
+def cmd_organization_create(name: str = typer.Argument(..., help="Organization name")):
+    """Create a new organization."""
     client = make_client()
-    result = client.organization_create(args.name)
-    print(f"Organization created with id={result['id']}")
+    result = client.organization_create(name)
+    rprint(f"Organization created with [green]id={result['id']}[/green]")
 
 
-def cmd_organization_get(args):
+@org_app.command("get")
+def cmd_organization_get(org_id: int = typer.Argument(..., help="Organization ID")):
+    """Show organization details."""
     client = make_client()
-    org = client.organization_get(args.id)
-    print(f"Organization: {org['name']}")
-    print(f"Owner: {org.get('owner_username', 'Unknown')}")
-    print("Members:")
+    org = client.organization_get(org_id)
+    rprint(f"Organization: [bold]{org['name']}[/bold]")
+    rprint(f"Owner: {org.get('owner_username', 'Unknown')}")
+    rprint("Members:")
     for member in org.get("members", []):
         role_info = f" ({member.get('role', 'member')})" if member.get('role') else ""
-        print(f"  - {member['username']}{role_info}")
+        rprint(f"  - {member['username']}{role_info}")
 
 
-def cmd_organization_members(args):
+@org_app.command("members")
+def cmd_organization_members(org_id: int = typer.Argument(..., help="Organization ID")):
+    """List organization members."""
     client = make_client()
-    members = client.organization_members(args.id)
+    members = client.organization_members(org_id)
     for member in members:
         role_info = f" ({member.get('role', 'member')})" if member.get('role') else ""
-        print(f"{member['id']:4}  {member['username']}{role_info}")
+        rprint(f"{member['id']:4}  {member['username']}{role_info}")
 
 
-def cmd_organization_member_add(args):
+@org_app.command("member-add")
+def cmd_organization_member_add(
+    org_id: int = typer.Argument(..., help="Organization ID"),
+    username: str = typer.Argument(..., help="Username to add"),
+):
+    """Add member to organization."""
     client = make_client()
-    result = client.organization_member_add(args.org_id, args.username)
-    print(f"Added {args.username} to organization")
+    client.organization_member_add(org_id, username)
+    rprint(f"Added [green]{username}[/green] to organization")
 
 
-def cmd_organization_member_remove(args):
+@org_app.command("member-remove")
+def cmd_organization_member_remove(
+    org_id: int = typer.Argument(..., help="Organization ID"),
+    user_id: int = typer.Argument(..., help="User ID to remove"),
+):
+    """Remove member from organization."""
     client = make_client()
-    client.organization_member_remove(args.org_id, args.user_id)
-    print(f"Removed user {args.user_id} from organization")
+    client.organization_member_remove(org_id, user_id)
+    rprint(f"Removed user [green]{user_id}[/green] from organization")
 
 
-def cmd_teams(args):
+# === Team Commands ===
+
+team_app = typer.Typer(help="Team management commands", no_args_is_help=True)
+app.add_typer(team_app, name="team")
+
+
+@team_app.command("list")
+def cmd_teams(org_id: int = typer.Option(..., "--org-id", "-o", help="Organization ID (required)")):
+    """List teams in an organization."""
     client = make_client()
-    if args.org_id:
-        teams = client.organization_teams(args.org_id)
-    else:
-        print("Organization ID required. Use --org-id to specify.")
-        return
+    teams = client.organization_teams(org_id)
     if not teams:
-        print("No teams found")
+        rprint("No teams found")
         return
     for team in teams:
-        print(f"{team['id']:4}  {team['name']} (org: {team.get('organization_name', 'Unknown')})")
+        rprint(f"{team['id']:4}  [bold]{team['name']}[/bold] (org: {team.get('organization_name', 'Unknown')})")
 
 
-def cmd_team_create(args):
+@team_app.command("create")
+def cmd_team_create(
+    org_id: int = typer.Argument(..., help="Organization ID"),
+    name: str = typer.Argument(..., help="Team name"),
+):
+    """Create a new team."""
     client = make_client()
-    result = client.team_create(args.org_id, args.name)
-    print(f"Team created with id={result['id']}")
+    result = client.team_create(org_id, name)
+    rprint(f"Team created with [green]id={result['id']}[/green]")
 
 
-def cmd_team_get(args):
+@team_app.command("get")
+def cmd_team_get(team_id: int = typer.Argument(..., help="Team ID")):
+    """Show team details."""
     client = make_client()
-    team = client.team_get(args.id)
-    print(f"Team: {team['name']}")
-    print(f"Organization: {team.get('organization_name', 'Unknown')}")
-    print("Members:")
+    team = client.team_get(team_id)
+    rprint(f"Team: [bold]{team['name']}[/bold]")
+    rprint(f"Organization: {team.get('organization_name', 'Unknown')}")
+    rprint("Members:")
     for member in team.get("members", []):
-        print(f"  - {member['username']}")
+        rprint(f"  - {member['username']}")
 
 
-def cmd_team_members(args):
+@team_app.command("members")
+def cmd_team_members(team_id: int = typer.Argument(..., help="Team ID")):
+    """List team members."""
     client = make_client()
-    members = client.team_members(args.id)
+    members = client.team_members(team_id)
     for member in members:
-        print(f"{member['id']:4}  {member['username']}")
+        rprint(f"{member['id']:4}  {member['username']}")
 
 
-def cmd_team_member_add(args):
+@team_app.command("member-add")
+def cmd_team_member_add(
+    team_id: int = typer.Argument(..., help="Team ID"),
+    username: str = typer.Argument(..., help="Username to add"),
+):
+    """Add member to team."""
     client = make_client()
-    result = client.team_member_add(args.team_id, args.username)
-    print(f"Added {args.username} to team")
+    client.team_member_add(team_id, username)
+    rprint(f"Added [green]{username}[/green] to team")
 
 
-def cmd_team_member_remove(args):
+@team_app.command("member-remove")
+def cmd_team_member_remove(
+    team_id: int = typer.Argument(..., help="Team ID"),
+    user_id: int = typer.Argument(..., help="User ID to remove"),
+):
+    """Remove member from team."""
     client = make_client()
-    client.team_member_remove(args.team_id, args.user_id)
-    print(f"Removed user {args.user_id} from team")
+    client.team_member_remove(team_id, user_id)
+    rprint(f"Removed user [green]{user_id}[/green] from team")
 
 
-def cmd_board_share(args):
+# === Board Sharing ===
+
+@app.command("share")
+def cmd_board_share(
+    board_id: int = typer.Argument(..., help="Board ID"),
+    team_id: str = typer.Argument(..., help="Team ID or 'private' to make board private"),
+):
+    """Share board with team or make private."""
     client = make_client()
-    team_id = args.team_id if args.team_id != "private" else None
-    result = client.board_share(args.board_id, team_id)
-    if team_id:
-        print(f"Board {args.board_id} shared with team {team_id}")
+    team_id_value = None if team_id == "private" else team_id
+    client.board_share(board_id, team_id_value)
+    if team_id_value:
+        rprint(f"Board [green]{board_id}[/green] shared with team {team_id_value}")
     else:
-        print(f"Board {args.board_id} made private")
-
-
-def main():
-    parser = argparse.ArgumentParser(prog="kanban", description="Kanban board CLI")
-    parser.add_argument("--url", help="Override server URL for this command")
-
-    subparsers = parser.add_subparsers(dest="command", help="Command to run")
-
-    sp_config = subparsers.add_parser("config", help="Configure the CLI")
-    sp_config.add_argument("--url", help="Set the server URL")
-
-    sp_login = subparsers.add_parser("login", help="Login to the Kanban server")
-    sp_login.add_argument("username", help="Username")
-    sp_login.add_argument("password", help="Password")
-    sp_login.add_argument("--server", default="http://localhost:8000", help="Server URL")
-
-    subparsers.add_parser("logout", help="Logout and clear credentials")
-
-    sp_boards = subparsers.add_parser("boards", help="List all boards")
-    sp_boards.set_defaults(func=cmd_boards)
-
-    sp_board_create = subparsers.add_parser("board-create", help="Create a new board")
-    sp_board_create.add_argument("name", help="Board name")
-    sp_board_create.set_defaults(func=cmd_board_create)
-
-    sp_board_get = subparsers.add_parser("board", help="Show board details")
-    sp_board_get.add_argument("id", type=int, help="Board ID")
-    sp_board_get.set_defaults(func=cmd_board_get)
-
-    sp_board_delete = subparsers.add_parser("board-delete", help="Delete a board")
-    sp_board_delete.add_argument("id", type=int, help="Board ID")
-    sp_board_delete.set_defaults(func=cmd_board_delete)
-
-    sp_column_create = subparsers.add_parser("column-create", help="Create a new column")
-    sp_column_create.add_argument("board_id", type=int, help="Board ID")
-    sp_column_create.add_argument("name", help="Column name")
-    sp_column_create.add_argument("position", type=int, help="Position")
-    sp_column_create.set_defaults(func=cmd_column_create)
-
-    sp_column_delete = subparsers.add_parser("column-delete", help="Delete a column")
-    sp_column_delete.add_argument("id", type=int, help="Column ID")
-    sp_column_delete.set_defaults(func=cmd_column_delete)
-
-    sp_card_create = subparsers.add_parser("card-create", help="Create a new card")
-    sp_card_create.add_argument("column_id", type=int, help="Column ID")
-    sp_card_create.add_argument("title", help="Card title")
-    sp_card_create.add_argument("--description", "-d", default=None, help="Card description")
-    sp_card_create.add_argument("--position", "-p", type=int, default=0, help="Position")
-    sp_card_create.set_defaults(func=cmd_card_create)
-
-    sp_card_update = subparsers.add_parser("card-update", help="Update a card")
-    sp_card_update.add_argument("id", type=int, help="Card ID")
-    sp_card_update.add_argument("title", help="Card title")
-    sp_card_update.add_argument("--description", "-d", default=None, help="Card description")
-    sp_card_update.add_argument("--position", "-p", type=int, default=None, help="Position")
-    sp_card_update.add_argument("--column", "-c", type=int, default=None, help="New column ID")
-    sp_card_update.set_defaults(func=cmd_card_update)
-
-    sp_card_delete = subparsers.add_parser("card-delete", help="Delete a card")
-    sp_card_delete.add_argument("id", type=int, help="Card ID")
-    sp_card_delete.set_defaults(func=cmd_card_delete)
-
-    # Organization commands
-    sp_organizations = subparsers.add_parser("organizations", help="List organizations")
-    sp_organizations.set_defaults(func=cmd_organizations)
-
-    sp_organization_create = subparsers.add_parser("org-create", help="Create an organization")
-    sp_organization_create.add_argument("name", help="Organization name")
-    sp_organization_create.set_defaults(func=cmd_organization_create)
-
-    sp_organization_get = subparsers.add_parser("org", help="Show organization details")
-    sp_organization_get.add_argument("id", type=int, help="Organization ID")
-    sp_organization_get.set_defaults(func=cmd_organization_get)
-
-    sp_organization_members = subparsers.add_parser("org-members", help="List organization members")
-    sp_organization_members.add_argument("id", type=int, help="Organization ID")
-    sp_organization_members.set_defaults(func=cmd_organization_members)
-
-    sp_organization_member_add = subparsers.add_parser("org-member-add", help="Add member to organization")
-    sp_organization_member_add.add_argument("org_id", type=int, help="Organization ID")
-    sp_organization_member_add.add_argument("username", help="Username to add")
-    sp_organization_member_add.set_defaults(func=cmd_organization_member_add)
-
-    sp_organization_member_remove = subparsers.add_parser("org-member-remove", help="Remove member from organization")
-    sp_organization_member_remove.add_argument("org_id", type=int, help="Organization ID")
-    sp_organization_member_remove.add_argument("user_id", type=int, help="User ID to remove")
-    sp_organization_member_remove.set_defaults(func=cmd_organization_member_remove)
-
-    # Team commands
-    sp_teams = subparsers.add_parser("teams", help="List teams")
-    sp_teams.add_argument("--org-id", type=int, help="Organization ID (required)")
-    sp_teams.set_defaults(func=cmd_teams)
-
-    sp_team_create = subparsers.add_parser("team-create", help="Create a team")
-    sp_team_create.add_argument("org_id", type=int, help="Organization ID")
-    sp_team_create.add_argument("name", help="Team name")
-    sp_team_create.set_defaults(func=cmd_team_create)
-
-    sp_team_get = subparsers.add_parser("team", help="Show team details")
-    sp_team_get.add_argument("id", type=int, help="Team ID")
-    sp_team_get.set_defaults(func=cmd_team_get)
-
-    sp_team_members = subparsers.add_parser("team-members", help="List team members")
-    sp_team_members.add_argument("id", type=int, help="Team ID")
-    sp_team_members.set_defaults(func=cmd_team_members)
-
-    sp_team_member_add = subparsers.add_parser("team-member-add", help="Add member to team")
-    sp_team_member_add.add_argument("team_id", type=int, help="Team ID")
-    sp_team_member_add.add_argument("username", help="Username to add")
-    sp_team_member_add.set_defaults(func=cmd_team_member_add)
-
-    sp_team_member_remove = subparsers.add_parser("team-member-remove", help="Remove member from team")
-    sp_team_member_remove.add_argument("team_id", type=int, help="Team ID")
-    sp_team_member_remove.add_argument("user_id", type=int, help="User ID to remove")
-    sp_team_member_remove.set_defaults(func=cmd_team_member_remove)
-
-    # Board sharing
-    sp_board_share = subparsers.add_parser("board-share", help="Share board with team or make private")
-    sp_board_share.add_argument("board_id", type=int, help="Board ID")
-    sp_board_share.add_argument("team_id", help="Team ID or 'private' to make board private")
-    sp_board_share.set_defaults(func=cmd_board_share)
-
-    args = parser.parse_args()
-
-    if args.command is None:
-        parser.print_help()
-        sys.exit(1)
-
-    if args.command == "config":
-        cmd_config(args)
-    elif args.command == "login":
-        cmd_login(args)
-    elif args.command == "logout":
-        cmd_logout(args)
-    else:
-        if hasattr(args, "func"):
-            args.func(args)
-        else:
-            parser.print_help()
-            sys.exit(1)
+        rprint(f"Board [green]{board_id}[/green] made private")
 
 
 if __name__ == "__main__":
-    main()
+    app()
