@@ -19,8 +19,6 @@ import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime, timezone
 
-os.environ["DATABASE_PATH"] = "test_kanban.db"
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.main import app
@@ -37,7 +35,15 @@ def client():
     return TestClient(app)
 
 
-def create_user(username, password):
+import random
+import string
+
+user_counter = 0
+
+def create_user(username_base, password):
+    global user_counter
+    user_counter += 1
+    username = f"{username_base}_{user_counter}_{random.choices(string.ascii_lowercase, k=4)[0]}"
     return User.create_user(username, password)
 
 

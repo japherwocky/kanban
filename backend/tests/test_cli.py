@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 tmp_dir = tempfile.mkdtemp()
 
 os.environ["KANBAN_CONFIG_DIR"] = tmp_dir
-os.environ["DATABASE_PATH"] = "test_kanban_cli.db"
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -4,8 +4,6 @@ from datetime import datetime, timezone
 import pytest
 from fastapi.testclient import TestClient
 
-os.environ["DATABASE_PATH"] = "test_kanban.db"
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.main import app
@@ -15,25 +13,33 @@ from backend.auth import create_access_token
 
 
 @pytest.fixture(autouse=True)
-def setup_database():
-    """Reset database before each test"""
-    if not db.is_connection_usable():
-        db.connect()
+def admin_test_db(test_db):
+    """Admin tests need their own database isolation"""
+    # Clean the database completely
     db.drop_tables([Board, Column, TeamMember, Team, OrganizationMember, Organization, User])
     db.create_tables([User, Organization, OrganizationMember, Team, TeamMember, Board, Column])
+    yield test_db
 
 
 @pytest.fixture
-def admin_user():
+def admin_user(admin_test_db):
     """Create an admin user"""
-    user = User.create_user(username="admin", password="admin123", admin=True)
+    import random
+    import string
+    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=8))
+    username = f"admin_{random_suffix}"
+    user = User.create_user(username=username, password="admin123", admin=True)
     return user
 
 
 @pytest.fixture
-def regular_user():
+def regular_user(admin_test_db):
     """Create a regular user"""
-    user = User.create_user(username="user", password="user123", admin=False)
+    import random
+    import string
+    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=8))
+    username = f"user_{random_suffix}"
+    user = User.create_user(username=username, password="user123", admin=False)
     return user
 
 
@@ -82,8 +88,8 @@ def test_list_users_admin(client, admin_token, admin_user, regular_user):
     users = response.json()
     assert len(users) == 2
     usernames = [u["username"] for u in users]
-    assert "admin" in usernames
-    assert "user" in usernames
+    assert admin_user.username in usernames
+    assert regular_user.username in usernames
 
 
 def test_create_user_requires_admin(client, regular_token):

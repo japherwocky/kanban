@@ -1,25 +1,14 @@
-import os
-import sys
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
-os.environ["DATABASE_PATH"] = "test_kanban.db"
-
+import sys
+import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.main import app
 from backend.database import db
 from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
-
-
-
-
-
-@pytest.fixture
-def test_user(test_db):
-    user = User.create_user("testuser", "testpassword")
-    return user
 
 
 @pytest.fixture
@@ -51,7 +40,7 @@ def test_root(client):
 def test_login_success(client, test_user):
     response = client.post(
         "/api/token",
-        json={"username": "testuser", "password": "testpassword"},
+        json={"username": test_user.username, "password": "testpassword"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -62,7 +51,7 @@ def test_login_success(client, test_user):
 def test_login_failure(client, test_user):
     response = client.post(
         "/api/token",
-        json={"username": "testuser", "password": "wrongpassword"},
+        json={"username": test_user.username, "password": "wrongpassword"},
     )
     assert response.status_code == 401
 
