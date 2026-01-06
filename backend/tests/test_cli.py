@@ -20,10 +20,6 @@ from backend.auth import create_access_token
 
 
 
-
-
-
-
 @pytest.fixture
 def auth_headers(test_user):
     token = create_access_token(data={"sub": test_user.id, "username": test_user.username})
@@ -58,12 +54,7 @@ def test_cli_login_command(client, test_cli_user):
 
     with patch.object(KanbanClient, "__init__", return_value=None) as mock_init:
         with patch.object(KanbanClient, "login", return_value="fake-jwt-token") as mock_login:
-            class MockArgs:
-                username = "testuser"
-                password = "testpassword"
-                server = "http://localhost:8000"
-
-            cmd_login(MockArgs())
+            cmd_login(username="testuser", password="testpassword", server="http://localhost:8000")
             token = get_token()
             assert token == "fake-jwt-token"
 
@@ -75,7 +66,7 @@ def test_cli_logout_command():
     set_token("some-token")
     assert get_token() == "some-token"
 
-    cmd_logout(type("Args", (), {})())
+    cmd_logout()
     assert get_token() is None
 
 
@@ -93,10 +84,7 @@ def test_cli_boards_command(client, auth_headers, test_user):
     ]
 
     with patch("kanban.cli.KanbanClient", return_value=mock_client):
-        class MockArgs:
-            pass
-
-        cmd_boards(MockArgs())
+        cmd_boards()
 
         mock_client.boards.assert_called_once()
 
@@ -112,10 +100,7 @@ def test_cli_board_create_command(client, auth_headers, test_user):
     mock_client.board_create.return_value = {"id": 42}
 
     with patch("kanban.cli.KanbanClient", return_value=mock_client):
-        class MockArgs:
-            name = "New Board"
-
-        cmd_board_create(MockArgs())
+        cmd_board_create(name="New Board")
 
         mock_client.board_create.assert_called_once_with("New Board")
 
@@ -131,13 +116,7 @@ def test_cli_card_create_command(client, auth_headers, test_user):
     mock_client.card_create.return_value = {"id": 99}
 
     with patch("kanban.cli.KanbanClient", return_value=mock_client):
-        class MockArgs:
-            column_id = 5
-            title = "Test Card"
-            description = "A test description"
-            position = 0
-
-        cmd_card_create(MockArgs())
+        cmd_card_create(column_id=5, title="Test Card", description="A test description", position=0)
 
         mock_client.card_create.assert_called_once_with(5, "Test Card", "A test description", 0)
 
@@ -153,14 +132,7 @@ def test_cli_card_update_command(client, auth_headers, test_user):
     mock_client.card_update.return_value = {"id": 99}
 
     with patch("kanban.cli.KanbanClient", return_value=mock_client):
-        class MockArgs:
-            id = 99
-            title = "Updated Card"
-            description = "Updated description"
-            position = 1
-            column = 3
-
-        cmd_card_update(MockArgs())
+        cmd_card_update(card_id=99, title="Updated Card", description="Updated description", position=1, column=3)
 
         mock_client.card_update.assert_called_once_with(99, "Updated Card", "Updated description", 1, 3)
 
@@ -176,10 +148,7 @@ def test_cli_board_delete_command(client, auth_headers, test_user):
     mock_client.board_delete.return_value = True
 
     with patch("kanban.cli.KanbanClient", return_value=mock_client):
-        class MockArgs:
-            id = 42
-
-        cmd_board_delete(MockArgs())
+        cmd_board_delete(board_id=42)
 
         mock_client.board_delete.assert_called_once_with(42)
 
@@ -195,9 +164,6 @@ def test_cli_card_delete_command(client, auth_headers, test_user):
     mock_client.card_delete.return_value = True
 
     with patch("kanban.cli.KanbanClient", return_value=mock_client):
-        class MockArgs:
-            id = 99
-
-        cmd_card_delete(MockArgs())
+        cmd_card_delete(card_id=99)
 
         mock_client.card_delete.assert_called_once_with(99)
