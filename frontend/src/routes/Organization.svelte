@@ -28,11 +28,6 @@
   let currentUsername = $state('');
 
   onMount(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
 
     // Get username from token (simple decode - in production use JWT decode)
     try {

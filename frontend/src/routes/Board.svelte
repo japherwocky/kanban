@@ -12,13 +12,6 @@
   let availableTeams = $state([]);
 
   onMount(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      const currentPath = window.location.pathname;
-      localStorage.setItem('redirectPath', currentPath);
-      navigate('/login');
-      return;
-    }
 
     try {
       loading = true;

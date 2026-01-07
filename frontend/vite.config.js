@@ -10,6 +10,8 @@ export default defineConfig({
     emptyOutDir: true
   },
   server: {
+    port: 8080,
+    historyApiFallback: true,
     proxy: {
       '/api': 'http://localhost:8000',
       '/static': 'http://localhost:8000'
