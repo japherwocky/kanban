@@ -17,6 +17,11 @@
   let currentSection = $derived(params.section || 'users');
 
   onMount(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
     await checkAdminStatus();
     if (!isAdmin) {
       navigate('/');
