@@ -3,6 +3,7 @@
   import { Router, Route, Link } from 'svelte-routing';
   import { theme } from './lib/theme.js';
 
+  import Landing from './routes/Landing.svelte';
   import Login from './routes/Login.svelte';
   import BoardsList from './routes/BoardsList.svelte';
   import Board from './routes/Board.svelte';
@@ -46,7 +47,7 @@
   </Route>
 
   <Route path="/">
-    <BoardsList />
+    <Landing />
   </Route>
 
   <Route path="*">
