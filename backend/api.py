@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict
 from backend.auth import Token, create_access_token, get_current_user, get_current_admin
 from backend.database import db
 from backend.models import (
-    User, Board, Column, Card, Organization, OrganizationMember,
+    User, Board, Column, Card, Comment, Organization, OrganizationMember,
     Team, TeamMember
 )
 
@@ -140,6 +140,28 @@ class CardResponse(BaseModel):
     title: str
     description: Optional[str]
     position: int
+    comments: Optional[list] = []
+
+
+class CommentCreate(BaseModel):
+    card_id: int
+    content: str
+
+
+class CommentUpdate(BaseModel):
+    content: str
+
+
+class CommentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    card_id: int
+    user_id: int
+    username: str
+    content: str
+    created_at: datetime
+    updated_at: Optional[datetime]
 
 
 class OrganizationCreate(BaseModel):
@@ -953,7 +975,29 @@ async def get_board(
         raise HTTPException(status_code=403, detail="Not authorized")
     columns = []
     for column in board.columns:
-        cards = [{"id": c.id, "title": c.title, "description": c.description, "position": c.position} for c in column.cards]
+        cards = []
+        for card in column.cards:
+            # Get comments for this card
+            comments = Comment.select().where(Comment.card == card).order_by(Comment.created_at)
+            card_comments = [
+                {
+                    "id": comment.id,
+                    "card_id": comment.card.id,
+                    "user_id": comment.user.id,
+                    "username": comment.user.username,
+                    "content": comment.content,
+                    "created_at": comment.created_at,
+                    "updated_at": comment.updated_at
+                }
+                for comment in comments
+            ]
+            cards.append({
+                "id": card.id,
+                "title": card.title,
+                "description": card.description,
+                "position": card.position,
+                "comments": card_comments
+            })
         columns.append({"id": column.id, "name": column.name, "position": column.position, "cards": cards})
     return {
         "id": board.id,
@@ -1126,6 +1170,113 @@ async def delete_card(
     if not can_modify_board(current_user, card.column.board):
         raise HTTPException(status_code=403, detail="Not authorized")
     card.delete_instance()
+    return {"ok": True}
+
+
+# Comment endpoints
+@api.post("/comments", response_model=CommentResponse)
+async def create_comment(
+    comment_data: CommentCreate, current_user: User = Depends(get_current_user)
+):
+    # Get the card and verify access
+    card = Card.get_or_none(Card.id == comment_data.card_id)
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    
+    # Check if user can access the board containing this card
+    if not can_access_board(current_user, card.column.board):
+        raise HTTPException(status_code=403, detail="Not authorized to access this card")
+    
+    # Create the comment
+    comment = Comment.create_comment(
+        card=card,
+        user=current_user,
+        content=comment_data.content
+    )
+    
+    # Return comment with username
+    return CommentResponse(
+        id=comment.id,
+        card_id=comment.card.id,
+        user_id=comment.user.id,
+        username=comment.user.username,
+        content=comment.content,
+        created_at=comment.created_at,
+        updated_at=comment.updated_at
+    )
+
+
+@api.get("/cards/{card_id}/comments", response_model=list[CommentResponse])
+async def get_card_comments(
+    card_id: int, current_user: User = Depends(get_current_user)
+):
+    # Get the card and verify access
+    card = Card.get_or_none(Card.id == card_id)
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    
+    # Check if user can access the board containing this card
+    if not can_access_board(current_user, card.column.board):
+        raise HTTPException(status_code=403, detail="Not authorized to access this card")
+    
+    # Get comments ordered by creation time
+    comments = Comment.select().where(Comment.card == card).order_by(Comment.created_at)
+    
+    return [
+        CommentResponse(
+            id=comment.id,
+            card_id=comment.card.id,
+            user_id=comment.user.id,
+            username=comment.user.username,
+            content=comment.content,
+            created_at=comment.created_at,
+            updated_at=comment.updated_at
+        )
+        for comment in comments
+    ]
+
+
+@api.put("/comments/{comment_id}", response_model=CommentResponse)
+async def update_comment(
+    comment_id: int, comment_data: CommentUpdate, current_user: User = Depends(get_current_user)
+):
+    comment = Comment.get_or_none(Comment.id == comment_id)
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    # Only the comment author can update their comment
+    if comment.user != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized to update this comment")
+    
+    # Update the comment
+    comment.content = comment_data.content
+    comment.updated_at = datetime.now(timezone.utc)
+    comment.save()
+    
+    return CommentResponse(
+        id=comment.id,
+        card_id=comment.card.id,
+        user_id=comment.user.id,
+        username=comment.user.username,
+        content=comment.content,
+        created_at=comment.created_at,
+        updated_at=comment.updated_at
+    )
+
+
+@api.delete("/comments/{comment_id}")
+async def delete_comment(
+    comment_id: int, current_user: User = Depends(get_current_user)
+):
+    comment = Comment.get_or_none(Comment.id == comment_id)
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    # Only the comment author can delete their comment
+    if comment.user != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
+    
+    comment.delete_instance()
     return {"ok": True}
 
 

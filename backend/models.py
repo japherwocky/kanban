@@ -112,3 +112,20 @@ class Card(BaseModel):
     title = CharField(max_length=500)
     description = TextField(null=True)
     position = IntegerField()
+
+
+class Comment(BaseModel):
+    card = ForeignKeyField(Card, backref="comments")
+    user = ForeignKeyField(User, backref="comments")
+    content = TextField()
+    created_at = DateTimeField()
+    updated_at = DateTimeField(null=True)
+
+    @classmethod
+    def create_comment(cls, card, user, content):
+        return cls.create(
+            card=card,
+            user=user,
+            content=content,
+            created_at=datetime.now(timezone.utc)
+        )

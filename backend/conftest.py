@@ -3,7 +3,7 @@ import pytest
 import random
 import string
 from backend.database import db
-from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
+from backend.models import User, Board, Column, Card, Comment, Organization, OrganizationMember, Team, TeamMember
 
 
 @pytest.fixture(scope="session")
@@ -42,7 +42,7 @@ def test_db(setup_test_db):
         pass
     
     db.connect()
-    db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
+    db.create_tables([User, Board, Column, Card, Comment, Organization, OrganizationMember, Team, TeamMember])
     
     yield db
     
@@ -83,7 +83,7 @@ def test_cli_db(setup_test_db):
         pass
     
     db.connect()
-    db.create_tables([User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember])
+    db.create_tables([User, Board, Column, Card, Comment, Organization, OrganizationMember, Team, TeamMember])
     
     yield db
     

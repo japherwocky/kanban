@@ -127,6 +127,18 @@ export const api = {
     }),
     delete: (id) => apiFetch(`/api/cards/${id}`, { method: 'DELETE' }),
   },
+  comments: {
+    create: (cardId, content) => apiFetch('/api/comments', {
+      method: 'POST',
+      body: JSON.stringify({ card_id: cardId, content }),
+    }),
+    list: (cardId) => apiFetch(`/api/cards/${cardId}/comments`),
+    update: (commentId, content) => apiFetch(`/api/comments/${commentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    }),
+    delete: (commentId) => apiFetch(`/api/comments/${commentId}`, { method: 'DELETE' }),
+  },
   organizations: {
     list: () => apiFetch('/api/organizations'),
     get: (id) => apiFetch(`/api/organizations/${id}`),

@@ -3,6 +3,7 @@
   import { api } from './api.js';
   import Modal from './Modal.svelte';
   import ShareModal from './ShareModal.svelte';
+  import Comments from './Comments.svelte';
 
   let { board, onBack, availableTeams = [], onShare } = $props();
 
@@ -119,6 +120,23 @@
       alert('Failed to update card: ' + e.message);
     } finally {
       editLoading = false;
+    }
+  }
+
+  function handleCommentsUpdate(cardId, updatedComments) {
+    // Update the comments in the local state
+    columns = columns.map(col => ({
+      ...col,
+      cards: col.cards.map(card =>
+        card.id === cardId
+          ? { ...card, comments: updatedComments }
+          : card
+      )
+    }));
+    
+    // Also update the editing card if it's the same card
+    if (editingCard && editingCard.id === cardId) {
+      editingCard = { ...editingCard, comments: updatedComments };
     }
   }
 
@@ -326,6 +344,13 @@
               </button>
             </div>
           </form>
+          
+          {#if editingCard}
+            <Comments 
+              card={editingCard} 
+              onCommentsUpdate={handleCommentsUpdate}
+            />
+          {/if}
         {/snippet}
       </Modal>
     {/if}
