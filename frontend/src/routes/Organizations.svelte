@@ -11,11 +11,6 @@
   let createLoading = $state(false);
 
   onMount(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
     await loadOrganizations();
   });
 

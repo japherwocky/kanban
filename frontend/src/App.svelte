@@ -5,12 +5,13 @@
 
   import Landing from './routes/Landing.svelte';
   import Login from './routes/Login.svelte';
-  import BoardsList from './routes/BoardsList.svelte';
+  import BoardsList from './routes/Boards.svelte';
   import Board from './routes/Board.svelte';
   import Organizations from './routes/Organizations.svelte';
   import Organization from './routes/Organization.svelte';
   import Admin from './routes/Admin.svelte';
   import NotFound from './routes/NotFound.svelte';
+  import ProtectedRoute from './lib/ProtectedRoute.svelte';
 
   onMount(() => {
     theme.init();
@@ -23,27 +24,39 @@
   </Route>
 
   <Route path="/boards">
-    <BoardsList />
+    <ProtectedRoute>
+      <BoardsList />
+    </ProtectedRoute>
   </Route>
 
   <Route path="/boards/:id" let:params>
-    <Board {params} />
+    <ProtectedRoute>
+      <Board {params} />
+    </ProtectedRoute>
   </Route>
 
   <Route path="/organizations">
-    <Organizations />
+    <ProtectedRoute>
+      <Organizations />
+    </ProtectedRoute>
   </Route>
 
   <Route path="/organizations/:id" let:params>
-    <Organization {params} />
+    <ProtectedRoute>
+      <Organization {params} />
+    </ProtectedRoute>
   </Route>
 
   <Route path="/admin" let:params>
-    <Admin {params} />
+    <ProtectedRoute>
+      <Admin {params} />
+    </ProtectedRoute>
   </Route>
 
   <Route path="/admin/:section" let:params>
-    <Admin {params} />
+    <ProtectedRoute>
+      <Admin {params} />
+    </ProtectedRoute>
   </Route>
 
   <Route path="/">
