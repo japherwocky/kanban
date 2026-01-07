@@ -39,3 +39,13 @@ async def root():
         from fastapi.responses import FileResponse
         return FileResponse(index_path)
     return {"message": "Kanban API is running. Build the frontend to serve it here."}
+
+
+@app.get("/{path:path}")
+async def catch_all(path: str):
+    """Serve index.html for all non-API routes (SPA fallback)"""
+    index_path = os.path.join(STATIC_PATH, "index.html")
+    if os.path.exists(index_path):
+        from fastapi.responses import FileResponse
+        return FileResponse(index_path)
+    return {"message": "Kanban API is running"}
