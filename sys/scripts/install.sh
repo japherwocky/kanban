@@ -284,7 +284,10 @@ EOF
 create_admin_user() {
     echo -e "${YELLOW}👔 Creating admin user...${NC}"
     read -p "Enter admin username: " ADMIN_USER
-    read -s -p "Enter admin password: " ADMIN_PASS
+    echo -n "Enter admin password: "
+    stty -echo
+    read ADMIN_PASS
+    stty echo
     echo
     sudo -u $DEPLOY_USER DATABASE_PATH=$DEPLOY_DIR/kanban.db $DEPLOY_DIR/venv/bin/python $DEPLOY_DIR/manage.py user-create $ADMIN_USER $ADMIN_PASS --admin
 }
