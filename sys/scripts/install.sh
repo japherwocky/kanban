@@ -33,7 +33,7 @@ check_root() {
 
 # Function to create user with SSH key
 create_user() {
-    echo -e "${YELLOW}👤 Creating deployment user with SSH key...${NC}"
+    echo -e "${YELLOW}👤 Setting up deployment user and SSH key...${NC}"
 
     # Create user if not exists
     if ! id "$DEPLOY_USER" &>/dev/null; then
@@ -42,6 +42,10 @@ create_user() {
     else
         echo "User $DEPLOY_USER already exists"
     fi
+
+    # Ensure home directory exists and has correct ownership
+    mkdir -p $DEPLOY_DIR
+    chown $DEPLOY_USER:$DEPLOY_USER $DEPLOY_DIR
 
     # Create .ssh directory
     mkdir -p $DEPLOY_DIR/.ssh
