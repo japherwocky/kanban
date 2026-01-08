@@ -36,7 +36,7 @@ create_user() {
     echo -e "${YELLOW}👤 Setting up deployment user and SSH key...${NC}"
 
     # Create user if not exists
-    if ! id -u "$DEPLOY_USER" &>/dev/null; then
+    if ! getent passwd "$DEPLOY_USER" > /dev/null 2>&1; then
         useradd --system --home $DEPLOY_DIR --shell /bin/bash $DEPLOY_USER
         echo "User $DEPLOY_USER created"
     else
