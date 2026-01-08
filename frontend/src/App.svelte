@@ -5,7 +5,7 @@
 
   import Landing from './routes/Landing.svelte';
   import Login from './routes/Login.svelte';
-  import BoardsList from './routes/Boards.svelte';
+  import BoardsList from './routes/BoardsList.svelte';
   import Board from './routes/Board.svelte';
   import Organizations from './routes/Organizations.svelte';
   import Organization from './routes/Organization.svelte';
