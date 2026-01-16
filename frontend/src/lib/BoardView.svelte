@@ -37,7 +37,7 @@
   }
 
   function isBoardOwner() {
-    return board?.owner_id === currentUserId;
+    return board?.owner_id && String(board.owner_id) === String(currentUserId);
   }
 
   async function loadBoard() {
