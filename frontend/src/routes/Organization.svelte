@@ -31,6 +31,7 @@
 
     // Get username from token (simple decode - in production use JWT decode)
     try {
+      const token = localStorage.getItem('token');
       const tokenData = JSON.parse(atob(token.split('.')[1]));
       currentUsername = tokenData.username;
     } catch (e) {
