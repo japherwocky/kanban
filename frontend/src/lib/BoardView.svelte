@@ -155,6 +155,16 @@
     }
   }
 
+  async function deleteColumn(columnId, columnName) {
+    if (!confirm(`Delete column "${columnName}" and all its cards?`)) return;
+    try {
+      await api.columns.delete(columnId);
+      columns = columns.filter(col => col.id !== columnId);
+    } catch (e) {
+      alert('Failed to delete column: ' + e.message);
+    }
+  }
+
   function handleDndConsider(columnId, e) {
     const { items } = e.detail;
     columns = columns.map(col => {
@@ -245,7 +255,12 @@
         <div class="column">
           <div class="column-header">
             <h3>{column.name}</h3>
-            <span class="card-count">{column.cards.length}</span>
+            <div class="column-actions">
+              <span class="card-count">{column.cards.length}</span>
+              {#if isBoardOwner()}
+                <button class="column-delete-btn" onclick={() => deleteColumn(column.id, column.name)} title="Delete column">×</button>
+              {/if}
+            </div>
           </div>
           <div class="column-content">
             {#if column.cards.length > 0}
@@ -494,6 +509,32 @@
     align-items: center;
     padding: 1rem;
     border-bottom: 1px solid var(--color-border);
+  }
+
+  .column-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .column-delete-btn {
+    padding: 0.125rem 0.375rem;
+    font-size: 1rem;
+    line-height: 1;
+    background: transparent;
+    color: var(--color-muted-foreground);
+    border: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .column:hover .column-delete-btn {
+    opacity: 1;
+  }
+
+  .column-delete-btn:hover {
+    color: var(--color-destructive);
+    background: transparent;
   }
 
   .column-header h3 {
