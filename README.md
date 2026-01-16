@@ -54,6 +54,14 @@ kanban card-create 1 "To Do" "First task" --position 0
 | `kanban card-update <id> <title>` | Update a card |
 | `kanban card-delete <id>` | Delete a card |
 
+## 📚 CLI Documentation for Agents
+
+For agents who need to quickly get up to speed with the CLI tool:
+
+- **[CLI Quick Start Guide](docs/cli-quickstart.md)** - Get productive in minutes
+- **[CLI Command Reference](docs/cli-reference.md)** - Complete command cheat sheet  
+- **[Common Workflows](docs/cli-workflows.md)** - Real-world examples and patterns
+
 ## Self-Hosting
 
 ### 1. Clone the repository

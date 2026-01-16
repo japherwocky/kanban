@@ -3,7 +3,9 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, ConfigDict
+import os
 
 from backend.auth import Token, create_access_token, get_current_user, get_current_admin
 from backend.database import db
@@ -1624,7 +1626,7 @@ async def remove_team_member(
     tm = TeamMember.get_or_none(
         (TeamMember.team == team) &
         (TeamMember.user == current_user)
-    )
+)
     if not tm:
         raise HTTPException(status_code=403, detail="Not a team member")
 
@@ -1642,3 +1644,33 @@ async def remove_team_member(
 
     target.delete_instance()
     return {"ok": True}
+
+
+# Documentation routes for serving markdown files
+@api.get("/docs.md", response_class=PlainTextResponse)
+async def docs_markdown():
+    """Serve main documentation as raw markdown"""
+    docs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "content", "docs.md")
+    try:
+        with open(docs_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return content
+    except FileNotFoundError:
+        return "# Documentation Not Found\n\nThe documentation file could not be found."
+
+
+@api.get("/docs/{section}.md", response_class=PlainTextResponse)
+async def docs_section_markdown(section: str):
+    """Serve specific documentation section as raw markdown"""
+    # Validate section name to prevent directory traversal
+    allowed_sections = ["quickstart", "reference", "workflows"]
+    if section not in allowed_sections:
+        return "# Section Not Found\n\nThe requested documentation section does not exist."
+    
+    docs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "content", f"{section}.md")
+    try:
+        with open(docs_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return content
+    except FileNotFoundError:
+        return f"# {section.title()} Documentation Not Found\n\nThe documentation section could not be found."
