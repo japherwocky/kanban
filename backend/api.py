@@ -829,7 +829,7 @@ async def create_admin_board(
     if not owner:
         raise HTTPException(status_code=404, detail="Owner user not found")
 
-    board = Board.create_with_columns(owner=owner, name=board_data.name)
+    board = Board.create_with_columns(owner=owner, name=board_data.name, column_names=[])
 
     column_count = Column.select().where(Column.board == board).count()
     card_count = Card.select().join(Column).where(Column.board == board).count()
@@ -905,7 +905,7 @@ async def create_board(
     board_data: BoardCreate, current_user: User = Depends(get_current_user)
 ):
     with db.atomic():
-        board = Board.create_with_columns(owner=current_user, name=board_data.name)
+        board = Board.create_with_columns(owner=current_user, name=board_data.name, column_names=[])
     return {
         "id": board.id,
         "name": board.name,
