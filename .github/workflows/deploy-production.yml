@@ -51,6 +51,10 @@ jobs:
       - name: Build frontend
         working-directory: ./frontend
         run: |
+          # Delete lock file and node_modules to avoid native module issues
+          rm -f package-lock.json
+          rm -rf node_modules
+          # Use npm install which handles optional native deps better than npm ci
           npm install
           npm run build
 
