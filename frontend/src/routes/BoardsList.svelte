@@ -124,21 +124,23 @@
     <div class="boards-grid">
       {#each boards as board (board.id)}
         <div class="board-card" class:shared={board.shared_team_id}>
-          <button class="board-header" onclick={() => navigate(`/boards/${board.id}`)}>
-            <h3>{board.name}</h3>
+          <button class="card-content" onclick={() => navigate(`/boards/${board.id}`)}>
+            <div class="board-header">
+              <h3>{board.name}</h3>
+            </div>
+            <div class="board-meta">
+              <span>Created {formatDate(board.created_at)}</span>
+              {#if board.shared_team_id}
+                <span class="shared-badge">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 2C6.44772 2 6 2.44772 6 3V5H4C3.44772 5 3 5.44772 3 6V7C3 7.55228 4.44772 9 6 9H6V10C6 10.5523 6.44772 11 7 11H7.5C8.05228 11 8.5 10.5523 8.5 10V9H10C11.5523 9 13 7.55228 13 6V5H8.5V3C8.5 2.44772 8.05228 2 7.5 2H7ZM4.5 6C4.5 5.72386 4.72386 5.5 5 5.5H6.5V6H4.5V6ZM10 6V6.5H11.5V6C11.5 5.72386 11.2761 5.5 11 5.5H10V6Z" stroke="currentColor" stroke-width="1"/>
+                  </svg>
+                  {getTeamName(board.shared_team_id)}
+                </span>
+              {/if}
+            </div>
           </button>
           <button class="delete-btn" onclick={(e) => deleteBoard(board.id, e)} title="Delete board">×</button>
-          <div class="board-meta">
-            <span>Created {formatDate(board.created_at)}</span>
-            {#if board.shared_team_id}
-              <span class="shared-badge">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 2C6.44772 2 6 2.44772 6 3V5H4C3.44772 5 3 5.44772 3 6V7C3 7.55228 4.44772 9 6 9H6V10C6 10.5523 6.44772 11 7 11H7.5C8.05228 11 8.5 10.5523 8.5 10V9H10C11.5523 9 13 7.55228 13 6V5H8.5V3C8.5 2.44772 8.05228 2 7.5 2H7ZM4.5 6C4.5 5.72386 4.72386 5.5 5 5.5H6.5V6H4.5V6ZM10 6V6.5H11.5V6C11.5 5.72386 11.2761 5.5 11 5.5H10V6Z" stroke="currentColor" stroke-width="1"/>
-                </svg>
-                {getTeamName(board.shared_team_id)}
-              </span>
-            {/if}
-          </div>
         </div>
       {/each}
       <button class="board-card create-card" onclick={() => showCreateModal = true}>
@@ -257,8 +259,8 @@
 
   .board-card {
     display: flex;
-    flex-direction: column;
-    padding: 1.25rem;
+    flex-direction: row;
+    padding: 0;
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: 12px;
@@ -266,6 +268,7 @@
     transition: all 0.15s ease;
     text-align: left;
     position: relative;
+    overflow: hidden;
   }
 
   .board-card:hover {
@@ -275,6 +278,21 @@
 
   .board-card.shared {
     border-left: 4px solid var(--color-primary);
+  }
+
+  .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .card-content:hover {
+    background: var(--color-muted);
   }
 
   .board-header {
@@ -303,6 +321,8 @@
     border: none;
     opacity: 0;
     transition: opacity 0.15s ease;
+    cursor: pointer;
+    z-index: 1;
   }
 
   .board-card:hover .delete-btn {
