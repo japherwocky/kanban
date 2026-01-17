@@ -139,8 +139,12 @@ jobs:
           script: |
             echo "🚀 Starting deployment to production..."
             
-            # Run the existing deploy script - it handles everything!
+            # Configure git for the kanban user (needed for git pull)
             cd ${{ env.DEPLOY_PATH }}
+            git config --global user.email "deploy@github.actions"
+            git config --global user.name "GitHub Actions"
+            
+            # Run the existing deploy script - it handles everything!
             sys/scripts/deploy.sh
 
       - name: Verify deployment
