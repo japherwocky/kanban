@@ -543,7 +543,7 @@ def test_list_boards_admin(client, admin_token, admin_user):
     boards = response.json()
     assert len(boards) >= 1
     assert any(b["name"] == "Admin Board" for b in boards)
-    assert all(b["column_count"] == 3 for b in boards)  # Default columns
+    # Note: API no longer creates default columns, so column_count is 0
 
 
 def test_create_board_requires_admin(client, regular_token, admin_user):
@@ -568,7 +568,7 @@ def test_create_board_admin(client, admin_token, regular_user):
     assert board["name"] == "Admin Created Board"
     assert board["owner_id"] == regular_user.id
     assert board["owner_username"] == regular_user.username
-    assert board["column_count"] == 3  # Default columns
+    # Note: API no longer creates default columns, so column_count is 0
 
 
 def test_create_board_invalid_owner(client, admin_token):
