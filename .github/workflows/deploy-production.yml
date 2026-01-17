@@ -119,7 +119,7 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [test, check-changes, backup]
+    needs: [test, check-changes]
     if: needs.check-changes.outputs.deploy_needed == 'true'
     environment: production
     steps:
@@ -158,7 +158,7 @@ jobs:
   notify:
     name: Send Notification
     runs-on: ubuntu-latest
-    needs: [test, check-changes, backup, deploy]
+    needs: [test, check-changes, deploy]
     if: always() && needs.check-changes.outputs.deploy_needed == 'true'
     steps:
       - name: Get deployment status
