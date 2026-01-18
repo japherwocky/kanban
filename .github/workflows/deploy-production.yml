@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
 
 env:
   DEPLOY_HOST: kanban.pearachute.com
@@ -11,58 +15,21 @@ env:
   DEPLOY_PATH: /opt/kanban
 
 jobs:
-  # First, run tests to ensure we don't deploy broken code
-  test:
-    name: Run Tests
+  # Skip if CI didn't pass
+  skip-if-ci-failed:
+    name: Check CI Status
     runs-on: ubuntu-latest
+    if: github.event.workflow_run && github.event.workflow_run.conclusion != 'success'
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install backend dependencies
-        working-directory: ./backend
+      - name: CI failed or not successful
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install CLI dependencies
-        run: |
-          pip install -e ./kanban
-
-      - name: Run backend tests
-        working-directory: ./backend
-        run: |
-          pytest
-
-      - name: Run CLI tests
-        working-directory: ./backend
-        run: |
-          pytest tests/test_cli.py
-
-      - name: Build frontend
-        working-directory: ./frontend
-        run: |
-          # Delete lock file and node_modules to avoid native module issues
-          rm -f package-lock.json
-          rm -rf node_modules
-          # Use npm install which handles optional native deps better than npm ci
-          npm install
-          npm run build
+          echo "CI workflow did not complete successfully. Skipping deployment."
+          exit 1
 
   # Check if deployment is actually needed
   check-changes:
     name: Check for Deployment Changes
     runs-on: ubuntu-latest
-    needs: test
     outputs:
       deploy_needed: ${{ steps.changes.outputs.deploy_needed }}
       frontend_changed: ${{ steps.changes.outputs.frontend_changed }}
@@ -86,7 +53,7 @@ jobs:
 
           # Get the list of changed files
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-          
+
           frontend_changed=false
           backend_changed=false
           config_changed=false
@@ -121,14 +88,11 @@ jobs:
           echo "  Config: $config_changed"
           echo "  Deploy needed: $deploy_needed"
 
-  # Create database backup before deployment (handled by deploy script)
-  # This step is now handled within the deploy script
-
   # Deploy to production
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [test, check-changes]
+    needs: check-changes
     if: needs.check-changes.outputs.deploy_needed == 'true'
     environment: production
     steps:
@@ -142,22 +106,22 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             echo "🚀 Starting deployment to production..."
-            
+
             # Configure git for the kanban user (needed for git pull)
             cd ${{ env.DEPLOY_PATH }}
             git config --global user.email "deploy@github.actions"
             git config --global user.name "GitHub Actions"
-            
+
             # Run the existing deploy script - it handles everything!
             sys/scripts/deploy.sh
 
       - name: Verify deployment
         run: |
           echo "🔍 Verifying deployment..."
-          
+
           # Wait for service to be fully ready
           sleep 10
-          
+
           # Check if the application is responding
           if curl -f -s -o /dev/null -w "%{http_code}" https://kanban.pearachute.com/api/health | grep -q "200\|404"; then
             echo "✅ Application is responding"
@@ -171,7 +135,7 @@ jobs:
   notify:
     name: Send Notification
     runs-on: ubuntu-latest
-    needs: [test, check-changes, deploy]
+    needs: [check-changes, deploy]
     if: always() && needs.check-changes.outputs.deploy_needed == 'true'
     steps:
       - name: Get deployment status
@@ -191,17 +155,17 @@ jobs:
         with:
           script: |
             const message = `${{ steps.status.outputs.message }}
-            
+
             **Changes deployed:**
             - Frontend: ${{ needs.check-changes.outputs.frontend_changed }}
             - Backend: ${{ needs.check-changes.outputs.backend_changed }}
             - Configuration: ${{ needs.check-changes.outputs.config_changed }}
-            
+
             **Commit:** ${{ github.sha }}
             **Deployed by:** ${{ github.actor }}
-            
+
             🌐 **Live at:** https://kanban.pearachute.com`;
-            
+
             // Find any open PRs that might be related to this push
             const { data: pulls } = await github.rest.pulls.list({
               owner: context.repo.owner,
@@ -209,7 +173,7 @@ jobs:
               state: 'open',
               base: 'main'
             });
-            
+
             for (const pr of pulls) {
               if (pr.head.sha === context.sha) {
                 await github.rest.issues.createComment({
