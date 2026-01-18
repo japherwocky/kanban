@@ -59,6 +59,9 @@ build_frontend() {
     if git diff --name-only HEAD~1 HEAD | grep -q "frontend/"; then
         echo "Frontend files changed, rebuilding..."
         cd $DEPLOY_DIR/frontend
+        # Remove package-lock.json and node_modules to avoid native module issues
+        rm -f package-lock.json
+        rm -rf node_modules
         npm install
         npm run build
         echo "Frontend rebuilt"
