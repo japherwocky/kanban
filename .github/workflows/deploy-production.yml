@@ -112,6 +112,9 @@ jobs:
             git config --global user.email "deploy@github.actions"
             git config --global user.name "GitHub Actions"
 
+            # Ensure deploy script is executable (git doesn't preserve permissions)
+            chmod +x sys/scripts/deploy.sh
+
             # Run the existing deploy script - it handles everything!
             sys/scripts/deploy.sh
 
