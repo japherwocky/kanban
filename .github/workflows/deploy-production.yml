@@ -1,8 +1,6 @@
 name: Deploy to Production
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
   workflow_run:
     workflows: [CI]
@@ -15,17 +13,6 @@ env:
   DEPLOY_PATH: /opt/kanban
 
 jobs:
-  # Skip if CI didn't pass
-  skip-if-ci-failed:
-    name: Check CI Status
-    runs-on: ubuntu-latest
-    if: github.event.workflow_run && github.event.workflow_run.conclusion != 'success'
-    steps:
-      - name: CI failed or not successful
-        run: |
-          echo "CI workflow did not complete successfully. Skipping deployment."
-          exit 1
-
   # Check if deployment is actually needed
   check-changes:
     name: Check for Deployment Changes
@@ -36,6 +23,15 @@ jobs:
       backend_changed: ${{ steps.changes.outputs.backend_changed }}
       config_changed: ${{ steps.changes.outputs.config_changed }}
     steps:
+      - name: Check CI status (if triggered by workflow_run)
+        if: github.event_name == 'workflow_run'
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "CI workflow did not succeed (conclusion: ${{ github.event.workflow_run.conclusion }}). Skipping deployment."
+            exit 1
+          fi
+          echo "CI passed, proceeding with deployment check..."
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
