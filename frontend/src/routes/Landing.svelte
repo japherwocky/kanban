@@ -14,6 +14,10 @@
   function goToLogin() {
     navigate('/login');
   }
+
+  function goToDocs() {
+    navigate('/docs');
+  }
 </script>
 
 <div class="landing">
@@ -56,7 +60,11 @@
     <button class="cta-button" onclick={goToLogin}>
       Get Started
     </button>
-    
+
+    <p class="docs-link">
+      <button class="link-button" onclick={goToDocs}>📚 View Documentation</button>
+    </p>
+
     <p class="login-prompt">
       Already have an account? <button class="link-button" onclick={goToLogin}>Sign in</button>
     </p>
@@ -179,6 +187,10 @@
 
   .cta-button:active {
     transform: translateY(0);
+  }
+
+  .docs-link {
+    margin-top: 0.5rem;
   }
 
   .login-prompt {
