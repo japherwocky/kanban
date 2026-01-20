@@ -115,28 +115,17 @@
     }
   }
 
-  // Handle markdown link clicks to use SPA router
-  function handleDocsLinkClick(event) {
+  function handleLinkClick(event) {
     const link = event.target.closest('a');
     if (!link) return;
 
     const href = link.getAttribute('href');
     if (!href) return;
 
-    // Check if it's a docs link
-    if (href.startsWith('/docs/') || (href.endsWith('.md') && !href.startsWith('http'))) {
+    // Only handle docs links (let external links work normally)
+    if (href.startsWith('/docs/') || href.startsWith('#')) {
       event.preventDefault();
-
-      // Convert .md links to SPA routes
-      let targetPath = href;
-      if (href.endsWith('.md')) {
-        targetPath = href.replace('.md', '');
-        if (!targetPath.startsWith('/')) {
-          targetPath = '/docs/' + targetPath;
-        }
-      }
-
-      navigate(targetPath);
+      navigate(href);
     }
   }
 </script>
@@ -405,8 +394,6 @@
   }
 </style>
 
-<svelte:window on:click={handleDocsLinkClick} />
-
 <div class="docs-container">
   <!-- Sidebar Navigation -->
   <nav class="docs-sidebar">
@@ -436,7 +423,7 @@
         {error}
       </div>
     {:else}
-      <div class="markdown-body">
+      <div class="markdown-body" on:click={handleLinkClick}>
         {@html htmlContent}
       </div>
     {/if}
