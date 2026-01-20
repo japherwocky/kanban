@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { navigate } from 'svelte-routing';
   import { marked } from 'marked';
   import Prism from 'prismjs';
   import 'prismjs/themes/prism.css';
@@ -23,14 +24,42 @@
 
   // Configure marked options
   marked.setOptions({
+    breaks: true,
+    gfm: true
+  });
+
+  // Custom renderer to fix markdown links to SPA routes
+  const renderer = new marked.Renderer();
+  const originalLinkRenderer = renderer.link.bind(renderer);
+
+  renderer.link = function(href, title, text) {
+    // Convert markdown file links to SPA route links
+    if (href && href.endsWith('.md')) {
+      // Remove .md and convert to SPA route
+      href = href.replace('.md', '');
+      // If it's a relative link (like quickstart.md), prepend /docs/
+      if (!href.startsWith('/')) {
+        href = '/docs/' + href;
+      }
+      // Handle anchor links (like quickstart.md#section)
+      if (href.includes('#')) {
+        const [path, anchor] = href.split('#');
+        href = path + '#' + anchor;
+      }
+    }
+    return originalLinkRenderer(href, title, text);
+  };
+
+  marked.use({ renderer });
+
+  // Configure highlight function
+  marked.setOptions({
     highlight: function(code, lang) {
       if (Prism.languages[lang]) {
         return Prism.highlight(code, Prism.languages[lang], lang);
       }
       return code;
-    },
-    breaks: true,
-    gfm: true
+    }
   });
 
   onMount(async () => {
@@ -83,6 +112,31 @@
           button.textContent = '📋 Copy';
         }, 2000);
       });
+    }
+  }
+
+  // Handle markdown link clicks to use SPA router
+  function handleDocsLinkClick(event) {
+    const link = event.target.closest('a');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    // Check if it's a docs link
+    if (href.startsWith('/docs/') || (href.endsWith('.md') && !href.startsWith('http'))) {
+      event.preventDefault();
+
+      // Convert .md links to SPA routes
+      let targetPath = href;
+      if (href.endsWith('.md')) {
+        targetPath = href.replace('.md', '');
+        if (!targetPath.startsWith('/')) {
+          targetPath = '/docs/' + targetPath;
+        }
+      }
+
+      navigate(targetPath);
     }
   }
 </script>
@@ -350,6 +404,8 @@
     }
   }
 </style>
+
+<svelte:window on:click={handleDocsLinkClick} />
 
 <div class="docs-container">
   <!-- Sidebar Navigation -->
