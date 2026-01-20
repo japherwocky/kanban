@@ -1,6 +1,5 @@
 <script>
   import { onMount } from 'svelte';
-  import { navigate } from 'svelte-routing';
   import { marked } from 'marked';
   import Prism from 'prismjs';
   import 'prismjs/themes/prism.css';
@@ -25,35 +24,7 @@
   // Configure marked options
   marked.setOptions({
     breaks: true,
-    gfm: true
-  });
-
-  // Custom renderer to fix markdown links to SPA routes
-  const renderer = new marked.Renderer();
-  const originalLinkRenderer = renderer.link.bind(renderer);
-
-  renderer.link = function(href, title, text) {
-    // Convert markdown file links to SPA route links
-    if (href && href.endsWith('.md')) {
-      // Remove .md and convert to SPA route
-      href = href.replace('.md', '');
-      // If it's a relative link (like quickstart.md), prepend /docs/
-      if (!href.startsWith('/')) {
-        href = '/docs/' + href;
-      }
-      // Handle anchor links (like quickstart.md#section)
-      if (href.includes('#')) {
-        const [path, anchor] = href.split('#');
-        href = path + '#' + anchor;
-      }
-    }
-    return originalLinkRenderer(href, title, text);
-  };
-
-  marked.use({ renderer });
-
-  // Configure highlight function
-  marked.setOptions({
+    gfm: true,
     highlight: function(code, lang) {
       if (Prism.languages[lang]) {
         return Prism.highlight(code, Prism.languages[lang], lang);
@@ -72,20 +43,34 @@
     loadDocumentation(activeSection);
   }
 
+  function convertMarkdownLinks(markdown) {
+    // Convert relative .md links to /docs/ routes
+    // [text](quickstart.md) → [text](/docs/quickstart)
+    // [text](reference.md#section) → [text](/docs/reference#section)
+    return markdown.replace(/\[([^\]]+)\]\(([^)]+?\.md[^)]*)\)/g, (match, text, href) => {
+      let newHref = href.replace('.md', '');
+      if (!newHref.startsWith('/')) {
+        newHref = '/docs/' + newHref;
+      }
+      return `[${text}](${newHref})`;
+    });
+  }
+
   async function loadDocumentation(section) {
     loading = true;
     error = '';
     
     try {
       const response = await fetch(`/content/${section}.md`);
-      
+
       if (!response.ok) {
         throw new Error(`Documentation not found: ${section}`);
       }
-      
-      markdownContent = await response.text();
+
+      let rawMarkdown = await response.text();
+      markdownContent = convertMarkdownLinks(rawMarkdown);
       htmlContent = marked(markdownContent);
-      
+
       // Re-highlight code blocks after content loads
       setTimeout(() => {
         Prism.highlightAll();
@@ -112,20 +97,6 @@
           button.textContent = '📋 Copy';
         }, 2000);
       });
-    }
-  }
-
-  function handleLinkClick(event) {
-    const link = event.target.closest('a');
-    if (!link) return;
-
-    const href = link.getAttribute('href');
-    if (!href) return;
-
-    // Only handle docs links (let external links work normally)
-    if (href.startsWith('/docs/') || href.startsWith('#')) {
-      event.preventDefault();
-      navigate(href);
     }
   }
 </script>
@@ -423,7 +394,7 @@
         {error}
       </div>
     {:else}
-      <div class="markdown-body" on:click={handleLinkClick}>
+      <div class="markdown-body">
         {@html htmlContent}
       </div>
     {/if}
