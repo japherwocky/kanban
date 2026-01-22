@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { navigate } from 'svelte-routing';
   import { marked } from 'marked';
   import Prism from 'prismjs';
   import 'prismjs/themes/prism.css';
@@ -84,8 +85,10 @@
     loading = false;
   }
 
-  function handleSectionClick(sectionId) {
-    activeSection = sectionId;
+  function handleSectionClick(sectionPath, sectionId) {
+    console.log('Navigating to:', sectionPath, 'from section:', sectionId);
+    // Navigate to the new URL
+    navigate(sectionPath);
   }
 
   function copyCodeBlock(button) {
@@ -374,7 +377,7 @@
           <a 
             href="{section.path}" 
             class:active={activeSection === section.id}
-            on:click|preventDefault={() => handleSectionClick(section.id)}
+            on:click={() => handleSectionClick(section.path, section.id)}
           >
             {section.title}
           </a>
