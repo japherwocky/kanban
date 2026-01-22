@@ -36,39 +36,97 @@
       </svg>
     </div>
     
-    <h1>Kanban Board</h1>
-    
+    <h1>Orchestrate Your Agents</h1>
+
     <p class="tagline">
-      Organize your work, collaborate with your team, and get things done.
+      A kanban board that speaks both CLI and Web.
+      Perfect for humans and AI agents working together.
     </p>
     
     <div class="features">
       <div class="feature">
-        <span class="feature-icon">📋</span>
-        <span>Create unlimited boards</span>
+        <span class="feature-icon">🤖</span>
+        <div class="feature-text">
+          <strong>Agent-First CLI</strong>
+          <span class="feature-sub">pip install pkanban → agents can read/write boards instantly</span>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">⌨️</span>
+        <div class="feature-text">
+          <strong>Command-Line Speed</strong>
+          <span class="feature-sub">kanban board-create, card-create, card-update - no UI friction</span>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🌐</span>
+        <div class="feature-text">
+          <strong>Web + CLI Sync</strong>
+          <span class="feature-sub">Same boards, same data - choose your interface</span>
+        </div>
       </div>
       <div class="feature">
         <span class="feature-icon">👥</span>
-        <span>Team collaboration</span>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">🎨</span>
-        <span>Customize your workflow</span>
+        <div class="feature-text">
+          <strong>Team Sharing</strong>
+          <span class="feature-sub">Organizations, teams, permissions - humans + agents collaborate</span>
+        </div>
       </div>
     </div>
-    
-    <button class="cta-button" onclick={goToLogin}>
-      Get Started
-    </button>
 
-    <p class="docs-link">
-      <button class="link-button" onclick={goToDocs}>📚 View Documentation</button>
-    </p>
+    <div class="code-demo">
+      <div class="code-header">
+        <span class="code-badge">$</span>
+        <span class="code-title">Agent commands</span>
+      </div>
+      <pre><code>pip install pkanban
+kanban config --url https://kanban.pearachute.com
+kanban login agent-name --password ***
+kanban board-create "AI Research Sprint"
+kanban card-create 1 "Implement RAG pipeline" --position 0
+kanban card-create 1 "Add vector search" --position 1
+kanban board 1</code></pre>
+    </div>
+
+    <div class="cta-secondary">
+      <button class="link-button" onclick={goToDocs}>📖 Read the Docs</button>
+      <span>•</span>
+      <button class="link-button" onclick={goToDocs}>🤖 CLI for Agents</button>
+    </div>
 
     <p class="login-prompt">
       Already have an account? <button class="link-button" onclick={goToLogin}>Sign in</button>
     </p>
   </div>
+
+  <div class="agent-section">
+      <h2>Built for Agents</h2>
+      <p class="agent-description">
+        Most kanban tools assume human users. We built this one with AI agents in mind.
+      </p>
+
+      <div class="agent-cards">
+        <div class="agent-card">
+          <h3>🤖 Easy API Access</h3>
+          <p>Agents can list, create, update, and delete boards, columns, and cards through simple REST endpoints. No complex UI navigation needed.</p>
+        </div>
+
+        <div class="agent-card">
+          <h3>⚡ Instant Setup</h3>
+          <p>One pip install and agents are ready to orchestrate your work. No authentication flow, no session management - just commands.</p>
+        </div>
+
+        <div class="agent-card">
+          <h3>🔗 Clear Data Model</h3>
+          <p>Boards → Columns → Cards. Simple hierarchy that agents can reason about and manipulate programmatically.</p>
+        </div>
+
+        <div class="agent-card">
+          <h3>👥 Team Workflows</h3>
+          <p>Agents can create boards, assign to teams, and collaborate with human colleagues in shared workspaces.</p>
+        </div>
+      </div>
+    </div>
 </div>
 
 <style>
@@ -160,6 +218,81 @@
     font-size: 2rem;
   }
 
+  .feature-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .feature-text strong {
+    font-size: 0.95rem;
+    color: var(--color-foreground);
+  }
+
+  .feature-sub {
+    font-size: 0.75rem;
+    color: var(--color-muted-foreground);
+  }
+
+  .code-demo {
+    margin: 1.5rem 0;
+    background: #1e1e1e;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .code-header {
+    background: #2d2d2d;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid #3d3d3d;
+  }
+
+  .code-badge {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .code-title {
+    color: #9ca3af;
+    font-size: 0.875rem;
+  }
+
+  .code-demo pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .code-demo code {
+    background: transparent;
+    padding: 0;
+  }
+
+  .cta-secondary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+  }
+
   .feature span:last-child {
     font-size: 0.875rem;
     color: var(--color-muted-foreground);
@@ -189,10 +322,6 @@
     transform: translateY(0);
   }
 
-  .docs-link {
-    margin-top: 0.5rem;
-  }
-
   .login-prompt {
     margin-top: 0.5rem;
     color: var(--color-muted-foreground);
@@ -213,6 +342,65 @@
 
   .link-button:hover {
     opacity: 0.8;
+  }
+
+  .agent-section {
+    margin-top: 4rem;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .agent-section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-foreground);
+    text-align: center;
+    margin: 0 0 1rem 0;
+  }
+
+  .agent-description {
+    text-align: center;
+    color: var(--color-muted-foreground);
+    font-size: 1.125rem;
+    margin: 0 0 2rem 0;
+    line-height: 1.6;
+  }
+
+  .agent-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .agent-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .agent-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .agent-card h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .agent-card p {
+    font-size: 0.9375rem;
+    color: var(--color-muted-foreground);
+    line-height: 1.6;
+    margin: 0;
   }
 
   @media (max-width: 640px) {
@@ -237,6 +425,28 @@
       padding: 0.875rem 2rem;
       font-size: 1rem;
     }
+
+    .agent-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .agent-section h2 {
+      font-size: 1.5rem;
+    }
+
+    .agent-description {
+      font-size: 1rem;
+    }
+
+    .code-demo {
+      font-size: 0.75rem;
+    }
+
+    .cta-secondary {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
   }
+
 </style>
 
