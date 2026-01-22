@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.api import api
 from backend.database import init_db
 
-STATIC_PATH = os.environ.get("STATIC_PATH", os.path.join(os.path.dirname(__file__), "static"))
+STATIC_PATH = os.environ.get(
+    "STATIC_PATH", os.path.join(os.path.dirname(__file__), "static")
+)
 
 
 @asynccontextmanager
@@ -16,7 +18,12 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url="/api/docs",  # Move Swagger UI to /api/docs to avoid conflict with frontend /docs route
+    redoc_url="/api/redoc",  # Move ReDoc to /api/redoc
+    openapi_url="/api/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +49,7 @@ async def root():
     index_path = os.path.join(STATIC_PATH, "index.html")
     if os.path.exists(index_path):
         from fastapi.responses import FileResponse
+
         return FileResponse(index_path)
     return {"message": "Kanban API is running. Build the frontend to serve it here."}
 
@@ -52,5 +60,6 @@ async def catch_all(path: str):
     index_path = os.path.join(STATIC_PATH, "index.html")
     if os.path.exists(index_path):
         from fastapi.responses import FileResponse
+
         return FileResponse(index_path)
     return {"message": "Kanban API is running"}
