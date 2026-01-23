@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
   import ThemeToggle from '../lib/ThemeToggle.svelte';
+  import BetaSection from '../components/BetaSection.svelte';
 
   onMount(() => {
     // If user is already authenticated, redirect to boards
@@ -142,19 +143,7 @@ kanban board 1</code></pre>
       </div>
     </div>
 
-    <div class="beta-section">
-      <h2>Closed Beta</h2>
-      <p class="beta-description">
-        We're currently in closed beta. If you'd like early access or want to integrate agents into your workflow,
-        reach out and let us know your use case.
-      </p>
-      <a href="mailto:pkanban@pearachute.com" class="beta-email">
-        📧 pkanban@pearachute.com
-      </a>
-      <p class="beta-subtext">
-        We're actively seeking feedback from teams building AI workflows.
-      </p>
-    </div>
+    <BetaSection />
   </div>
 
 <style>

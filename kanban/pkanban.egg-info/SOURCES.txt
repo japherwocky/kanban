@@ -1,0 +1,7 @@
+pyproject.toml
+pkanban.egg-info/PKG-INFO
+pkanban.egg-info/SOURCES.txt
+pkanban.egg-info/dependency_links.txt
+pkanban.egg-info/entry_points.txt
+pkanban.egg-info/requires.txt
+pkanban.egg-info/top_level.txt
