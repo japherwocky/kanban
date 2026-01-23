@@ -205,11 +205,10 @@ kanban board 1</code></pre>
   }
 
   .features {
-    display: flex;
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
     margin: 1rem 0;
-    flex-wrap: wrap;
-    justify-content: center;
   }
 
   .feature {
@@ -221,7 +220,6 @@ kanban board 1</code></pre>
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: 12px;
-    min-width: 140px;
     transition: all 0.2s ease;
   }
 
@@ -441,7 +439,6 @@ kanban board 1</code></pre>
     }
 
     .feature {
-      min-width: 120px;
       padding: 0.75rem;
     }
 
