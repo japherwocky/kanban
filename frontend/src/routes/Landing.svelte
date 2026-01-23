@@ -58,32 +58,20 @@
 
     <div class="features">
       <div class="feature featured">
-        <span class="feature-icon">🤖</span>
-        <div class="feature-text">
-          <strong>Agent-First CLI</strong>
-          <span class="feature-sub">pip install pkanban → agents can read/write boards instantly</span>
-        </div>
+        <h3>🤖 Agent-First CLI</h3>
+        <p>pip install pkanban → agents can read/write boards instantly</p>
       </div>
       <div class="feature">
-        <span class="feature-icon">⌨️</span>
-        <div class="feature-text">
-          <strong>Command-Line Speed</strong>
-          <span class="feature-sub">kanban board-create, card-create, card-update - no UI friction</span>
-        </div>
+        <h3>⌨️ Command-Line Speed</h3>
+        <p>kanban board-create, card-create, card-update - no UI friction</p>
       </div>
       <div class="feature">
-        <span class="feature-icon">🌐</span>
-        <div class="feature-text">
-          <strong>Web + CLI Sync</strong>
-          <span class="feature-sub">Same boards, same data - choose your interface</span>
-        </div>
+        <h3>🌐 Web + CLI Sync</h3>
+        <p>Same boards, same data - choose your interface</p>
       </div>
       <div class="feature">
-        <span class="feature-icon">👥</span>
-        <div class="feature-text">
-          <strong>Team Sharing</strong>
-          <span class="feature-sub">Organizations, teams, permissions - humans + agents collaborate</span>
-        </div>
+        <h3>👥 Team Sharing</h3>
+        <p>Organizations, teams, permissions - humans + agents collaborate</p>
       </div>
     </div>
 
@@ -242,26 +230,21 @@ kanban board 1</code></pre>
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  .feature-icon {
-    font-size: 2rem;
-  }
-
-  .feature-text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    text-align: center;
-  }
-
-  .feature-text strong {
-    font-size: 0.95rem;
+  .feature h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
     color: var(--color-foreground);
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
-  .feature-sub {
-    font-size: 0.75rem;
+  .feature p {
+    font-size: 0.9375rem;
     color: var(--color-muted-foreground);
+    line-height: 1.6;
+    margin: 0;
   }
 
   .code-demo {
