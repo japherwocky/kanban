@@ -18,6 +18,14 @@
   function goToDocs() {
     navigate('/docs');
   }
+
+  function goToQuickstart() {
+    navigate('/docs/quickstart');
+  }
+
+  function goToReference() {
+    navigate('/docs/reference');
+  }
 </script>
 
 <div class="landing">
@@ -42,9 +50,13 @@
       A kanban board that speaks both CLI and Web.
       Perfect for humans and AI agents working together.
     </p>
-    
+
+    <button class="cta-button" onclick={goToLogin}>
+      Start Managing Tasks
+    </button>
+
     <div class="features">
-      <div class="feature">
+      <div class="feature featured">
         <span class="feature-icon">🤖</span>
         <div class="feature-text">
           <strong>Agent-First CLI</strong>
@@ -89,9 +101,11 @@ kanban board 1</code></pre>
     </div>
 
     <div class="cta-secondary">
-      <button class="link-button" onclick={goToDocs}>📖 Read the Docs</button>
+      <button class="link-button" onclick={goToQuickstart}>📖 Quick Start Guide</button>
       <span>•</span>
-      <button class="link-button" onclick={goToDocs}>🤖 CLI for Agents</button>
+      <button class="link-button" onclick={goToReference}>🤖 CLI Reference</button>
+      <span>•</span>
+      <button class="link-button" onclick={goToDocs}>📚 Full Documentation</button>
     </div>
 
     <p class="login-prompt">
@@ -127,7 +141,21 @@ kanban board 1</code></pre>
         </div>
       </div>
     </div>
-</div>
+
+    <div class="beta-section">
+      <h2>Closed Beta</h2>
+      <p class="beta-description">
+        We're currently in closed beta. If you'd like early access or want to integrate agents into your workflow,
+        reach out and let us know your use case.
+      </p>
+      <a href="mailto:pkanban@pearachute.com" class="beta-email">
+        📧 pkanban@pearachute.com
+      </a>
+      <p class="beta-subtext">
+        We're actively seeking feedback from teams building AI workflows.
+      </p>
+    </div>
+  </div>
 
 <style>
   .landing {
@@ -206,6 +234,19 @@ kanban board 1</code></pre>
     border-radius: 12px;
     min-width: 140px;
     transition: all 0.2s ease;
+  }
+
+  .feature.featured {
+    border: 2px solid var(--color-primary);
+    background: linear-gradient(135deg, var(--color-card) 0%, rgba(var(--color-primary-rgb), 0.1) 100%);
+  }
+
+  .feature.featured .feature-icon {
+    font-size: 2.5rem;
+  }
+
+  .feature.featured strong {
+    color: var(--color-primary);
   }
 
   .feature:hover {
@@ -291,12 +332,6 @@ kanban board 1</code></pre>
     margin: 1rem 0;
     color: var(--color-muted-foreground);
     font-size: 0.875rem;
-  }
-
-  .feature span:last-child {
-    font-size: 0.875rem;
-    color: var(--color-muted-foreground);
-    text-align: center;
   }
 
   .cta-button {
@@ -445,6 +480,75 @@ kanban board 1</code></pre>
     .cta-secondary {
       flex-direction: column;
       gap: 0.5rem;
+    }
+  }
+
+  .beta-section {
+    margin-top: 4rem;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    background: linear-gradient(135deg, var(--color-card) 0%, rgba(var(--color-primary-rgb), 0.05) 100%);
+    border: 2px solid var(--color-primary);
+    border-radius: 16px;
+    padding: 2.5rem;
+  }
+
+  .beta-section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-foreground);
+    margin: 0 0 1rem 0;
+  }
+
+  .beta-description {
+    color: var(--color-muted-foreground);
+    font-size: 1.125rem;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.6;
+  }
+
+  .beta-email {
+    display: inline-block;
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .beta-email:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .beta-subtext {
+    margin-top: 1.5rem;
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+    font-style: italic;
+  }
+
+  @media (max-width: 640px) {
+    .beta-section {
+      padding: 1.5rem;
+    }
+
+    .beta-section h2 {
+      font-size: 1.5rem;
+    }
+
+    .beta-description {
+      font-size: 1rem;
+    }
+
+    .beta-email {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
     }
   }
 
