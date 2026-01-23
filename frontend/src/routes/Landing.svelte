@@ -206,7 +206,7 @@ kanban board 1</code></pre>
 
   .features {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
     margin: 1rem 0;
   }
@@ -216,7 +216,7 @@ kanban board 1</code></pre>
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    padding: 1rem;
+    padding: 1.5rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: 12px;
