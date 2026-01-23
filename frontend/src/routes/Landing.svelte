@@ -101,11 +101,11 @@ kanban board 1</code></pre>
     </div>
 
     <div class="cta-secondary">
-      <button class="link-button" onclick={goToQuickstart}>📖 Quick Start Guide</button>
+      <button class="link-button" onclick={goToQuickstart}>Quick Start Guide</button>
       <span>•</span>
-      <button class="link-button" onclick={goToReference}>🤖 CLI Reference</button>
+      <button class="link-button" onclick={goToReference}>CLI Reference</button>
       <span>•</span>
-      <button class="link-button" onclick={goToDocs}>📚 Full Documentation</button>
+      <button class="link-button" onclick={goToDocs}>Full Documentation</button>
     </div>
 
     <p class="login-prompt">
