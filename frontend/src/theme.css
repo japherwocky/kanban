@@ -28,6 +28,7 @@
 
   --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
+  --color-primary-rgb: 37, 99, 235;
 
   --color-secondary: #64748b;
   --color-secondary-foreground: #ffffff;
@@ -53,6 +54,7 @@
 .dark {
   --color-primary: #3b82f6;
   --color-primary-foreground: #ffffff;
+  --color-primary-rgb: 59, 130, 246;
 
   --color-secondary: #94a3b8;
   --color-secondary-foreground: #0f172a;
