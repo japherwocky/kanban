@@ -57,6 +57,8 @@
 <style>
   .beta-section {
     margin-top: var(--margin-top, 4rem);
+    margin-left: auto;
+    margin-right: auto;
     max-width: var(--max-width, 600px);
     width: 100%;
     text-align: center;
