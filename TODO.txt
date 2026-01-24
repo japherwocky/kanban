@@ -3,45 +3,41 @@
 ## Phase 1: Header & Footer Components (DONE)
 - [x] Create Header.svelte - logo, nav links, auth buttons
 - [x] Create Footer.svelte - columns, copyright, social links
-- [x] Update App.svelte to use Header/Footer on public pages
-- [x] Update Landing.svelte to remove duplicate Header/ThemeToggle
-- [x] Update Login.svelte to fit new layout
+- [x] Create PublicLayout.svelte - wraps marketing pages with Header/Footer
 
-## Phase 2: Public Pages (with Header/Footer)
+## Phase 2: Layout Refactor (DONE)
+- [x] Update App.svelte to use PublicLayout for marketing pages
+- [x] App pages (BoardsList, Board, Organizations, Admin) are now standalone
+- [x] Removed Header/Footer duplication issues
+
+## Phase 3: Public Pages (with Header/Footer)
 
 ### Existing (updated)
-- [x] Landing (`/`) - updated with new layout
-- [x] Docs (`/docs/*`) - uses new layout
-- [x] Login (`/login`) - updated with new layout
+- [x] Landing (`/`) - uses PublicLayout
+- [x] Docs (`/docs/*`) - uses PublicLayout
+- [x] Login (`/login`) - uses PublicLayout
+- [x] Pricing (`/pricing`) - uses PublicLayout
+- [x] About (`/about`) - uses PublicLayout
+- [x] Contact (`/contact`) - uses PublicLayout
+- [x] Privacy (`/privacy`) - uses PublicLayout
+- [x] Terms (`/terms`) - uses PublicLayout
 
-### New Pages Created
-- [x] Pricing (`/pricing`) - Beta notice with "contact for pricing"
-- [x] About (`/about`) - Mission statement and use cases
-- [x] Contact (`/contact`) - Email, GitHub, location
-- [x] Privacy (`/privacy`) - Privacy policy placeholder
-- [x] Terms (`/terms`) - Terms of service placeholder
-
-### Helper Components
-- [x] PageLayout.svelte - Reusable layout for simple pages
-- [x] Reuse BetaSection.svelte for closed beta messaging
-
-## Phase 3: App Pages (no Header/Footer, full-width)
-These pages should NOT have header/footer:
-- [x] BoardsList (`/boards`) - already works
-- [x] Board (`/boards/:id`) - already works
-- [x] Organizations (`/organizations`) - already works
-- [x] Organization (`/organizations/:id`) - already works
-- [x] Admin (`/admin/*`) - already works
+## Phase 4: App Pages (standalone, no Header/Footer)
+- [x] BoardsList (`/boards`) - standalone
+- [x] Board (`/boards/:id`) - standalone
+- [x] Organizations (`/organizations`) - standalone
+- [x] Organization (`/organizations/:id`) - standalone
+- [x] Admin (`/admin/*`) - standalone
 
 ---
 
-## Done! 🎉
+## Done! Layout separation complete.
 
-All public pages now have a consistent Header/Footer layout.
-App pages remain full-width without navigation.
+**Marketing pages** (`/`, `/login`, `/docs/*`, `/pricing`, `/about`, `/contact`, `/privacy`, `/terms`)
+- Wrapped in PublicLayout
+- Has Header and Footer
 
-## Notes
-- Tech stack: Svelte + Tailwind CSS + CSS variables for theming
-- Use existing ThemeToggle component
-- Keep styling minimal and clean
-- Closed beta messaging via BetaSection component
+**App pages** (`/boards/*`, `/organizations/*`, `/admin/*`)
+- Standalone components
+- No Header/Footer
+- Each has its own navigation
