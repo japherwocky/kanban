@@ -102,10 +102,14 @@
   }
 
   h2 {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: var(--color-foreground);
-    margin: 0 0 0.75rem 0;
+    color: var(--color-muted-foreground);
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-variant: small-caps;
   }
 
   p {
@@ -170,7 +174,7 @@
     }
 
     h2 {
-      font-size: 1.125rem;
+      font-size: 0.875rem;
     }
   }
 </style>
