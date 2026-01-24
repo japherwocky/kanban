@@ -1,7 +1,6 @@
 <script>
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
-  import ThemeToggle from '../lib/ThemeToggle.svelte';
   import BetaSection from '../components/BetaSection.svelte';
 
   onMount(() => {
@@ -30,10 +29,6 @@
 </script>
 
 <div class="landing">
-  <div class="theme-toggle-wrapper">
-    <ThemeToggle />
-  </div>
-  
   <div class="hero">
     <div class="logo">
       <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -135,7 +130,7 @@ kanban board 1</code></pre>
   </div>
 
 <style>
-  .landing {
+.landing {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -144,12 +139,6 @@ kanban board 1</code></pre>
     padding: 2rem;
     background: var(--color-background);
     position: relative;
-  }
-
-  .theme-toggle-wrapper {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
   }
 
   .hero {
