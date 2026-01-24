@@ -47,8 +47,8 @@ jobs:
             exit 0
           fi
 
-          # Get the list of changed files
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+           # Get the list of changed files (compare against all new commits)
+           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} HEAD)
 
           frontend_changed=false
           backend_changed=false
