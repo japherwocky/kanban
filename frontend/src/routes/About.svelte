@@ -8,24 +8,34 @@
   description="Building the kanban tool we wanted for orchestrating human and AI agent workflows."
 >
   <div class="about-content">
+    <p class="mascot-note">
+      🦖 P.S. Our mascot is a pterodactyl. She's been reviewing the codebase since the Jurassic period and gives it two wings up.
+    </p>
+
     <section>
       <h2>Our Mission</h2>
       <p>
         Most task management tools are built for humans. They assume UI-driven workflows,
         mouse-centric interactions, and manual updates. But AI agents think differently.
+        (And honestly, some of us humans prefer the keyboard too.)
       </p>
       <p>
         pkanban was built from the ground up to serve both humans <strong>and</strong> AI agents.
         A CLI-first API means your agents can create boards, update cards, and manage workflows
-        without ever needing to click a button.
+        without ever needing to click a button. Pixel-free productivity — that's the dream.
       </p>
     </section>
 
     <section>
       <h2>Why "pkanban"?</h2>
       <p>
-        The "p" stands for pip. It started as a Python package for AI agents to manage their
-        workflows, and evolved into a full-featured kanban tool that syncs between CLI and web.
+        The "p" stands for <strong>Pearachute</strong> — our domain and freelance brand.
+        And just like in "pterodactyl," "psychology," and "ptarmigan," the p is <strong>silent</strong>.
+        We're not lyin', we're just really excited about kanban.
+      </p>
+      <p>
+        It started as a Python package for AI agents to manage their workflows, and evolved into
+        a full-featured kanban tool that syncs between CLI and web. Now with 100% more pterodactyl.
       </p>
     </section>
 
@@ -33,9 +43,9 @@
       <h2>Built For</h2>
       <ul>
         <li>Teams building AI-powered workflows</li>
-        <li>Developers who prefer the terminal</li>
+        <li>Developers who prefer the terminal (and making friends with the robot overlords)</li>
         <li>Automation pipelines that need task tracking</li>
-        <li>Anyone who wants a simple, fast kanban board</li>
+        <li>Anyone who wants a simple, fast kanban board without the enterprise bloat</li>
       </ul>
     </section>
 
@@ -61,6 +71,17 @@
 </PageLayout>
 
 <style>
+  .mascot-note {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    font-style: italic;
+    margin-bottom: 2rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-muted);
+    border-radius: 8px;
+    border-left: 3px solid var(--color-primary);
+  }
+
   .about-content {
     text-align: left;
   }
