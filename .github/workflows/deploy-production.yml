@@ -39,6 +39,15 @@ jobs:
       - name: Check for relevant changes
         id: changes
         run: |
+          # Determine the baseline commit to compare against
+          # For workflow_run: use github.event.before
+          # For workflow_dispatch: use HEAD~1
+          if [ -n "${{ github.event.before }}" ]; then
+            BASELINE="${{ github.event.before }}"
+          else
+            BASELINE="HEAD~1"
+          fi
+
           if [ "${{ github.event.inputs.force_deploy }}" = "true" ]; then
             echo "deploy_needed=true" >> $GITHUB_OUTPUT
             echo "frontend_changed=true" >> $GITHUB_OUTPUT
@@ -47,8 +56,8 @@ jobs:
             exit 0
           fi
 
-           # Get the list of changed files (compare against all new commits)
-           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} HEAD)
+          # Get the list of changed files
+          CHANGED_FILES=$(git diff --name-only "$BASELINE" HEAD)
 
           frontend_changed=false
           backend_changed=false
