@@ -51,7 +51,6 @@
 
     <BetaSection
       marginTop="2.5rem"
-      maxWidth="500px"
       borderRadius="12px"
       padding="2rem"
       h2FontSize="1.5rem"

@@ -1,8 +1,7 @@
-<div class="beta-section" style="
-  --margin-top: {marginTop};
-  --max-width: {maxWidth};
-  --border-radius: {borderRadius};
-  --padding: {padding};
+ <div class="beta-section" style="
+   --margin-top: {marginTop};
+   --border-radius: {borderRadius};
+   --padding: {padding};
   --h2-font-size: {h2FontSize};
   --desc-font-size: {descFontSize};
   --email-padding: {emailPadding};
@@ -34,7 +33,6 @@
 
 <script>
   export let marginTop = '4rem';
-  export let maxWidth = '600px';
   export let borderRadius = '16px';
   export let padding = '2.5rem';
   export let h2FontSize = '2rem';
@@ -59,7 +57,6 @@
     margin-top: var(--margin-top, 4rem);
     margin-left: auto;
     margin-right: auto;
-    max-width: var(--max-width, 600px);
     width: 100%;
     text-align: center;
     background: linear-gradient(135deg, var(--color-card) 0%, rgba(var(--color-primary-rgb), 0.05) 100%);
