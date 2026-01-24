@@ -37,43 +37,52 @@
   }
 </script>
 
-<div class="login">
-  <h1>Kanban Board</h1>
-  <form onsubmit={(e) => { e.preventDefault(); login(); }}>
-    <input bind:value={username} placeholder="Username" required />
-    <input type="password" bind:value={password} placeholder="Password" required />
-    <button type="submit">Login</button>
-  </form>
+<div class="login-container">
+  <div class="login">
+    <h1>Kanban Board</h1>
+    <form onsubmit={(e) => { e.preventDefault(); login(); }}>
+      <input bind:value={username} placeholder="Username" required />
+      <input type="password" bind:value={password} placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
 
-  <BetaSection 
-    marginTop="2rem"
-    maxWidth="400px"
-    borderRadius="12px"
-    padding="1.5rem"
-    h2FontSize="1.5rem"
-    descFontSize="0.9375rem"
-    emailPadding="0.625rem 1.25rem"
-    emailBorderRadius="8px"
-    emailFontWeight="500"
-    emailFontSize="0.875rem"
-    subtextFontSize="0.8125rem"
-    compactPadding="1rem"
-    compactH2FontSize="1.25rem"
-    compactDescFontSize="0.875rem"
-    compactEmailPadding="0.625rem 1.25rem"
-    compactEmailFontSize="0.875rem"
-  />
+    <BetaSection
+      marginTop="2rem"
+      maxWidth="400px"
+      borderRadius="12px"
+      padding="1.5rem"
+      h2FontSize="1.5rem"
+      descFontSize="0.9375rem"
+      emailPadding="0.625rem 1.25rem"
+      emailBorderRadius="8px"
+      emailFontWeight="500"
+      emailFontSize="0.875rem"
+      subtextFontSize="0.8125rem"
+      compactPadding="1rem"
+      compactH2FontSize="1.25rem"
+      compactDescFontSize="0.875rem"
+      compactEmailPadding="0.625rem 1.25rem"
+      compactEmailFontSize="0.875rem"
+    />
+  </div>
 </div>
 
 <style>
+  .login-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
   .login {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
     gap: 1rem;
-    padding: 1rem;
+    width: 100%;
   }
 
   .login h1 {
