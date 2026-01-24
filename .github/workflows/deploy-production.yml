@@ -130,6 +130,10 @@ jobs:
             git config --global user.email "deploy@github.actions"
             git config --global user.name "GitHub Actions"
 
+            # Reset hard to ensure we have the latest code
+            git fetch origin
+            git reset --hard origin/main
+
             # Ensure deploy script is executable (git doesn't preserve permissions)
             chmod +x sys/scripts/deploy.sh
 
