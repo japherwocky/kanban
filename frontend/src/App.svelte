@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { Router, Route } from 'svelte-routing';
+  import { Router, Route, Link } from 'svelte-routing';
   import { theme } from './lib/theme.js';
 
   import Landing from './routes/Landing.svelte';
@@ -26,90 +26,108 @@
   });
 </script>
 
-<svelte:head>
-  <script>
-    (function() {
-      function updateBodyClass() {
-        const path = window.location.pathname;
-        if (path.startsWith('/boards') || path.startsWith('/organizations') || path.startsWith('/admin')) {
-          document.body.classList.add('app-page');
-        } else {
-          document.body.classList.remove('app-page');
-        }
-      }
-      updateBodyClass();
-      window.addEventListener('popstate', updateBodyClass);
-      const originalPushState = history.pushState;
-      history.pushState = function() {
-        originalPushState.apply(this, arguments);
-        updateBodyClass();
-      };
-    })();
-  </script>
-</svelte:head>
-
 <Router>
-  <!-- Public pages -->
-  <Route path="/" component={Landing} />
-  <Route path="/docs" component={Docs} />
-  <Route path="/docs/:section" let:params>
-    <Docs {params} />
-  </Route>
-  <Route path="/login" component={Login} />
-  <Route path="/pricing" component={Pricing} />
-  <Route path="/about" component={About} />
-  <Route path="/contact" component={Contact} />
-  <Route path="/privacy" component={Privacy} />
-  <Route path="/terms" component={Terms} />
+  <!-- Public pages with Header and Footer -->
+  <div class="public-layout">
+    <Header />
+    <main>
+      <Route path="/">
+        <Landing />
+      </Route>
 
-  <!-- App pages: no Header/Footer -->
-  <Route path="/boards">
-    <ProtectedRoute>
-      <BoardsList />
-    </ProtectedRoute>
-  </Route>
+      <Route path="/docs">
+        <Docs />
+      </Route>
 
-  <Route path="/boards/:id" let:params>
-    <ProtectedRoute>
-      <Board {params} />
-    </ProtectedRoute>
-  </Route>
+      <Route path="/docs/:section" let:params>
+        <Docs {params} />
+      </Route>
 
-  <Route path="/organizations">
-    <ProtectedRoute>
-      <Organizations />
-    </ProtectedRoute>
-  </Route>
+      <Route path="/login">
+        <Login />
+      </Route>
 
-  <Route path="/organizations/:id" let:params>
-    <ProtectedRoute>
-      <Organization {params} />
-    </ProtectedRoute>
-  </Route>
+      <Route path="/pricing">
+        <Pricing />
+      </Route>
 
-  <Route path="/admin" let:params>
-    <ProtectedRoute>
-      <Admin {params} />
-    </ProtectedRoute>
-  </Route>
+      <Route path="/about">
+        <About />
+      </Route>
 
-  <Route path="/admin/:section" let:params>
-    <ProtectedRoute>
-      <Admin {params} />
-    </ProtectedRoute>
-  </Route>
+      <Route path="/contact">
+        <Contact />
+      </Route>
+
+      <Route path="/privacy">
+        <Privacy />
+      </Route>
+
+      <Route path="/terms">
+        <Terms />
+      </Route>
+    </main>
+    <Footer />
+  </div>
+
+  <!-- App pages (full-width, no Header/Footer) -->
+  <div class="app-layout">
+    <Route path="/boards">
+      <ProtectedRoute>
+        <BoardsList />
+      </ProtectedRoute>
+    </Route>
+
+    <Route path="/boards/:id" let:params>
+      <ProtectedRoute>
+        <Board {params} />
+      </ProtectedRoute>
+    </Route>
+
+    <Route path="/organizations">
+      <ProtectedRoute>
+        <Organizations />
+      </ProtectedRoute>
+    </Route>
+
+    <Route path="/organizations/:id" let:params>
+      <ProtectedRoute>
+        <Organization {params} />
+      </ProtectedRoute>
+    </Route>
+
+    <Route path="/admin" let:params>
+      <ProtectedRoute>
+        <Admin {params} />
+      </ProtectedRoute>
+    </Route>
+
+    <Route path="/admin/:section" let:params>
+      <ProtectedRoute>
+        <Admin {params} />
+      </ProtectedRoute>
+    </Route>
+  </div>
 
   <Route path="*">
     <NotFound />
   </Route>
 </Router>
 
-<Header />
-<Footer />
-
 <style>
-  :global(body.app-page) :global(.header),
-  :global(body.app-page) :global(.footer) {
-    display: none !important;
+  .public-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .public-layout main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-layout {
+    min-height: 100vh;
   }
 </style>
