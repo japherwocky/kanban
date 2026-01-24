@@ -39,9 +39,17 @@ jobs:
       - name: Check for relevant changes
         id: changes
         run: |
-          # Determine the baseline commit to compare against
-          # For workflow_run: use github.event.before
-          # For workflow_dispatch: use HEAD~1
+          # For workflow_dispatch, always deploy (user manually triggered)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "deploy_needed=true" >> $GITHUB_OUTPUT
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+            echo "config_changed=true" >> $GITHUB_OUTPUT
+            echo "Manual deployment triggered"
+            exit 0
+          fi
+
+          # For workflow_run: determine the baseline commit
           if [ -n "${{ github.event.before }}" ]; then
             BASELINE="${{ github.event.before }}"
           else
