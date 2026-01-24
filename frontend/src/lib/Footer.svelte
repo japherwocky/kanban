@@ -1,0 +1,193 @@
+<script>
+  import { navigate } from 'svelte-routing';
+
+  function goTo(path) {
+    navigate(path);
+  }
+</script>
+
+<footer class="footer">
+  <div class="footer-container">
+    <!-- Brand Column -->
+    <div class="footer-brand">
+      <button class="logo" onclick={() => goTo('/')}>
+        <svg width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="48" height="48" rx="8" stroke="currentColor" stroke-width="3" fill="none"/>
+          <rect x="16" y="20" width="12" height="8" rx="2" fill="currentColor"/>
+          <rect x="16" y="32" width="12" height="8" rx="2" fill="currentColor"/>
+          <rect x="32" y="20" width="12" height="8" rx="2" fill="currentColor"/>
+          <rect x="48" y="20" width="4" height="8" rx="2" fill="currentColor"/>
+        </svg>
+        <span>pkanban</span>
+      </button>
+      <p class="tagline">A kanban tool for humans and AI agents.</p>
+    </div>
+
+    <!-- Links Columns -->
+    <div class="footer-links">
+      <div class="link-group">
+        <h4>Product</h4>
+        <button onclick={() => goTo('/docs')}>Documentation</button>
+        <button onclick={() => goTo('/pricing')}>Pricing</button>
+      </div>
+
+      <div class="link-group">
+        <h4>Company</h4>
+        <button onclick={() => goTo('/about')}>About</button>
+        <button onclick={() => goTo('/contact')}>Contact</button>
+      </div>
+
+      <div class="link-group">
+        <h4>Legal</h4>
+        <button onclick={() => goTo('/privacy')}>Privacy</button>
+        <button onclick={() => goTo('/terms')}>Terms</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <p>&copy; {new Date().getFullYear()} pkanban. All rights reserved.</p>
+    <div class="social-links">
+      <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--color-card);
+    border-top: 1px solid var(--color-border);
+    margin-top: auto;
+  }
+
+  .footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 2rem;
+    display: grid;
+    gap: 2rem;
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--color-foreground);
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .logo:hover {
+    opacity: 0.8;
+  }
+
+  .logo svg {
+    color: var(--color-primary);
+  }
+
+  .tagline {
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .footer-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .link-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .link-group h4 {
+    color: var(--color-foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .link-group button {
+    background: none;
+    border: none;
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    transition: color 0.15s ease;
+  }
+
+  .link-group button:hover {
+    color: var(--color-foreground);
+    text-decoration: underline;
+  }
+
+  .footer-bottom {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .footer-bottom p {
+    color: var(--color-muted-foreground);
+    font-size: 0.8125rem;
+    margin: 0;
+  }
+
+  .social-links {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .social-links a {
+    color: var(--color-muted-foreground);
+    transition: color 0.15s ease;
+  }
+
+  .social-links a:hover {
+    color: var(--color-foreground);
+  }
+
+  @media (min-width: 640px) {
+    .footer-container {
+      grid-template-columns: 1fr 2fr;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .footer-links {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>
