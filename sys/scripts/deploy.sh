@@ -33,7 +33,7 @@ git_pull() {
     echo "Current branch: $CURRENT_BRANCH"
 
     git fetch origin
-    git pull origin $CURRENT_BRANCH
+    git reset --hard origin/$CURRENT_BRANCH
 
     echo "Code updated"
 }
