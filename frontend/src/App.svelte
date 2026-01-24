@@ -26,7 +26,7 @@
 </script>
 
 <Router>
-  <!-- Marketing pages with Header and Footer -->
+  <!-- Marketing pages with Header and Footer (via PublicLayout) -->
   <Route path="/" let:params>
     <PublicLayout>
       <Landing {params} />
@@ -126,6 +126,5 @@
 <style>
   :global(body) {
     margin: 0;
-    min-height: 100vh;
   }
 </style>
