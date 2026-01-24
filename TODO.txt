@@ -14,24 +14,34 @@
 - [x] Docs (`/docs/*`) - uses new layout
 - [x] Login (`/login`) - updated with new layout
 
-### New Pages to Create
-- [ ] Pricing (`/pricing`)
-- [ ] About (`/about`)
-- [ ] Contact (`/contact`)
-- [ ] Privacy (`/privacy`)
-- [ ] Terms (`/terms`)
+### New Pages Created
+- [x] Pricing (`/pricing`) - Beta notice with "contact for pricing"
+- [x] About (`/about`) - Mission statement and use cases
+- [x] Contact (`/contact`) - Email, GitHub, location
+- [x] Privacy (`/privacy`) - Privacy policy placeholder
+- [x] Terms (`/terms`) - Terms of service placeholder
+
+### Helper Components
+- [x] PageLayout.svelte - Reusable layout for simple pages
+- [x] Reuse BetaSection.svelte for closed beta messaging
 
 ## Phase 3: App Pages (no Header/Footer, full-width)
 These pages should NOT have header/footer:
-- [ ] BoardsList (`/boards`) - already works
-- [ ] Board (`/boards/:id`) - already works
-- [ ] Organizations (`/organizations`) - already works
-- [ ] Organization (`/organizations/:id`) - already works
-- [ ] Admin (`/admin/*`) - already works
+- [x] BoardsList (`/boards`) - already works
+- [x] Board (`/boards/:id`) - already works
+- [x] Organizations (`/organizations`) - already works
+- [x] Organization (`/organizations/:id`) - already works
+- [x] Admin (`/admin/*`) - already works
 
 ---
+
+## Done! 🎉
+
+All public pages now have a consistent Header/Footer layout.
+App pages remain full-width without navigation.
 
 ## Notes
 - Tech stack: Svelte + Tailwind CSS + CSS variables for theming
 - Use existing ThemeToggle component
 - Keep styling minimal and clean
+- Closed beta messaging via BetaSection component
