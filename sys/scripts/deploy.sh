@@ -55,19 +55,13 @@ update_dependencies() {
 build_frontend() {
     echo -e "${YELLOW}🏗️ Building frontend...${NC}"
 
-    # Check if frontend files changed
-    if git diff --name-only HEAD~1 HEAD | grep -q "frontend/"; then
-        echo "Frontend files changed, rebuilding..."
-        cd $DEPLOY_DIR/frontend
-        # Remove package-lock.json and node_modules to avoid native module issues
-        rm -f package-lock.json
-        rm -rf node_modules
-        npm install
-        npm run build
-        echo "Frontend rebuilt"
-    else
-        echo "Frontend files unchanged, skipping"
-    fi
+    cd $DEPLOY_DIR/frontend
+    # Remove package-lock.json and node_modules to avoid native module issues
+    rm -f package-lock.json
+    rm -rf node_modules
+    npm install
+    npm run build
+    echo "Frontend rebuilt"
 }
 
 # Function to run database migrations
