@@ -1,29 +1,33 @@
 # pkanban TODO
 
-## Phase 1: Header & Footer Components (IN PROGRESS)
-- [ ] Create Header.svelte - logo, nav links, auth buttons
-- [ ] Create Footer.svelte - columns, copyright, social links
-- [ ] Update App.svelte to use Header/Footer on public pages
+## Phase 1: Header & Footer Components (DONE)
+- [x] Create Header.svelte - logo, nav links, auth buttons
+- [x] Create Footer.svelte - columns, copyright, social links
+- [x] Update App.svelte to use Header/Footer on public pages
+- [x] Update Landing.svelte to remove duplicate Header/ThemeToggle
+- [x] Update Login.svelte to fit new layout
 
 ## Phase 2: Public Pages (with Header/Footer)
 
-### Existing (may need layout updates)
-- [ ] Landing (`/`) - existing, needs header/footer
-- [ ] Docs (`/docs/*`) - existing, needs header/footer
-- [ ] Login (`/login`) - existing, needs header/footer
+### Existing (updated)
+- [x] Landing (`/`) - updated with new layout
+- [x] Docs (`/docs/*`) - uses new layout
+- [x] Login (`/login`) - updated with new layout
 
 ### New Pages to Create
 - [ ] Pricing (`/pricing`)
 - [ ] About (`/about`)
 - [ ] Contact (`/contact`)
+- [ ] Privacy (`/privacy`)
+- [ ] Terms (`/terms`)
 
-## Phase 3: App Pages (no Header/FootER, full-width)
+## Phase 3: App Pages (no Header/Footer, full-width)
 These pages should NOT have header/footer:
-- [ ] BoardsList (`/boards`)
-- [ ] Board (`/boards/:id`)
-- [ ] Organizations (`/organizations`)
-- [ ] Organization (`/organizations/:id`)
-- [ ] Admin (`/admin/*`)
+- [ ] BoardsList (`/boards`) - already works
+- [ ] Board (`/boards/:id`) - already works
+- [ ] Organizations (`/organizations`) - already works
+- [ ] Organization (`/organizations/:id`) - already works
+- [ ] Admin (`/admin/*`) - already works
 
 ---
 
