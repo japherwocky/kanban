@@ -15,6 +15,11 @@
   import ProtectedRoute from './lib/ProtectedRoute.svelte';
   import Header from './lib/Header.svelte';
   import Footer from './lib/Footer.svelte';
+  import Pricing from './routes/Pricing.svelte';
+  import About from './routes/About.svelte';
+  import Contact from './routes/Contact.svelte';
+  import Privacy from './routes/Privacy.svelte';
+  import Terms from './routes/Terms.svelte';
 
   onMount(() => {
     theme.init();
@@ -43,23 +48,23 @@
       </Route>
 
       <Route path="/pricing">
-        <Landing />
+        <Pricing />
       </Route>
 
       <Route path="/about">
-        <Landing />
+        <About />
       </Route>
 
       <Route path="/contact">
-        <Landing />
+        <Contact />
       </Route>
 
       <Route path="/privacy">
-        <Landing />
+        <Privacy />
       </Route>
 
       <Route path="/terms">
-        <Landing />
+        <Terms />
       </Route>
     </main>
     <Footer />

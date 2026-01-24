@@ -1,0 +1,88 @@
+<script>
+  import PageLayout from '../lib/PageLayout.svelte';
+</script>
+
+<PageLayout title="Privacy Policy" description="">
+  <div class="legal-content">
+    <section>
+      <p class="last-updated">Last updated: January 2026</p>
+
+      <h2>Data Collection</h2>
+      <p>
+        pkanban collects minimal data necessary to provide the service. This includes
+        account information (username, email if provided), board data you create,
+        and usage metrics to improve the service.
+      </p>
+
+      <h2>Data Storage</h2>
+      <p>
+        All data is stored securely using industry-standard practices. We do not sell
+        or share your data with third parties for advertising purposes.
+      </p>
+
+      <h2>AI Agent Data</h2>
+      <p>
+        Any data processed through our CLI or API is treated with the same privacy
+        standards as user-created content. We do not use your board data to train
+        external AI models.
+      </p>
+
+      <h2>Cookies</h2>
+      <p>
+        We use essential cookies for authentication and session management. You can
+        disable cookies in your browser settings, though some features may not work.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        For privacy concerns, contact us at <a href="mailto:pkanban@pearachute.com">pkanban@pearachute.com</a>.
+      </p>
+    </section>
+  </div>
+</PageLayout>
+
+<style>
+  .legal-content {
+    text-align: left;
+  }
+
+  .last-updated {
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+    font-style: italic;
+    margin: 0 0 2rem 0;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin: 0 0 0.75rem 0;
+  }
+
+  p {
+    color: var(--color-muted-foreground);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0 0 1rem 0;
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    h2 {
+      font-size: 1.125rem;
+    }
+  }
+</style>
