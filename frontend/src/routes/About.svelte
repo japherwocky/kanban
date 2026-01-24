@@ -41,12 +41,24 @@
 
     <section>
       <h2>Built For</h2>
-      <ul>
-        <li>Teams building AI-powered workflows</li>
-        <li>Developers who prefer the terminal (and making friends with the robot overlords)</li>
-        <li>Automation pipelines that need task tracking</li>
-        <li>Anyone who wants a simple, fast kanban board without the enterprise bloat</li>
-      </ul>
+      <div class="built-for-grid">
+        <div class="built-for-card">
+          <h3>🤖 AI-Powered Teams</h3>
+          <p>Building workflows that orchestrate humans and agents together</p>
+        </div>
+        <div class="built-for-card">
+          <h3>⌨️ CLI Devs</h3>
+          <p>Developers who prefer the terminal (and making friends with robot overlords)</p>
+        </div>
+        <div class="built-for-card">
+          <h3>⚙️ Automation Pipelines</h3>
+          <p>Task tracking for CI/CD and agent workflows without the drag</p>
+        </div>
+        <div class="built-for-card">
+          <h3>🚀 Simplicity Seekers</h3>
+          <p>Fast, focused kanban boards without the enterprise bloat</p>
+        </div>
+      </div>
     </section>
 
     <BetaSection
@@ -113,6 +125,43 @@
     font-size: 1rem;
     line-height: 1.7;
     margin-bottom: 0.5rem;
+  }
+
+  .built-for-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .built-for-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+  }
+
+  .built-for-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .built-for-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .built-for-card p {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    line-height: 1.6;
+    margin: 0;
   }
 
   @media (max-width: 640px) {
