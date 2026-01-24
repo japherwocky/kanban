@@ -130,15 +130,13 @@ kanban board 1</code></pre>
   </div>
 
 <style>
-.landing {
-    min-height: 100vh;
+  .landing {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 2rem;
     background: var(--color-background);
-    position: relative;
   }
 
   .hero {
