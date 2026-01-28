@@ -218,7 +218,7 @@
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 0.5rem;
   }
 
   .nav-btn {
@@ -228,7 +228,6 @@
     border: 2px solid var(--color-border);
     text-decoration: none;
     font-size: 0.875rem;
-    margin-left: -2px;
   }
 
   .nav-btn:hover {
@@ -250,7 +249,6 @@
     background: var(--color-muted);
     color: var(--color-foreground);
     border: 2px solid var(--color-border);
-    margin-left: -2px;
   }
 
   .logout-btn:hover {
