@@ -44,9 +44,8 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 8px;
-    border: 1px solid var(--color-border);
-    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    background: transparent;
     color: var(--color-foreground);
     cursor: pointer;
     transition: all 0.15s ease;

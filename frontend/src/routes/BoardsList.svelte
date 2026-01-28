@@ -187,8 +187,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--color-border);
+    border: 2px solid var(--color-border);
+    padding: 1rem 1.5rem;
   }
 
   .logo-link {
@@ -218,16 +218,17 @@
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0;
   }
 
   .nav-btn {
     padding: 0.5rem 1rem;
     background: transparent;
     color: var(--color-foreground);
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-border);
     text-decoration: none;
     font-size: 0.875rem;
+    margin-left: -2px;
   }
 
   .nav-btn:hover {
@@ -248,7 +249,8 @@
     padding: 0.5rem 1rem;
     background: var(--color-muted);
     color: var(--color-foreground);
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-border);
+    margin-left: -2px;
   }
 
   .logout-btn:hover {
@@ -283,18 +285,15 @@
     flex-direction: row;
     padding: 0;
     background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border: 2px solid var(--color-border);
     cursor: pointer;
     transition: all 0.15s ease;
     text-align: left;
     position: relative;
-    overflow: hidden;
   }
 
   .board-card:hover {
     border-color: var(--color-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   .board-card.shared {
