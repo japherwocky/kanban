@@ -101,8 +101,11 @@
 </script>
 
 <div class="app">
-  <header>
-    <h1>Kanban Board</h1>
+<header>
+    <a href="/" class="logo-link">
+      <span class="logo-icon">⬡</span>
+      <h1>Kanban Board</h1>
+    </a>
     <div class="header-actions">
       <button class="nav-btn" onclick={() => navigate('/organizations')}>Organizations</button>
       {#if isAdmin}
@@ -188,10 +191,28 @@
     border-bottom: 1px solid var(--color-border);
   }
 
+  .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .logo-link:hover {
+    opacity: 0.8;
+  }
+
+  .logo-icon {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+  }
+
   header h1 {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-primary);
+    margin: 0;
   }
 
   .header-actions {
