@@ -143,10 +143,6 @@ kanban board 1</code></pre>
     max-width: 900px;
     width: 100%;
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
   }
 
   .logo {
