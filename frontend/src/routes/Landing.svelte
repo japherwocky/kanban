@@ -1,17 +1,8 @@
 <script>
-  import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
   import HeroSection from '../components/HeroSection.svelte';
   import FeaturesSection from '../components/FeaturesSection.svelte';
   import BetaSection from '../components/BetaSection.svelte';
-
-  onMount(() => {
-    // If user is already authenticated, redirect to boards
-    const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/boards');
-    }
-  });
 
   function goToLogin() {
     navigate('/login');
