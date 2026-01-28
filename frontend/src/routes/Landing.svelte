@@ -236,7 +236,7 @@ kanban board 1</code></pre>
 
   .code-demo {
     margin: 1.5rem 0;
-    background: #1e1e1e;
+    background: var(--color-muted);
     border-radius: 8px;
     overflow: hidden;
     width: 100%;
@@ -270,7 +270,7 @@ kanban board 1</code></pre>
     margin: 0;
     padding: 1rem;
     overflow-x: auto;
-    background: #1e1e1e;
+    background: var(--color-muted);
     color: #d4d4d4;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
