@@ -1,7 +1,11 @@
 import bcrypt  # type: ignore
 from peewee import (
-    CharField, IntegerField, ForeignKeyField, DateTimeField, TextField,
-    BooleanField
+    CharField,
+    IntegerField,
+    ForeignKeyField,
+    DateTimeField,
+    TextField,
+    BooleanField,
 )
 from playhouse.sqlite_ext import Model  # type: ignore
 from datetime import datetime, timezone
@@ -26,12 +30,20 @@ class User(BaseModel):
     @classmethod
     def create_user(cls, username, password, email=None, admin=False):
         if len(password) > PASSWORD_MAX_LENGTH:
-            raise ValueError(f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer")
-        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        return cls.create(username=username, password_hash=password_hash, email=email, admin=admin)
+            raise ValueError(
+                f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer"
+            )
+        password_hash = bcrypt.hashpw(
+            password.encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
+        return cls.create(
+            username=username, password_hash=password_hash, email=email, admin=admin
+        )
 
     def verify_password(self, password):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))  # type: ignore
+        return bcrypt.checkpw(
+            password.encode("utf-8"), self.password_hash.encode("utf-8")
+        )  # type: ignore
 
 
 class Organization(BaseModel):
@@ -42,7 +54,9 @@ class Organization(BaseModel):
 
     @classmethod
     def create_with_columns(cls, name, slug, owner):
-        return cls.create(name=name, slug=slug, owner=owner, created_at=datetime.now(timezone.utc))
+        return cls.create(
+            name=name, slug=slug, owner=owner, created_at=datetime.now(timezone.utc)
+        )
 
 
 class OrganizationMember(BaseModel):
@@ -51,9 +65,7 @@ class OrganizationMember(BaseModel):
     joined_at = DateTimeField()
 
     class Meta:  # type: ignore
-        indexes = (
-            (("user", "organization"), True),
-        )
+        indexes = ((("user", "organization"), True),)
 
 
 class Team(BaseModel):
@@ -63,7 +75,9 @@ class Team(BaseModel):
 
     @classmethod
     def create_with_columns(cls, name, organization):
-        return cls.create(name=name, organization=organization, created_at=datetime.now(timezone.utc))
+        return cls.create(
+            name=name, organization=organization, created_at=datetime.now(timezone.utc)
+        )
 
 
 class TeamMember(BaseModel):
@@ -72,9 +86,7 @@ class TeamMember(BaseModel):
     joined_at = DateTimeField()
 
     class Meta:  # type: ignore
-        indexes = (
-            (("user", "team"), True),
-        )
+        indexes = ((("user", "team"), True),)
 
 
 class Board(BaseModel):
@@ -85,7 +97,9 @@ class Board(BaseModel):
     created_at = DateTimeField()
 
     @classmethod
-    def create_with_columns(cls, owner, name, shared_team=None, is_public_to_org=False, column_names=None):
+    def create_with_columns(
+        cls, owner, name, shared_team=None, is_public_to_org=False, column_names=None
+    ):
         if column_names is None:
             column_names = ["To Do", "In Progress", "For Review"]
 
@@ -94,7 +108,7 @@ class Board(BaseModel):
             name=name,
             shared_team=shared_team,
             is_public_to_org=is_public_to_org,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
         for i, col_name in enumerate(column_names):
             Column.create(board=board, name=col_name, position=i)
@@ -124,8 +138,17 @@ class Comment(BaseModel):
     @classmethod
     def create_comment(cls, card, user, content):
         return cls.create(
-            card=card,
-            user=user,
-            content=content,
-            created_at=datetime.now(timezone.utc)
+            card=card, user=user, content=content, created_at=datetime.now(timezone.utc)
+        )
+
+
+class BetaSignup(BaseModel):
+    email = CharField(max_length=255, unique=True)
+    created_at = DateTimeField()
+    status = CharField(max_length=50, default="pending")  # pending, invited, rejected
+
+    @classmethod
+    def create_signup(cls, email):
+        return cls.create(
+            email=email, created_at=datetime.now(timezone.utc), status="pending"
         )

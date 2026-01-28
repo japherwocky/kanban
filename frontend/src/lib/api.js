@@ -22,6 +22,12 @@ export async function apiFetch(endpoint, options = {}) {
 }
 
 export const api = {
+  beta: {
+    signup: (email) => apiFetch('/api/beta-signup', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  },
   admin: {
     status: () => apiFetch('/api/admin/status'),
     users: {

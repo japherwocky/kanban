@@ -10,15 +10,23 @@ import os
 from backend.auth import Token, create_access_token, get_current_user, get_current_admin
 from backend.database import db
 from backend.models import (
-    User, Board, Column, Card, Comment, Organization, OrganizationMember,
-    Team, TeamMember
+    User,
+    Board,
+    Column,
+    Card,
+    Comment,
+    Organization,
+    OrganizationMember,
+    Team,
+    TeamMember,
+    BetaSignup,
 )
 
 api = APIRouter()
 
 
 def slugify(text):
-    return re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
 def can_access_board(user, board):
@@ -28,10 +36,12 @@ def can_access_board(user, board):
 
     # Board shared with team - check if user is team member
     if board.shared_team:
-        return TeamMember.get_or_none(
-            (TeamMember.user == user) &
-            (TeamMember.team == board.shared_team)
-        ) is not None
+        return (
+            TeamMember.get_or_none(
+                (TeamMember.user == user) & (TeamMember.team == board.shared_team)
+            )
+            is not None
+        )
 
     # Board public to org - check if user is org member
     if board.is_public_to_org:
@@ -49,10 +59,13 @@ def can_modify_board(user, board):
 
 def is_org_member(user, organization):
     """Check if user is a member of an organization"""
-    return OrganizationMember.get_or_none(
-        (OrganizationMember.user == user) &
-        (OrganizationMember.organization == organization)
-    ) is not None
+    return (
+        OrganizationMember.get_or_none(
+            (OrganizationMember.user == user)
+            & (OrganizationMember.organization == organization)
+        )
+        is not None
+    )
 
 
 def can_delete_board(user, board):
@@ -64,7 +77,11 @@ def can_share_board(user, board):
 
 
 def get_user_organizations(user):
-    return Organization.select().join(OrganizationMember).where(OrganizationMember.user == user)
+    return (
+        Organization.select()
+        .join(OrganizationMember)
+        .where(OrganizationMember.user == user)
+    )
 
 
 class LoginRequest(BaseModel):
@@ -226,6 +243,10 @@ class UserCreate(BaseModel):
     admin: bool = False
 
 
+class BetaSignupRequest(BaseModel):
+    email: str
+
+
 class UserUpdate(BaseModel):
     username: str
     email: Optional[str] = None
@@ -379,10 +400,14 @@ async def update_admin_user(
 
     # Prevent admin from removing their own admin access
     if user == current_admin_user and not user_data.admin:
-        raise HTTPException(status_code=400, detail="Cannot remove your own admin access")
+        raise HTTPException(
+            status_code=400, detail="Cannot remove your own admin access"
+        )
 
     # Check for duplicate username
-    existing = User.get_or_none((User.username == user_data.username) & (User.id != user_id))
+    existing = User.get_or_none(
+        (User.username == user_data.username) & (User.id != user_id)
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Username already taken")
 
@@ -437,9 +462,14 @@ async def reset_user_password(
 
     PASSWORD_MAX_LENGTH = 72
     if len(reset_data.password) > PASSWORD_MAX_LENGTH:
-        raise HTTPException(status_code=400, detail=f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer",
+        )
 
-    user.password_hash = hashpw(reset_data.password.encode('utf-8'), gensalt()).decode('utf-8')
+    user.password_hash = hashpw(reset_data.password.encode("utf-8"), gensalt()).decode(
+        "utf-8"
+    )
     user.save()
 
     return {"ok": True}
@@ -447,23 +477,31 @@ async def reset_user_password(
 
 # Admin organization management endpoints
 @api.get("/admin/organizations", response_model=list)
-async def list_admin_organizations(current_admin_user: User = Depends(get_current_admin)):
+async def list_admin_organizations(
+    current_admin_user: User = Depends(get_current_admin),
+):
     """List all organizations (admin only)"""
     organizations = Organization.select().order_by(Organization.id)
     result = []
     for org in organizations:
-        member_count = OrganizationMember.select().where(OrganizationMember.organization == org).count()
+        member_count = (
+            OrganizationMember.select()
+            .where(OrganizationMember.organization == org)
+            .count()
+        )
         team_count = Team.select().where(Team.organization == org).count()
-        result.append({
-            "id": org.id,
-            "name": org.name,
-            "slug": org.slug,
-            "owner_id": org.owner_id,
-            "owner_username": org.owner.username,
-            "member_count": member_count,
-            "team_count": team_count,
-            "created_at": org.created_at,
-        })
+        result.append(
+            {
+                "id": org.id,
+                "name": org.name,
+                "slug": org.slug,
+                "owner_id": org.owner_id,
+                "owner_username": org.owner.username,
+                "member_count": member_count,
+                "team_count": team_count,
+                "created_at": org.created_at,
+            }
+        )
     return result
 
 
@@ -485,17 +523,21 @@ async def create_admin_organization(
         counter += 1
 
     with db.atomic():
-        org = Organization.create_with_columns(name=org_data.name, slug=slug, owner=owner)
+        org = Organization.create_with_columns(
+            name=org_data.name, slug=slug, owner=owner
+        )
         # Auto-add owner as member
         OrganizationMember.create(
-            user=owner,
-            organization=org,
-            joined_at=datetime.now(timezone.utc)
+            user=owner, organization=org, joined_at=datetime.now(timezone.utc)
         )
         # Create default team
         Team.create_with_columns(name="Administrators", organization=org)
 
-    member_count = OrganizationMember.select().where(OrganizationMember.organization == org).count()
+    member_count = (
+        OrganizationMember.select()
+        .where(OrganizationMember.organization == org)
+        .count()
+    )
     team_count = Team.select().where(Team.organization == org).count()
 
     return {
@@ -531,17 +573,19 @@ async def update_admin_organization(
 
     # If owner changed, add new owner as member if not already
     existing_member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == new_owner)
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user == new_owner)
     )
     if not existing_member:
         OrganizationMember.create(
-            user=new_owner,
-            organization=org,
-            joined_at=datetime.now(timezone.utc)
+            user=new_owner, organization=org, joined_at=datetime.now(timezone.utc)
         )
 
-    member_count = OrganizationMember.select().where(OrganizationMember.organization == org).count()
+    member_count = (
+        OrganizationMember.select()
+        .where(OrganizationMember.organization == org)
+        .count()
+    )
     team_count = Team.select().where(Team.organization == org).count()
 
     return {
@@ -580,14 +624,16 @@ async def list_admin_teams(current_admin_user: User = Depends(get_current_admin)
     result = []
     for team in teams:
         member_count = TeamMember.select().where(TeamMember.team == team).count()
-        result.append({
-            "id": team.id,
-            "name": team.name,
-            "organization_id": team.organization_id,
-            "organization_name": team.organization.name,
-            "member_count": member_count,
-            "created_at": team.created_at,
-        })
+        result.append(
+            {
+                "id": team.id,
+                "name": team.name,
+                "organization_id": team.organization_id,
+                "organization_name": team.organization.name,
+                "member_count": member_count,
+                "created_at": team.created_at,
+            }
+        )
     return result
 
 
@@ -717,11 +763,13 @@ async def list_available_team_members(
     available = []
     for om in org_members:
         if om.user.id not in team_member_ids:
-            available.append({
-                "id": om.user.id,
-                "user_id": om.user.id,
-                "username": om.user.username,
-            })
+            available.append(
+                {
+                    "id": om.user.id,
+                    "user_id": om.user.id,
+                    "username": om.user.username,
+                }
+            )
 
     return available
 
@@ -743,27 +791,24 @@ async def add_admin_team_member(
 
     # Ensure user is a member of the organization
     org_member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == team.organization) &
-        (OrganizationMember.user == user)
+        (OrganizationMember.organization == team.organization)
+        & (OrganizationMember.user == user)
     )
     if not org_member:
         raise HTTPException(
             status_code=400,
-            detail=f"User '{user.username}' is not a member of the organization '{team.organization.name}'"
+            detail=f"User '{user.username}' is not a member of the organization '{team.organization.name}'",
         )
 
     # Check if already a team member
     existing = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user == user)
+        (TeamMember.team == team) & (TeamMember.user == user)
     )
     if existing:
         raise HTTPException(status_code=400, detail="User is already in this team")
 
     team_member = TeamMember.create(
-        user=user,
-        team=team,
-        joined_at=datetime.now(timezone.utc)
+        user=user, team=team, joined_at=datetime.now(timezone.utc)
     )
     return {
         "id": team_member.id,
@@ -785,8 +830,7 @@ async def remove_admin_team_member(
         raise HTTPException(status_code=404, detail="Team not found")
 
     target = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user_id == user_id)
+        (TeamMember.team == team) & (TeamMember.user_id == user_id)
     )
     if not target:
         raise HTTPException(status_code=404, detail="Member not found")
@@ -806,18 +850,20 @@ async def list_admin_boards(current_admin_user: User = Depends(get_current_admin
         card_count = Card.select().join(Column).where(Column.board == board).count()
         shared_team_name = board.shared_team.name if board.shared_team else None
 
-        result.append({
-            "id": board.id,
-            "name": board.name,
-            "owner_id": board.owner_id,
-            "owner_username": board.owner.username,
-            "shared_team_id": board.shared_team_id,
-            "shared_team_name": shared_team_name,
-            "is_public_to_org": board.is_public_to_org,
-            "column_count": column_count,
-            "card_count": card_count,
-            "created_at": board.created_at,
-        })
+        result.append(
+            {
+                "id": board.id,
+                "name": board.name,
+                "owner_id": board.owner_id,
+                "owner_username": board.owner.username,
+                "shared_team_id": board.shared_team_id,
+                "shared_team_name": shared_team_name,
+                "is_public_to_org": board.is_public_to_org,
+                "column_count": column_count,
+                "card_count": card_count,
+                "created_at": board.created_at,
+            }
+        )
     return result
 
 
@@ -831,7 +877,9 @@ async def create_admin_board(
     if not owner:
         raise HTTPException(status_code=404, detail="Owner user not found")
 
-    board = Board.create_with_columns(owner=owner, name=board_data.name, column_names=[])
+    board = Board.create_with_columns(
+        owner=owner, name=board_data.name, column_names=[]
+    )
 
     column_count = Column.select().where(Column.board == board).count()
     card_count = Card.select().join(Column).where(Column.board == board).count()
@@ -907,7 +955,9 @@ async def create_board(
     board_data: BoardCreate, current_user: User = Depends(get_current_user)
 ):
     with db.atomic():
-        board = Board.create_with_columns(owner=current_user, name=board_data.name, column_names=[])
+        board = Board.create_with_columns(
+            owner=current_user, name=board_data.name, column_names=[]
+        )
     return {
         "id": board.id,
         "name": board.name,
@@ -954,7 +1004,9 @@ async def update_board(
         raise HTTPException(status_code=403, detail="Not authorized")
     board.name = board_data.name
     board.save()
-    columns = [{"id": c.id, "name": c.name, "position": c.position} for c in board.columns]
+    columns = [
+        {"id": c.id, "name": c.name, "position": c.position} for c in board.columns
+    ]
     return {
         "id": board.id,
         "name": board.name,
@@ -967,9 +1019,7 @@ async def update_board(
 
 
 @api.get("/boards/{board_id}", response_model=BoardResponse)
-async def get_board(
-    board_id: int, current_user: User = Depends(get_current_user)
-):
+async def get_board(board_id: int, current_user: User = Depends(get_current_user)):
     board = Board.get_or_none(Board.id == board_id)
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
@@ -980,7 +1030,11 @@ async def get_board(
         cards = []
         for card in column.cards:
             # Get comments for this card
-            comments = Comment.select().where(Comment.card == card).order_by(Comment.created_at)
+            comments = (
+                Comment.select()
+                .where(Comment.card == card)
+                .order_by(Comment.created_at)
+            )
             card_comments = [
                 {
                     "id": comment.id,
@@ -989,18 +1043,27 @@ async def get_board(
                     "username": comment.user.username,
                     "content": comment.content,
                     "created_at": comment.created_at,
-                    "updated_at": comment.updated_at
+                    "updated_at": comment.updated_at,
                 }
                 for comment in comments
             ]
-            cards.append({
-                "id": card.id,
-                "title": card.title,
-                "description": card.description,
-                "position": card.position,
-                "comments": card_comments
-            })
-        columns.append({"id": column.id, "name": column.name, "position": column.position, "cards": cards})
+            cards.append(
+                {
+                    "id": card.id,
+                    "title": card.title,
+                    "description": card.description,
+                    "position": card.position,
+                    "comments": card_comments,
+                }
+            )
+        columns.append(
+            {
+                "id": column.id,
+                "name": column.name,
+                "position": column.position,
+                "cards": cards,
+            }
+        )
     return {
         "id": board.id,
         "name": board.name,
@@ -1013,9 +1076,7 @@ async def get_board(
 
 
 @api.delete("/boards/{board_id}")
-async def delete_board(
-    board_id: int, current_user: User = Depends(get_current_user)
-):
+async def delete_board(board_id: int, current_user: User = Depends(get_current_user)):
     board = Board.get_or_none(Board.id == board_id)
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
@@ -1059,7 +1120,7 @@ async def share_board(
     return {
         "ok": True,
         "shared_team_id": board.shared_team_id,
-        "is_public_to_org": board.is_public_to_org
+        "is_public_to_org": board.is_public_to_org,
     }
 
 
@@ -1078,7 +1139,12 @@ async def create_column(
         name=column_data.name,
         position=column_data.position,
     )
-    return {"id": column.id, "name": column.name, "position": column.position, "cards": []}
+    return {
+        "id": column.id,
+        "name": column.name,
+        "position": column.position,
+        "cards": [],
+    }
 
 
 @api.put("/columns/{column_id}", response_model=ColumnResponse)
@@ -1095,14 +1161,25 @@ async def update_column(
     column.name = column_data.name
     column.position = column_data.position
     column.save()
-    cards = [{"id": c.id, "title": c.title, "description": c.description, "position": c.position} for c in column.cards]
-    return {"id": column.id, "name": column.name, "position": column.position, "cards": cards}
+    cards = [
+        {
+            "id": c.id,
+            "title": c.title,
+            "description": c.description,
+            "position": c.position,
+        }
+        for c in column.cards
+    ]
+    return {
+        "id": column.id,
+        "name": column.name,
+        "position": column.position,
+        "cards": cards,
+    }
 
 
 @api.delete("/columns/{column_id}")
-async def delete_column(
-    column_id: int, current_user: User = Depends(get_current_user)
-):
+async def delete_column(column_id: int, current_user: User = Depends(get_current_user)):
     column = Column.get_or_none(Column.id == column_id)
     if not column:
         raise HTTPException(status_code=404, detail="Column not found")
@@ -1131,7 +1208,12 @@ async def create_card(
         description=card_data.description,
         position=card_data.position,
     )
-    return {"id": card.id, "title": card.title, "description": card.description, "position": card.position}
+    return {
+        "id": card.id,
+        "title": card.title,
+        "description": card.description,
+        "position": card.position,
+    }
 
 
 @api.put("/cards/{card_id}", response_model=CardResponse)
@@ -1159,13 +1241,16 @@ async def update_card(
     if card_data.position is not None:
         card.position = card_data.position
     card.save()
-    return {"id": card.id, "title": card.title, "description": card.description, "position": card.position}
+    return {
+        "id": card.id,
+        "title": card.title,
+        "description": card.description,
+        "position": card.position,
+    }
 
 
 @api.delete("/cards/{card_id}")
-async def delete_card(
-    card_id: int, current_user: User = Depends(get_current_user)
-):
+async def delete_card(card_id: int, current_user: User = Depends(get_current_user)):
     card = Card.get_or_none(Card.id == card_id)
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -1184,18 +1269,18 @@ async def create_comment(
     card = Card.get_or_none(Card.id == comment_data.card_id)
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
-    
+
     # Check if user can access the board containing this card
     if not can_access_board(current_user, card.column.board):
-        raise HTTPException(status_code=403, detail="Not authorized to access this card")
-    
+        raise HTTPException(
+            status_code=403, detail="Not authorized to access this card"
+        )
+
     # Create the comment
     comment = Comment.create_comment(
-        card=card,
-        user=current_user,
-        content=comment_data.content
+        card=card, user=current_user, content=comment_data.content
     )
-    
+
     # Return comment with username
     return CommentResponse(
         id=comment.id,
@@ -1204,7 +1289,7 @@ async def create_comment(
         username=comment.user.username,
         content=comment.content,
         created_at=comment.created_at,
-        updated_at=comment.updated_at
+        updated_at=comment.updated_at,
     )
 
 
@@ -1216,14 +1301,16 @@ async def get_card_comments(
     card = Card.get_or_none(Card.id == card_id)
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
-    
+
     # Check if user can access the board containing this card
     if not can_access_board(current_user, card.column.board):
-        raise HTTPException(status_code=403, detail="Not authorized to access this card")
-    
+        raise HTTPException(
+            status_code=403, detail="Not authorized to access this card"
+        )
+
     # Get comments ordered by creation time
     comments = Comment.select().where(Comment.card == card).order_by(Comment.created_at)
-    
+
     return [
         CommentResponse(
             id=comment.id,
@@ -1232,7 +1319,7 @@ async def get_card_comments(
             username=comment.user.username,
             content=comment.content,
             created_at=comment.created_at,
-            updated_at=comment.updated_at
+            updated_at=comment.updated_at,
         )
         for comment in comments
     ]
@@ -1240,21 +1327,25 @@ async def get_card_comments(
 
 @api.put("/comments/{comment_id}", response_model=CommentResponse)
 async def update_comment(
-    comment_id: int, comment_data: CommentUpdate, current_user: User = Depends(get_current_user)
+    comment_id: int,
+    comment_data: CommentUpdate,
+    current_user: User = Depends(get_current_user),
 ):
     comment = Comment.get_or_none(Comment.id == comment_id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
-    
+
     # Only the comment author can update their comment
     if comment.user != current_user:
-        raise HTTPException(status_code=403, detail="Not authorized to update this comment")
-    
+        raise HTTPException(
+            status_code=403, detail="Not authorized to update this comment"
+        )
+
     # Update the comment
     comment.content = comment_data.content
     comment.updated_at = datetime.now(timezone.utc)
     comment.save()
-    
+
     return CommentResponse(
         id=comment.id,
         card_id=comment.card.id,
@@ -1262,7 +1353,7 @@ async def update_comment(
         username=comment.user.username,
         content=comment.content,
         created_at=comment.created_at,
-        updated_at=comment.updated_at
+        updated_at=comment.updated_at,
     )
 
 
@@ -1273,11 +1364,13 @@ async def delete_comment(
     comment = Comment.get_or_none(Comment.id == comment_id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
-    
+
     # Only the comment author can delete their comment
     if comment.user != current_user:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
-    
+        raise HTTPException(
+            status_code=403, detail="Not authorized to delete this comment"
+        )
+
     comment.delete_instance()
     return {"ok": True}
 
@@ -1294,40 +1387,56 @@ async def create_organization(
         counter += 1
 
     with db.atomic():
-        org = Organization.create_with_columns(name=org_data.name, slug=slug, owner=current_user)
+        org = Organization.create_with_columns(
+            name=org_data.name, slug=slug, owner=current_user
+        )
         OrganizationMember.create(
-            user=current_user,
-            organization=org,
-            joined_at=datetime.now(timezone.utc)
+            user=current_user, organization=org, joined_at=datetime.now(timezone.utc)
         )
         Team.create_with_columns(name="Administrators", organization=org)
 
-    return {"id": org.id, "name": org.name, "slug": org.slug, "owner_id": org.owner_id, "created_at": org.created_at}
+    return {
+        "id": org.id,
+        "name": org.name,
+        "slug": org.slug,
+        "owner_id": org.owner_id,
+        "created_at": org.created_at,
+    }
 
 
 @api.get("/organizations", response_model=list)
 async def list_organizations(current_user: User = Depends(get_current_user)):
     orgs = get_user_organizations(current_user)
     return [
-        {"id": org.id, "name": org.name, "slug": org.slug, "owner_id": org.owner_id, "created_at": org.created_at}
+        {
+            "id": org.id,
+            "name": org.name,
+            "slug": org.slug,
+            "owner_id": org.owner_id,
+            "created_at": org.created_at,
+        }
         for org in orgs
     ]
 
 
 @api.get("/organizations/{org_id}", response_model=OrganizationResponse)
-async def get_organization(
-    org_id: int, current_user: User = Depends(get_current_user)
-):
+async def get_organization(org_id: int, current_user: User = Depends(get_current_user)):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
     member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user == current_user)
     )
     if not member:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
-    return {"id": org.id, "name": org.name, "slug": org.slug, "owner_id": org.owner_id, "created_at": org.created_at}
+    return {
+        "id": org.id,
+        "name": org.name,
+        "slug": org.slug,
+        "owner_id": org.owner_id,
+        "created_at": org.created_at,
+    }
 
 
 @api.put("/organizations/{org_id}")
@@ -1341,10 +1450,17 @@ async def update_organization(
         raise HTTPException(status_code=404, detail="Organization not found")
     # Only the owner (root) can update the organization
     if org.owner != current_user:
-        raise HTTPException(status_code=403, detail="Only the owner can update the organization")
+        raise HTTPException(
+            status_code=403, detail="Only the owner can update the organization"
+        )
     org.name = org_data.name
     org.save()
-    return {"id": org.id, "name": org.name, "slug": org.slug, "created_at": org.created_at}
+    return {
+        "id": org.id,
+        "name": org.name,
+        "slug": org.slug,
+        "created_at": org.created_at,
+    }
 
 
 @api.post("/organizations/{org_id}/members", response_model=OrganizationMemberResponse)
@@ -1366,16 +1482,13 @@ async def add_organization_member(
         raise HTTPException(status_code=404, detail="User not found")
 
     existing = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == user)
+        (OrganizationMember.organization == org) & (OrganizationMember.user == user)
     )
     if existing:
         raise HTTPException(status_code=400, detail="User is already a member")
 
     org_member = OrganizationMember.create(
-        user=user,
-        organization=org,
-        joined_at=datetime.now(timezone.utc)
+        user=user, organization=org, joined_at=datetime.now(timezone.utc)
     )
     return {
         "id": org_member.id,
@@ -1393,8 +1506,8 @@ async def list_organization_members(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
     member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user == current_user)
     )
     if not member:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
@@ -1422,15 +1535,15 @@ async def remove_organization_member(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user == current_user)
     )
     if not member:
         raise HTTPException(status_code=403, detail="Not a member")
 
     target = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user_id == user_id)
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user_id == user_id)
     )
     if not target:
         raise HTTPException(status_code=404, detail="Member not found")
@@ -1462,14 +1575,19 @@ async def create_team(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
     member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user == current_user)
     )
     if not member:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
 
     team = Team.create_with_columns(name=team_data.name, organization=org)
-    return {"id": team.id, "name": team.name, "organization_id": org.id, "created_at": team.created_at}
+    return {
+        "id": team.id,
+        "name": team.name,
+        "organization_id": org.id,
+        "created_at": team.created_at,
+    }
 
 
 @api.get("/organizations/{org_id}/teams", response_model=list)
@@ -1480,15 +1598,20 @@ async def list_organization_teams(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
     member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == org) &
-        (OrganizationMember.user == current_user)
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user == current_user)
     )
     if not member:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
 
     teams = Team.select().where(Team.organization == org)
     return [
-        {"id": team.id, "name": team.name, "organization_id": org.id, "created_at": team.created_at}
+        {
+            "id": team.id,
+            "name": team.name,
+            "organization_id": org.id,
+            "created_at": team.created_at,
+        }
         for team in teams
     ]
 
@@ -1505,15 +1628,19 @@ async def update_team(
 
     # Any team member can update team (Unix group model)
     tm = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user == current_user)
+        (TeamMember.team == team) & (TeamMember.user == current_user)
     )
     if not tm:
         raise HTTPException(status_code=403, detail="Not authorized to update team")
 
     team.name = team_data.name
     team.save()
-    return {"id": team.id, "name": team.name, "organization_id": team.organization_id, "created_at": team.created_at}
+    return {
+        "id": team.id,
+        "name": team.name,
+        "organization_id": team.organization_id,
+        "created_at": team.created_at,
+    }
 
 
 @api.delete("/teams/{team_id}")
@@ -1549,8 +1676,7 @@ async def add_team_member(
 
     # Any team member can add other org members (Unix group model)
     tm = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user == current_user)
+        (TeamMember.team == team) & (TeamMember.user == current_user)
     )
     if not tm:
         raise HTTPException(status_code=403, detail="Not authorized to add members")
@@ -1560,23 +1686,22 @@ async def add_team_member(
         raise HTTPException(status_code=404, detail="User not found")
 
     org_member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == team.organization) &
-        (OrganizationMember.user == user)
+        (OrganizationMember.organization == team.organization)
+        & (OrganizationMember.user == user)
     )
     if not org_member:
-        raise HTTPException(status_code=400, detail="User is not a member of this organization")
+        raise HTTPException(
+            status_code=400, detail="User is not a member of this organization"
+        )
 
     existing = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user == user)
+        (TeamMember.team == team) & (TeamMember.user == user)
     )
     if existing:
         raise HTTPException(status_code=400, detail="User is already in this team")
 
     team_member = TeamMember.create(
-        user=user,
-        team=team,
-        joined_at=datetime.now(timezone.utc)
+        user=user, team=team, joined_at=datetime.now(timezone.utc)
     )
     return {
         "id": team_member.id,
@@ -1595,8 +1720,8 @@ async def list_team_members(
         raise HTTPException(status_code=404, detail="Team not found")
 
     org_member = OrganizationMember.get_or_none(
-        (OrganizationMember.organization == team.organization) &
-        (OrganizationMember.user == current_user)
+        (OrganizationMember.organization == team.organization)
+        & (OrganizationMember.user == current_user)
     )
     if not org_member:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
@@ -1624,15 +1749,13 @@ async def remove_team_member(
         raise HTTPException(status_code=404, detail="Team not found")
 
     tm = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user == current_user)
-)
+        (TeamMember.team == team) & (TeamMember.user == current_user)
+    )
     if not tm:
         raise HTTPException(status_code=403, detail="Not a team member")
 
     target = TeamMember.get_or_none(
-        (TeamMember.team == team) &
-        (TeamMember.user_id == user_id)
+        (TeamMember.team == team) & (TeamMember.user_id == user_id)
     )
     if not target:
         raise HTTPException(status_code=404, detail="Member not found")
@@ -1650,7 +1773,9 @@ async def remove_team_member(
 @api.get("/docs.md", response_class=PlainTextResponse)
 async def docs_markdown():
     """Serve main documentation as raw markdown"""
-    docs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "content", "docs.md")
+    docs_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "frontend", "content", "docs.md"
+    )
     try:
         with open(docs_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -1665,12 +1790,40 @@ async def docs_section_markdown(section: str):
     # Validate section name to prevent directory traversal
     allowed_sections = ["quickstart", "reference", "workflows"]
     if section not in allowed_sections:
-        return "# Section Not Found\n\nThe requested documentation section does not exist."
-    
-    docs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "content", f"{section}.md")
+        return (
+            "# Section Not Found\n\nThe requested documentation section does not exist."
+        )
+
+    docs_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "frontend",
+        "content",
+        f"{section}.md",
+    )
     try:
         with open(docs_path, "r", encoding="utf-8") as f:
             content = f.read()
         return content
     except FileNotFoundError:
         return f"# {section.title()} Documentation Not Found\n\nThe documentation section could not be found."
+
+
+# Beta signup endpoint (public, no auth required)
+@api.post("/beta-signup")
+async def beta_signup(request: BetaSignupRequest):
+    """Register interest for beta access"""
+    import re
+
+    # Basic email validation
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    if not re.match(email_pattern, request.email):
+        raise HTTPException(status_code=400, detail="Invalid email address")
+
+    # Check if already signed up
+    existing = BetaSignup.get_or_none(BetaSignup.email == request.email)
+    if existing:
+        return {"message": "You're already on the list! We'll be in touch."}
+
+    # Create signup
+    BetaSignup.create_signup(request.email)
+    return {"message": "Thanks for signing up! We'll be in touch soon."}

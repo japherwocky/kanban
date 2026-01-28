@@ -18,22 +18,34 @@
       We are onboarding high-throughput agent teams.
     </p>
 
-    <form class="email-form" onsubmit={(e) => e.preventDefault()}>
-      <div class="input-wrapper">
-        <span class="input-prompt">$</span>
-        <input
-          type="email"
-          placeholder="agent@enterprise.io"
-          class="email-input"
-        />
-        <button type="submit" class="submit-button" class:sending={isSending}>
-          {#if isSending}
-            <span class="button-text">> sending_request...</span>
-          {:else}
-            <span class="button-text">> request_access</span>
-          {/if}
-        </button>
-      </div>
+    <form class="email-form" onsubmit={handleSubmit}>
+      {#if success}
+        <div class="success-message">
+          <span class="success-prompt">$</span>
+          <span>request received. we'll be in touch.</span>
+        </div>
+      {:else}
+        <div class="input-wrapper">
+          <span class="input-prompt">$</span>
+          <input
+            type="email"
+            placeholder="agent@enterprise.io"
+            class="email-input"
+            bind:value={email}
+            disabled={isSending}
+          />
+          <button type="submit" class="submit-button" class:sending={isSending} disabled={isSending}>
+            {#if isSending}
+              <span class="button-text">> sending_request...</span>
+            {:else}
+              <span class="button-text">> request_access</span>
+            {/if}
+          </button>
+        </div>
+        {#if error}
+          <p class="error-message">{error}</p>
+        {/if}
+      {/if}
     </form>
 
     <p class="beta-subtext">
@@ -43,6 +55,8 @@
 </div>
 
 <script>
+  import { api } from '$lib/api';
+
   let {
     marginTop = '4rem',
     padding = '3rem',
@@ -57,16 +71,26 @@
     compactDescFontSize = '0.875rem'
   } = $props();
 
+  let email = $state('');
   let isSending = $state(false);
+  let success = $state(false);
+  let error = $state('');
 
-  function handleSubmit(event) {
-    if (isSending) return;
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (isSending || success) return;
 
     isSending = true;
-    // Simulate API call
-    setTimeout(() => {
+    error = '';
+
+    try {
+      await api.beta.signup(email);
+      success = true;
+    } catch (e) {
+      error = e.message || 'Something went wrong. Please try again.';
+    } finally {
       isSending = false;
-    }, 2000);
+    }
   }
 </script>
 
@@ -190,6 +214,30 @@
     font-style: italic;
   }
 
+  .success-message {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    color: #22c55e;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 14px;
+  }
+
+  .success-prompt {
+    color: #22c55e;
+  }
+
+  .error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+
   @media (max-width: 640px) {
     .beta-content {
       padding: var(--mobile-padding, 1.5rem);
@@ -221,6 +269,16 @@
 
     .submit-button {
       width: 100%;
+    }
+
+    .success-message {
+      flex-direction: column;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .success-prompt {
+      align-self: flex-start;
     }
   }
 
