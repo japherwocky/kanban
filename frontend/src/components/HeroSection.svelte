@@ -40,7 +40,12 @@
     align-items: center;
     justify-content: center;
     padding: 60px 24px;
-    background: linear-gradient(180deg, #0a0a0f 0%, #0f172a 50%, #0a0a0f 100%);
+    background: linear-gradient(
+      180deg,
+      var(--color-background) 0%,
+      color-mix(in srgb, var(--color-primary) 10%, transparent) 50%,
+      var(--color-background) 100%
+    );
     position: relative;
     overflow: hidden;
   }
@@ -53,8 +58,8 @@
     right: 0;
     bottom: 0;
     background:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(34, 197, 94, 0.08) 0%, transparent 40%);
+      radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in srgb, var(--color-primary) 15%, transparent) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, color-mix(in srgb, var(--color-success) 8%, transparent) 0%, transparent 40%);
     pointer-events: none;
   }
 
@@ -77,11 +82,11 @@
   .headline {
     font-size: 3.5rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--color-foreground);
     margin: 0 0 20px 0;
     line-height: 1.15;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+    background: linear-gradient(135deg, var(--color-foreground) 0%, var(--color-muted-foreground) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -89,7 +94,7 @@
 
   .subhead {
     font-size: 1.25rem;
-    color: #64748b;
+    color: var(--color-muted-foreground);
     margin: 0 0 32px 0;
     line-height: 1.6;
     max-width: 600px;
@@ -102,28 +107,28 @@
     align-items: center;
     gap: 12px;
     padding: 14px 24px;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
   }
 
   .install-button:hover {
-    border-color: rgba(59, 130, 246, 0.4);
+    border-color: var(--color-primary);
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 8px 30px color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 
   .button-icon {
     font-size: 18px;
-    color: #3b82f6;
+    color: var(--color-primary);
   }
 
   .button-command {
     font-size: 15px;
-    color: #e2e8f0;
+    color: var(--color-foreground);
     font-weight: 500;
     background: transparent;
     padding: 0;
@@ -131,16 +136,16 @@
 
   .button-copy {
     font-size: 12px;
-    color: #64748b;
+    color: var(--color-muted-foreground);
     padding: 4px 10px;
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--color-foreground) 5%, transparent);
     border-radius: 6px;
     transition: all 0.2s ease;
   }
 
   .install-button:hover .button-copy {
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-foreground);
+    background: color-mix(in srgb, var(--color-foreground) 10%, transparent);
   }
 
   .demo-container {

@@ -20,6 +20,10 @@
   --color-border: var(--color-border);
   --color-card: var(--color-card);
   --color-card-foreground: var(--color-card-foreground);
+  --color-surface: var(--color-surface);
+  --color-surface-foreground: var(--color-surface-foreground);
+  --color-code-bg: var(--color-code-bg);
+  --color-code-fg: var(--color-code-fg);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 }
@@ -30,12 +34,10 @@
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Monaco", "Menlo", monospace;
 
+  /* Brand Colors */
   --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
   --color-primary-rgb: 37, 99, 235;
-
-  --color-secondary: #64748b;
-  --color-secondary-foreground: #ffffff;
 
   --color-accent: #8b5cf6;
   --color-accent-foreground: #ffffff;
@@ -46,22 +48,27 @@
   --color-error: #ef4444;
   --color-error-foreground: #ffffff;
 
-  --color-background: #ffffff;
+  /* Neutrals - Light Mode */
+  --color-background: #f8fafc;
   --color-foreground: #0f172a;
-  --color-muted: #f1f5f9;
+  --color-muted: #e2e8f0;
   --color-muted-foreground: #64748b;
-  --color-border: #e2e8f0;
-  --color-card: #f8fafc;
+  --color-border: #cbd5e1;
+  --color-card: #ffffff;
   --color-card-foreground: #0f172a;
+  --color-surface: #f1f5f9;
+  --color-surface-foreground: #334155;
+
+  /* Code/Technical Colors */
+  --color-code-bg: #1e293b;
+  --color-code-fg: #e2e8f0;
 }
 
 .dark {
+  /* Brand Colors */
   --color-primary: #3b82f6;
   --color-primary-foreground: #ffffff;
   --color-primary-rgb: 59, 130, 246;
-
-  --color-secondary: #94a3b8;
-  --color-secondary-foreground: #0f172a;
 
   --color-accent: #a78bfa;
   --color-accent-foreground: #0f172a;
@@ -72,13 +79,20 @@
   --color-error: #f87171;
   --color-error-foreground: #0f172a;
 
-  --color-background: #0f172a;
+  /* Neutrals - Dark Mode */
+  --color-background: #0a0a0f;
   --color-foreground: #f8fafc;
   --color-muted: #1e293b;
   --color-muted-foreground: #94a3b8;
   --color-border: #334155;
-  --color-card: #1e293b;
+  --color-card: #0f172a;
   --color-card-foreground: #f8fafc;
+  --color-surface: #1e293b;
+  --color-surface-foreground: #e2e8f0;
+
+  /* Code/Technical Colors */
+  --color-code-bg: #0f172a;
+  --color-code-fg: #e2e8f0;
 }
 
 body {

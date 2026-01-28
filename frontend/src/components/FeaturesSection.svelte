@@ -184,8 +184,8 @@
 
   .bento-box {
     position: relative;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 16px;
     padding: 24px;
     overflow: hidden;
@@ -194,20 +194,20 @@
   }
 
   .bento-box:hover {
-    border-color: rgba(59, 130, 246, 0.3);
+    border-color: var(--color-primary);
     transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 40px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
   .bento-box.hovered {
-    border-color: rgba(59, 130, 246, 0.5);
+    border-color: var(--color-primary);
   }
 
   .glow-spot {
     position: absolute;
     width: 200px;
     height: 200px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 15%, transparent) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
     transform: translate(-50%, -50%);
@@ -269,16 +269,16 @@
 
   /* Code Panel Styles */
   .code-panel {
-    background: #0f172a;
+    background: var(--color-code-bg);
     border-radius: 8px;
     padding: 16px;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
     line-height: 1.6;
   }
 
   .code-line {
-    color: #64748b;
+    color: var(--color-muted-foreground);
   }
 
   .code-indent {
@@ -292,20 +292,20 @@
   .code-keyword { color: #c084fc; }
   .code-type { color: #60a5fa; }
   .code-function { color: #fbbf24; }
-  .code-string { color: #4ade80; }
-  .code-comment { color: #475569; }
+  .code-string { color: var(--color-success); }
+  .code-comment { color: var(--color-muted-foreground); opacity: 0.7; }
 
   .code-line.highlight {
-    background: rgba(74, 222, 128, 0.1);
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
     margin: 0 -16px;
     padding: 0 16px;
-    border-left: 3px solid #4ade80;
-    color: #e2e8f0;
+    border-left: 3px solid var(--color-success);
+    color: var(--color-code-fg);
     transition: all 0.2s ease;
   }
 
   .code-line.highlight.active {
-    background: rgba(74, 222, 128, 0.2);
+    background: color-mix(in srgb, var(--color-success) 20%, transparent);
   }
 
   /* JSON Tree Styles */
@@ -317,29 +317,29 @@
 
   .json-tree {
     flex: 1;
-    background: #0f172a;
+    background: var(--color-code-bg);
     border-radius: 8px;
     padding: 16px;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.8;
   }
 
-  .json-line { color: #64748b; }
-  .json-brace { color: #94a3b8; }
+  .json-line { color: var(--color-muted-foreground); }
+  .json-brace { color: var(--color-muted-foreground); }
   .json-key { color: #60a5fa; }
-  .json-string { color: #4ade80; }
+  .json-string { color: var(--color-success); }
   .json-number { color: #fbbf24; }
 
   .robot-scanner {
     width: 60px;
     height: 60px;
-    color: #64748b;
+    color: var(--color-muted-foreground);
     transition: all 0.3s ease;
   }
 
   .robot-scanner.scanning {
-    color: #3b82f6;
+    color: var(--color-primary);
   }
 
   .robot-icon {
@@ -386,10 +386,10 @@
   .logo-item {
     flex-shrink: 0;
     padding: 12px 24px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-foreground) 6%, transparent);
     border-radius: 8px;
-    color: #64748b;
+    color: var(--color-muted-foreground);
     font-weight: 500;
     font-size: 14px;
     transition: all 0.3s ease;
@@ -397,9 +397,9 @@
 
   .logo-item:hover,
   .logo-item.colored {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--logo-color, #3b82f6);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    color: var(--logo-color, var(--color-primary));
+    border-color: color-mix(in srgb, var(--color-foreground) 12%, transparent);
   }
 
   .logo-text {

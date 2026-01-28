@@ -108,9 +108,9 @@
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(59, 130, 246, 0.08) 0%,
-      rgba(139, 92, 246, 0.12) 40%,
-      rgba(15, 23, 42, 0) 100%
+      color-mix(in srgb, var(--color-primary) 8%, transparent) 0%,
+      color-mix(in srgb, var(--color-accent) 12%, transparent) 40%,
+      transparent 100%
     );
   }
 
@@ -126,7 +126,7 @@
     font-weight: 700;
     color: var(--color-foreground);
     margin: 0 0 0.75rem 0;
-    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-family: var(--font-mono);
   }
 
   .beta-description {
@@ -144,8 +144,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0;
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 4px;
     max-width: 500px;
@@ -154,14 +154,14 @@
   }
 
   .input-wrapper:focus-within {
-    border-color: rgba(59, 130, 246, 0.5);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
   .input-prompt {
     padding: 0 12px;
-    color: #22c55e;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--color-success);
+    font-family: var(--font-mono);
     font-size: 14px;
   }
 
@@ -173,15 +173,15 @@
     padding: 12px 0;
     color: var(--color-foreground);
     font-size: 15px;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
   }
 
   .email-input::placeholder {
-    color: #475569;
+    color: var(--color-muted-foreground);
   }
 
   .submit-button {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
     border: none;
     border-radius: 8px;
     padding: 10px 16px;
@@ -191,7 +191,7 @@
 
   .submit-button:hover:not(.sending) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
   }
 
   .submit-button.sending {
@@ -200,8 +200,8 @@
   }
 
   .button-text {
-    color: #ffffff;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--color-primary-foreground);
+    font-family: var(--font-mono);
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
@@ -219,20 +219,20 @@
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
     border-radius: 12px;
-    color: #22c55e;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--color-success);
+    font-family: var(--font-mono);
     font-size: 14px;
   }
 
   .success-prompt {
-    color: #22c55e;
+    color: var(--color-success);
   }
 
   .error-message {
-    color: #ef4444;
+    color: var(--color-error);
     font-size: 0.875rem;
     margin-top: 0.75rem;
     text-align: center;

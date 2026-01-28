@@ -146,9 +146,9 @@
     gap: 16px;
     height: 100%;
     padding: 20px;
-    background: rgba(15, 23, 42, 0.6);
+    background: color-mix(in srgb, var(--color-code-bg) 60%, transparent);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--color-border);
     backdrop-filter: blur(10px);
   }
 
@@ -173,22 +173,22 @@
     border-radius: 50%;
   }
 
-  .column-dot.todo { background: #64748b; }
+  .column-dot.todo { background: var(--color-muted-foreground); }
   .column-dot.in-progress { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-  .column-dot.done { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .column-dot.done { background: var(--color-success); box-shadow: 0 0 8px var(--color-success); }
 
   .column-title {
     font-size: 13px;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--color-muted-foreground);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   .column-count {
     font-size: 12px;
-    color: #64748b;
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-muted-foreground);
+    background: color-mix(in srgb, var(--color-foreground) 5%, transparent);
     padding: 2px 8px;
     border-radius: 10px;
   }
@@ -202,8 +202,8 @@
   }
 
   .card {
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 14px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -212,9 +212,9 @@
   }
 
   .card:hover {
-    border-color: rgba(59, 130, 246, 0.3);
+    border-color: var(--color-primary);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 25px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
   .card.animated {
@@ -239,13 +239,13 @@
 
   .card-id {
     font-size: 11px;
-    color: #64748b;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--color-muted-foreground);
+    font-family: var(--font-mono);
   }
 
   .card-title {
     font-size: 14px;
-    color: #e2e8f0;
+    color: var(--color-foreground);
     font-weight: 500;
     margin: 6px 0 0 0;
     line-height: 1.4;
@@ -260,11 +260,11 @@
     width: 24px;
     height: 24px;
     border-radius: 6px;
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
   }
 
   .card-avatar.done-avatar {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, #16a34a 100%);
   }
 
   @keyframes cardAppear {
