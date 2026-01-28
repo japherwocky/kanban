@@ -140,7 +140,7 @@ kanban board 1</code></pre>
   }
 
   .hero {
-    max-width: 600px;
+    max-width: 900px;
     width: 100%;
     text-align: center;
     display: flex;
