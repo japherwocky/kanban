@@ -1,13 +1,8 @@
- <div class="beta-section" style="
-   --margin-top: {marginTop};
-   --border-radius: {borderRadius};
-   --padding: {padding};
+<div class="beta-section" style="
+  --margin-top: {marginTop};
+  --padding: {padding};
   --h2-font-size: {h2FontSize};
   --desc-font-size: {descFontSize};
-  --email-padding: {emailPadding};
-  --email-border-radius: {emailBorderRadius};
-  --email-font-weight: {emailFontWeight};
-  --email-font-size: {emailFontSize};
   --subtext-font-size: {subtextFontSize};
   --mobile-padding: {mobilePadding};
   --mobile-h2-font-size: {mobileH2FontSize};
@@ -15,97 +10,188 @@
   --compact-padding: {compactPadding};
   --compact-h2-font-size: {compactH2FontSize};
   --compact-desc-font-size: {compactDescFontSize};
-  --compact-email-padding: {compactEmailPadding};
-  --compact-email-font-size: {compactEmailFontSize};
 ">
-  <h2>Closed Beta</h2>
-  <p class="beta-description">
-    We're currently in closed beta. If you'd like early access or want to integrate agents into your workflow,
-    reach out and let us know your use case.
-  </p>
-  <a href="mailto:pkanban@pearachute.com" class="beta-email">
-    pkanban@pearachute.com
-  </a>
-  <p class="beta-subtext">
-    We're actively seeking feedback from teams building AI workflows.
-  </p>
+  <div class="beta-background"></div>
+  <div class="beta-content">
+    <h2>Initialize Your Workspace</h2>
+    <p class="beta-description">
+      We are onboarding high-throughput agent teams.
+    </p>
+
+    <form class="email-form" onsubmit={(e) => e.preventDefault()}>
+      <div class="input-wrapper">
+        <span class="input-prompt">$</span>
+        <input
+          type="email"
+          placeholder="agent@enterprise.io"
+          class="email-input"
+        />
+        <button type="submit" class="submit-button" class:sending={isSending}>
+          {#if isSending}
+            <span class="button-text">> sending_request...</span>
+          {:else}
+            <span class="button-text">> request_access</span>
+          {/if}
+        </button>
+      </div>
+    </form>
+
+    <p class="beta-subtext">
+      Limited spots available for Q1 2025.
+    </p>
+  </div>
 </div>
 
 <script>
-  export let marginTop = '4rem';
-  export let borderRadius = '16px';
-  export let padding = '2.5rem';
-  export let h2FontSize = '2rem';
-  export let descFontSize = '1.125rem';
-  export let emailPadding = '0.875rem 2rem';
-  export let emailBorderRadius = '12px';
-  export let emailFontWeight = '600';
-  export let emailFontSize = '1rem';
-  export let subtextFontSize = '0.875rem';
-  export let mobilePadding = '1.5rem';
-  export let mobileH2FontSize = '1.5rem';
-  export let mobileDescFontSize = '1rem';
-  export let compactPadding = '1rem';
-  export let compactH2FontSize = '1.25rem';
-  export let compactDescFontSize = '0.875rem';
-  export let compactEmailPadding = '0.625rem 1.25rem';
-  export let compactEmailFontSize = '0.875rem';
+  let {
+    marginTop = '4rem',
+    padding = '3rem',
+    h2FontSize = '2rem',
+    descFontSize = '1.125rem',
+    subtextFontSize = '0.875rem',
+    mobilePadding = '1.5rem',
+    mobileH2FontSize = '1.5rem',
+    mobileDescFontSize = '1rem',
+    compactPadding = '1rem',
+    compactH2FontSize = '1.25rem',
+    compactDescFontSize = '0.875rem'
+  } = $props();
+
+  let isSending = $state(false);
+
+  function handleSubmit(event) {
+    if (isSending) return;
+
+    isSending = true;
+    // Simulate API call
+    setTimeout(() => {
+      isSending = false;
+    }, 2000);
+  }
 </script>
 
 <style>
   .beta-section {
+    position: relative;
     margin-top: var(--margin-top, 4rem);
-    margin-left: auto;
-    margin-right: auto;
     width: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+  }
+
+  .beta-background {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(59, 130, 246, 0.08) 0%,
+      rgba(139, 92, 246, 0.12) 40%,
+      rgba(15, 23, 42, 0) 100%
+    );
+  }
+
+  .beta-content {
+    position: relative;
+    z-index: 1;
     text-align: center;
-    background: linear-gradient(135deg, var(--color-card) 0%, rgba(var(--color-primary-rgb), 0.05) 100%);
-    border: 2px solid var(--color-primary);
-    border-radius: var(--border-radius, 16px);
-    padding: var(--padding, 2.5rem);
+    padding: var(--padding, 3rem);
   }
 
   .beta-section h2 {
     font-size: var(--h2-font-size, 2rem);
     font-weight: 700;
     color: var(--color-foreground);
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
   }
 
   .beta-description {
     color: var(--color-muted-foreground);
     font-size: var(--desc-font-size, 1.125rem);
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 2rem 0;
     line-height: 1.6;
   }
 
-  .beta-email {
-    display: inline-block;
-    background: var(--color-primary);
-    color: var(--color-primary-foreground);
-    padding: var(--email-padding, 0.875rem 2rem);
-    border-radius: var(--email-border-radius, 12px);
-    text-decoration: none;
-    font-weight: var(--email-font-weight, 600);
-    font-size: var(--email-font-size, 1rem);
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  .email-form {
+    margin-bottom: 1.5rem;
   }
 
-  .beta-email:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  .input-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 4px;
+    max-width: 500px;
+    width: 100%;
+    transition: all 0.2s ease;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .input-prompt {
+    padding: 0 12px;
+    color: #22c55e;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 14px;
+  }
+
+  .email-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 12px 0;
+    color: var(--color-foreground);
+    font-size: 15px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  .email-input::placeholder {
+    color: #475569;
+  }
+
+  .submit-button {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .submit-button:hover:not(.sending) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  .submit-button.sending {
+    opacity: 0.8;
+    cursor: not-allowed;
+  }
+
+  .button-text {
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
   .beta-subtext {
-    margin-top: 1.5rem;
     color: var(--color-muted-foreground);
     font-size: var(--subtext-font-size, 0.875rem);
+    margin: 0;
     font-style: italic;
   }
 
   @media (max-width: 640px) {
-    .beta-section {
+    .beta-content {
       padding: var(--mobile-padding, 1.5rem);
     }
 
@@ -116,10 +202,30 @@
     .beta-description {
       font-size: var(--mobile-desc-font-size, 1rem);
     }
+
+    .input-wrapper {
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+    }
+
+    .input-prompt {
+      align-self: flex-start;
+      padding: 0;
+    }
+
+    .email-input {
+      width: 100%;
+      padding: 8px 0;
+    }
+
+    .submit-button {
+      width: 100%;
+    }
   }
 
   @media (max-width: 480px) {
-    .beta-section {
+    .beta-content {
       padding: var(--compact-padding, 1rem);
     }
 
@@ -129,11 +235,6 @@
 
     .beta-description {
       font-size: var(--compact-desc-font-size, 0.875rem);
-    }
-
-    .beta-email {
-      padding: var(--compact-email-padding, 0.625rem 1.25rem);
-      font-size: var(--compact-email-font-size, 0.875rem);
     }
   }
 </style>
