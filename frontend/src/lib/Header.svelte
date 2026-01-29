@@ -1,9 +1,31 @@
 <script>
+  import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
   import ThemeToggle from './ThemeToggle.svelte';
 
   let isMenuOpen = $state(false);
+  let isUserMenuOpen = $state(false);
   let isLoggedIn = $state(false);
+  let username = $state('');
+
+  onMount(() => {
+    checkAuth();
+  });
+
+  function checkAuth() {
+    const token = localStorage.getItem('token');
+    isLoggedIn = !!token;
+    // Get username from token or storage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        username = user.username || '';
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }
 
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
@@ -16,6 +38,15 @@
   function goTo(path) {
     navigate(path);
     closeMenu();
+    isUserMenuOpen = false;
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    isLoggedIn = false;
+    isUserMenuOpen = false;
+    navigate('/');
   }
 </script>
 
@@ -44,10 +75,46 @@
     <div class="header-right">
       <ThemeToggle />
 
-      <div class="auth-buttons">
-        <button class="btn-secondary" onclick={() => goTo('/login')}>Log in</button>
-        <button class="btn-primary" onclick={() => goTo('/login')}>Sign up</button>
-      </div>
+      {#if isLoggedIn}
+        <div class="user-menu-container">
+          <button
+            class="user-menu-trigger"
+            onclick={() => isUserMenuOpen = !isUserMenuOpen}
+            aria-expanded={isUserMenuOpen}
+          >
+            <span class="user-avatar">{username ? username[0].toUpperCase() : 'U'}</span>
+            <span class="username">{username || 'User'}</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          {#if isUserMenuOpen}
+            <div class="user-menu-dropdown">
+              <button class="dropdown-item" onclick={() => goTo('/settings/api-keys')}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="10" height="10" rx="1.5"/>
+                  <path d="M6 6.5v3a1.5 1.5 0 001.5 1.5h1"/>
+                </svg>
+                API Keys
+              </button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item logout" onclick={logout}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M10.5 3.5L6.5 7.5l4 4"/>
+                  <path d="M13 12.5h-5a2 2 0 01-2-2V9a2 2 0 012-2h5"/>
+                </svg>
+                Log out
+              </button>
+            </div>
+          {/if}
+        </div>
+      {:else}
+        <div class="auth-buttons">
+          <button class="btn-secondary" onclick={() => goTo('/login')}>Log in</button>
+          <button class="btn-primary" onclick={() => goTo('/login')}>Sign up</button>
+        </div>
+      {/if}
 
       <!-- Mobile Menu Button -->
       <button class="mobile-toggle" onclick={toggleMenu} aria-label="Toggle menu">
@@ -230,6 +297,97 @@
     height: 1px;
     background: var(--color-border);
     margin: 0.5rem 0;
+  }
+
+  .user-menu-container {
+    position: relative;
+  }
+
+  .user-menu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem 0.375rem 0.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-foreground);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+
+  .user-menu-trigger:hover {
+    background: var(--color-muted);
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  .username {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .user-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 180px;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0.375rem;
+    z-index: 50;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--color-foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+  }
+
+  .dropdown-item:hover {
+    background: var(--color-muted);
+  }
+
+  .dropdown-item.logout {
+    color: var(--color-error);
+  }
+
+  .dropdown-item.logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .dropdown-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 0.375rem 0;
   }
 
   @media (min-width: 768px) {

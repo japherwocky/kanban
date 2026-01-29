@@ -191,4 +191,13 @@ export const api = {
       }),
     },
   },
+  apiKeys: {
+    list: () => apiFetch('/api/api-keys'),
+    create: (name, expiresAt) => apiFetch('/api/api-keys', {
+      method: 'POST',
+      body: JSON.stringify({ name, expires_at: expiresAt }),
+    }),
+    revoke: (id) => apiFetch(`/api/api-keys/${id}`, { method: 'DELETE' }),
+    activate: (id) => apiFetch(`/api/api-keys/${id}/activate`, { method: 'POST' }),
+  },
 };

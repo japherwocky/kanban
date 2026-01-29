@@ -19,6 +19,9 @@
   import Contact from './routes/Contact.svelte';
   import Privacy from './routes/Privacy.svelte';
   import Terms from './routes/Terms.svelte';
+  import Settings from './routes/Settings.svelte';
+  import SettingsApiKeys from './routes/SettingsApiKeys.svelte';
+  import ApiKeyCreated from './routes/ApiKeyCreated.svelte';
 
   onMount(() => {
     theme.init();
@@ -115,6 +118,28 @@
   <Route path="/admin/:section" let:params>
     <ProtectedRoute>
       <Admin {params} />
+    </ProtectedRoute>
+  </Route>
+
+  <Route path="/settings/api-keys/created" let:params>
+    <ProtectedRoute>
+      <ApiKeyCreated {params} />
+    </ProtectedRoute>
+  </Route>
+
+  <Route path="/settings/api-keys" let:params>
+    <ProtectedRoute>
+      <Settings>
+        <SettingsApiKeys {params} />
+      </Settings>
+    </ProtectedRoute>
+  </Route>
+
+  <Route path="/settings" let:params>
+    <ProtectedRoute>
+      <Settings>
+        <SettingsApiKeys {params} />
+      </Settings>
     </ProtectedRoute>
   </Route>
 
