@@ -24,6 +24,9 @@ kanban config --url http://localhost:8000
 # Login
 kanban login <username> <password>
 
+# Or use an API key (for agents/CI)
+kanban --api-key <key> boards
+
 # List boards
 kanban boards
 
@@ -44,6 +47,11 @@ kanban card-create 1 "To Do" "First task" --position 0
 | `kanban config --url <url>` | Set the server URL |
 | `kanban login <user> <pass>` | Login to the server |
 | `kanban logout` | Logout and clear credentials |
+| `kanban --api-key <key>` | Use API key for authentication (global option) |
+| `kanban apikey create <name>` | Generate a new API key |
+| `kanban apikey list` | List your API keys |
+| `kanban apikey revoke <id>` | Revoke (deactivate) an API key |
+| `kanban apikey activate <id>` | Reactivate a deactivated API key |
 | `kanban boards` | List all boards |
 | `kanban board-create <name>` | Create a new board |
 | `kanban board <id>` | Show board details |
@@ -59,8 +67,37 @@ kanban card-create 1 "To Do" "First task" --position 0
 For agents who need to quickly get up to speed with the CLI tool:
 
 - **[CLI Quick Start Guide](docs/cli-quickstart.md)** - Get productive in minutes
-- **[CLI Command Reference](docs/cli-reference.md)** - Complete command cheat sheet  
+- **[CLI Command Reference](docs/cli-reference.md)** - Complete command cheat sheet
 - **[Common Workflows](docs/cli-workflows.md)** - Real-world examples and patterns
+
+## 🔑 API Keys for Agents
+
+Instead of sharing passwords, users can generate one-off API keys for agents and CI/CD pipelines:
+
+```bash
+# Generate an API key (shown only once - save it securely!)
+kanban apikey create "CI Agent"
+
+# Use the API key for any command
+kanban --api-key kanban_abc123... boards
+
+# Or set it as default
+export KANBAN_API_KEY=kanban_abc123...
+kanban boards
+```
+
+### API Key Features
+
+- **Secure**: API keys are bcrypt-hashed in the database (like passwords)
+- **Revokable**: Deactivate or reactivate keys at any time
+- **Identifiable**: Each key has a prefix for identification in logs
+- **Trackable**: Last used timestamp recorded for each key
+
+### Security Notes
+
+- API keys are shown only once at creation time - copy and store securely
+- Use environment variables or secure secret management for CI/CD
+- Rotate keys periodically and revoke compromised keys
 
 ## Self-Hosting
 
@@ -178,6 +215,14 @@ See [docs/multi-tenant.md](docs/multi-tenant.md) for details on the organization
 ### Authentication
 
 - `POST /api/token` - Login (returns JWT)
+- `X-API-Key` header - Use API key for authentication (alternative to Bearer token)
+
+### API Keys
+
+- `GET /api/api-keys` - List your API keys
+- `POST /api/api-keys` - Create a new API key (returns key once)
+- `DELETE /api/api-keys/{id}` - Revoke (deactivate) an API key
+- `POST /api/api-keys/{id}/activate` - Reactivate a deactivated API key
 
 ### Boards
 
