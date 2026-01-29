@@ -166,7 +166,6 @@
           bind:value={newKeyName}
           placeholder="e.g., Production Agent, CI Pipeline"
           required
-          autofocus
         />
         <p class="form-hint">Give this key a descriptive name to identify its purpose later.</p>
         <div class="modal-actions">
