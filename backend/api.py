@@ -7,7 +7,13 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, ConfigDict
 import os
 
-from backend.auth import Token, create_access_token, get_current_user, get_current_admin
+from backend.auth import (
+    Token,
+    create_access_token,
+    get_current_user,
+    get_current_user_or_api_key,
+    get_current_admin,
+)
 from backend.database import db
 from backend.models import (
     User,
@@ -373,7 +379,7 @@ async def login(request: LoginRequest):
 
 
 @api.get("/admin/status")
-async def admin_status(current_user: User = Depends(get_current_user)):
+async def admin_status(current_user: User = Depends(get_current_user_or_api_key)):
     """Check if current user has admin access"""
     return {"is_admin": current_user.admin}
 
@@ -977,7 +983,7 @@ async def delete_admin_board(
 
 @api.post("/boards", response_model=dict)
 async def create_board(
-    board_data: BoardCreate, current_user: User = Depends(get_current_user)
+    board_data: BoardCreate, current_user: User = Depends(get_current_user_or_api_key)
 ):
     with db.atomic():
         board = Board.create_with_columns(
@@ -993,7 +999,7 @@ async def create_board(
 
 
 @api.get("/boards", response_model=list)
-async def list_boards(current_user: User = Depends(get_current_user)):
+async def list_boards(current_user: User = Depends(get_current_user_or_api_key)):
     board_ids = []
     for board in current_user.boards:
         board_ids.append(board.id)
@@ -1020,7 +1026,7 @@ async def list_boards(current_user: User = Depends(get_current_user)):
 async def update_board(
     board_id: int,
     board_data: BoardUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     board = Board.get_or_none(Board.id == board_id)
     if not board:
@@ -1044,7 +1050,9 @@ async def update_board(
 
 
 @api.get("/boards/{board_id}", response_model=BoardResponse)
-async def get_board(board_id: int, current_user: User = Depends(get_current_user)):
+async def get_board(
+    board_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
     board = Board.get_or_none(Board.id == board_id)
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
@@ -1101,7 +1109,9 @@ async def get_board(board_id: int, current_user: User = Depends(get_current_user
 
 
 @api.delete("/boards/{board_id}")
-async def delete_board(board_id: int, current_user: User = Depends(get_current_user)):
+async def delete_board(
+    board_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
     board = Board.get_or_none(Board.id == board_id)
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
@@ -1120,7 +1130,7 @@ async def delete_board(board_id: int, current_user: User = Depends(get_current_u
 async def share_board(
     board_id: int,
     share_data: BoardShare,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     board = Board.get_or_none(Board.id == board_id)
     if not board:
@@ -1152,7 +1162,7 @@ async def share_board(
 @api.post("/columns", response_model=ColumnResponse)
 async def create_column(
     column_data: ColumnCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     board = Board.get_or_none(Board.id == column_data.board_id)
     if not board:
@@ -1176,7 +1186,7 @@ async def create_column(
 async def update_column(
     column_id: int,
     column_data: ColumnUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     column = Column.get_or_none(Column.id == column_id)
     if not column:
@@ -1204,7 +1214,9 @@ async def update_column(
 
 
 @api.delete("/columns/{column_id}")
-async def delete_column(column_id: int, current_user: User = Depends(get_current_user)):
+async def delete_column(
+    column_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
     column = Column.get_or_none(Column.id == column_id)
     if not column:
         raise HTTPException(status_code=404, detail="Column not found")
@@ -1220,7 +1232,7 @@ async def delete_column(column_id: int, current_user: User = Depends(get_current
 @api.post("/cards", response_model=CardResponse)
 async def create_card(
     card_data: CardCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     column = Column.get_or_none(Column.id == card_data.column_id)
     if not column:
@@ -1245,7 +1257,7 @@ async def create_card(
 async def update_card(
     card_id: int,
     card_data: CardUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     card = Card.get_or_none(Card.id == card_id)
     if not card:
@@ -1275,7 +1287,9 @@ async def update_card(
 
 
 @api.delete("/cards/{card_id}")
-async def delete_card(card_id: int, current_user: User = Depends(get_current_user)):
+async def delete_card(
+    card_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
     card = Card.get_or_none(Card.id == card_id)
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -1288,7 +1302,8 @@ async def delete_card(card_id: int, current_user: User = Depends(get_current_use
 # Comment endpoints
 @api.post("/comments", response_model=CommentResponse)
 async def create_comment(
-    comment_data: CommentCreate, current_user: User = Depends(get_current_user)
+    comment_data: CommentCreate,
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     # Get the card and verify access
     card = Card.get_or_none(Card.id == comment_data.card_id)
@@ -1320,7 +1335,7 @@ async def create_comment(
 
 @api.get("/cards/{card_id}/comments", response_model=list[CommentResponse])
 async def get_card_comments(
-    card_id: int, current_user: User = Depends(get_current_user)
+    card_id: int, current_user: User = Depends(get_current_user_or_api_key)
 ):
     # Get the card and verify access
     card = Card.get_or_none(Card.id == card_id)
@@ -1354,7 +1369,7 @@ async def get_card_comments(
 async def update_comment(
     comment_id: int,
     comment_data: CommentUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     comment = Comment.get_or_none(Comment.id == comment_id)
     if not comment:
@@ -1384,7 +1399,7 @@ async def update_comment(
 
 @api.delete("/comments/{comment_id}")
 async def delete_comment(
-    comment_id: int, current_user: User = Depends(get_current_user)
+    comment_id: int, current_user: User = Depends(get_current_user_or_api_key)
 ):
     comment = Comment.get_or_none(Comment.id == comment_id)
     if not comment:
@@ -1402,7 +1417,8 @@ async def delete_comment(
 
 @api.post("/organizations", response_model=OrganizationResponse)
 async def create_organization(
-    org_data: OrganizationCreate, current_user: User = Depends(get_current_user)
+    org_data: OrganizationCreate,
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     base_slug = slugify(org_data.name)
     slug = base_slug
@@ -1430,7 +1446,7 @@ async def create_organization(
 
 
 @api.get("/organizations", response_model=list)
-async def list_organizations(current_user: User = Depends(get_current_user)):
+async def list_organizations(current_user: User = Depends(get_current_user_or_api_key)):
     orgs = get_user_organizations(current_user)
     return [
         {
@@ -1445,7 +1461,9 @@ async def list_organizations(current_user: User = Depends(get_current_user)):
 
 
 @api.get("/organizations/{org_id}", response_model=OrganizationResponse)
-async def get_organization(org_id: int, current_user: User = Depends(get_current_user)):
+async def get_organization(
+    org_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -1468,7 +1486,7 @@ async def get_organization(org_id: int, current_user: User = Depends(get_current
 async def update_organization(
     org_id: int,
     org_data: OrganizationUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
@@ -1492,7 +1510,7 @@ async def update_organization(
 async def add_organization_member(
     org_id: int,
     request: UsernameRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
@@ -1525,7 +1543,7 @@ async def add_organization_member(
 
 @api.get("/organizations/{org_id}/members", response_model=list)
 async def list_organization_members(
-    org_id: int, current_user: User = Depends(get_current_user)
+    org_id: int, current_user: User = Depends(get_current_user_or_api_key)
 ):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
@@ -1553,7 +1571,7 @@ async def list_organization_members(
 async def remove_organization_member(
     org_id: int,
     user_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
@@ -1594,7 +1612,7 @@ async def remove_organization_member(
 async def create_team(
     org_id: int,
     team_data: TeamCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
@@ -1617,7 +1635,7 @@ async def create_team(
 
 @api.get("/organizations/{org_id}/teams", response_model=list)
 async def list_organization_teams(
-    org_id: int, current_user: User = Depends(get_current_user)
+    org_id: int, current_user: User = Depends(get_current_user_or_api_key)
 ):
     org = Organization.get_or_none(Organization.id == org_id)
     if not org:
@@ -1645,7 +1663,7 @@ async def list_organization_teams(
 async def update_team(
     team_id: int,
     team_data: TeamUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     team = Team.get_or_none(Team.id == team_id)
     if not team:
@@ -1671,7 +1689,7 @@ async def update_team(
 @api.delete("/teams/{team_id}")
 async def delete_team(
     team_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     team = Team.get_or_none(Team.id == team_id)
     if not team:
@@ -1693,7 +1711,7 @@ async def delete_team(
 async def add_team_member(
     team_id: int,
     request: UsernameRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     team = Team.get_or_none(Team.id == team_id)
     if not team:
@@ -1738,7 +1756,7 @@ async def add_team_member(
 
 @api.get("/teams/{team_id}/members", response_model=list)
 async def list_team_members(
-    team_id: int, current_user: User = Depends(get_current_user)
+    team_id: int, current_user: User = Depends(get_current_user_or_api_key)
 ):
     team = Team.get_or_none(Team.id == team_id)
     if not team:
@@ -1767,7 +1785,7 @@ async def list_team_members(
 async def remove_team_member(
     team_id: int,
     user_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_api_key),
 ):
     team = Team.get_or_none(Team.id == team_id)
     if not team:
@@ -1856,7 +1874,7 @@ async def beta_signup(request: BetaSignupRequest):
 
 # API Key management endpoints
 @api.get("/api-keys", response_model=list[ApiKeyResponse])
-async def list_api_keys(current_user: User = Depends(get_current_user)):
+async def list_api_keys(current_user: User = Depends(get_current_user_or_api_key)):
     """List all API keys for the current user"""
     keys = (
         ApiKey.select()
@@ -1879,7 +1897,7 @@ async def list_api_keys(current_user: User = Depends(get_current_user)):
 
 @api.post("/api-keys", response_model=ApiKeyCreateResponse)
 async def create_api_key(
-    key_data: ApiKeyCreate, current_user: User = Depends(get_current_user)
+    key_data: ApiKeyCreate, current_user: User = Depends(get_current_user_or_api_key)
 ):
     """Create a new API key. Returns the key only once - save it securely!"""
     api_key, raw_key = ApiKey.create_key(
@@ -1895,7 +1913,9 @@ async def create_api_key(
 
 
 @api.delete("/api-keys/{key_id}")
-async def delete_api_key(key_id: int, current_user: User = Depends(get_current_user)):
+async def delete_api_key(
+    key_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
     """Deactivate an API key"""
     key = ApiKey.get_or_none((ApiKey.id == key_id) & (ApiKey.user == current_user))
     if not key:
@@ -1906,7 +1926,9 @@ async def delete_api_key(key_id: int, current_user: User = Depends(get_current_u
 
 
 @api.post("/api-keys/{key_id}/activate")
-async def activate_api_key(key_id: int, current_user: User = Depends(get_current_user)):
+async def activate_api_key(
+    key_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
     """Reactivate a deactivated API key"""
     key = ApiKey.get_or_none((ApiKey.id == key_id) & (ApiKey.user == current_user))
     if not key:

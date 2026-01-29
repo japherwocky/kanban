@@ -27,6 +27,24 @@ class User(BaseModel):
     email = CharField(max_length=255, null=True)
     admin = BooleanField(default=False)
 
+    @classmethod
+    def create_user(cls, username, password, email=None, admin=False):
+        if len(password) > PASSWORD_MAX_LENGTH:
+            raise ValueError(
+                f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer"
+            )
+        password_hash = bcrypt.hashpw(
+            password.encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
+        return cls.create(
+            username=username, password_hash=password_hash, email=email, admin=admin
+        )
+
+    def verify_password(self, password):
+        return bcrypt.checkpw(
+            password.encode("utf-8"), self.password_hash.encode("utf-8")
+        )  # type: ignore
+
 
 API_KEY_PREFIX = "kanban_"
 API_KEY_LENGTH = 32  # Length of the random part (32 chars = 192 bits of entropy)
@@ -91,24 +109,6 @@ class ApiKey(BaseModel):
         """Update the last used timestamp."""
         self.last_used_at = datetime.now(timezone.utc)
         self.save()
-
-    @classmethod
-    def create_user(cls, username, password, email=None, admin=False):
-        if len(password) > PASSWORD_MAX_LENGTH:
-            raise ValueError(
-                f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer"
-            )
-        password_hash = bcrypt.hashpw(
-            password.encode("utf-8"), bcrypt.gensalt()
-        ).decode("utf-8")
-        return cls.create(
-            username=username, password_hash=password_hash, email=email, admin=admin
-        )
-
-    def verify_password(self, password):
-        return bcrypt.checkpw(
-            password.encode("utf-8"), self.password_hash.encode("utf-8")
-        )  # type: ignore
 
 
 class Organization(BaseModel):
