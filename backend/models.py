@@ -27,6 +27,71 @@ class User(BaseModel):
     email = CharField(max_length=255, null=True)
     admin = BooleanField(default=False)
 
+
+API_KEY_PREFIX = "kanban_"
+API_KEY_LENGTH = 32  # Length of the random part (32 chars = 192 bits of entropy)
+
+
+def generate_api_key():
+    """Generate a new API key with the kanban_ prefix."""
+    import secrets
+    import base64
+
+    random_bytes = base64.urlsafe_b64encode(secrets.token_bytes(24)).decode("utf-8")
+    random_bytes = random_bytes.rstrip("=")[:API_KEY_LENGTH]
+    return f"{API_KEY_PREFIX}{random_bytes}"
+
+
+def hash_api_key(key):
+    """Hash an API key for storage (like passwords)."""
+    return bcrypt.hashpw(key.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def get_api_key_prefix(key):
+    """Get the first 8 characters of an API key for identification."""
+    return key[:8]
+
+
+class ApiKey(BaseModel):
+    """One-off API keys for agent authentication."""
+
+    user = ForeignKeyField(User, backref="api_keys")
+    name = CharField(max_length=100)  # Friendly name (e.g., "CI Agent")
+    key_hash = CharField(max_length=255)  # bcrypt hash of the key
+    prefix = CharField(max_length=8)  # First 8 chars for identification
+    created_at = DateTimeField(default=datetime.now)
+    last_used_at = DateTimeField(null=True)
+    expires_at = DateTimeField(null=True)  # Optional expiration
+    is_active = BooleanField(default=True)
+
+    @classmethod
+    def create_key(cls, user, name, expires_at=None):
+        """Create a new API key for a user."""
+        key = generate_api_key()
+        prefix = get_api_key_prefix(key)
+        key_hash = hash_api_key(key)
+        return cls.create(
+            user=user,
+            name=name,
+            key_hash=key_hash,
+            prefix=prefix,
+            expires_at=expires_at,
+        ), key
+
+    def verify(self, key):
+        """Verify an API key against the stored hash."""
+        return bcrypt.checkpw(key.encode("utf-8"), self.key_hash.encode("utf-8"))
+
+    def deactivate(self):
+        """Deactivate this API key."""
+        self.is_active = False
+        self.save()
+
+    def update_last_used(self):
+        """Update the last used timestamp."""
+        self.last_used_at = datetime.now(timezone.utc)
+        self.save()
+
     @classmethod
     def create_user(cls, username, password, email=None, admin=False):
         if len(password) > PASSWORD_MAX_LENGTH:

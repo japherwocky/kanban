@@ -4,8 +4,12 @@ from typing import Optional
 
 from jose import JWTError, jwt
 from pydantic import BaseModel
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
+
+
+security = HTTPBearer()
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-this-in-production")
 ALGORITHM = "HS256"
@@ -31,7 +35,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -90,3 +96,74 @@ async def get_current_admin(
             detail="Admin access required",
         )
     return user
+
+
+async def get_current_user_from_api_key(request: Request):
+    """
+    Validate an API key from the X-API-Key header.
+    Returns the user if valid, raises HTTPException if not.
+    """
+    api_key = request.headers.get("X-API-Key")
+    if not api_key:
+        return None
+
+    from backend.models import ApiKey
+    from datetime import timezone as tz
+
+    # Look up API key by prefix (first 8 chars)
+    prefix = api_key[:8]
+    api_key_record = ApiKey.get_or_none(ApiKey.prefix == prefix)
+
+    if api_key_record is None:
+        return None
+
+    if not api_key_record.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key is inactive",
+        )
+
+    # Check expiration
+    if api_key_record.expires_at and api_key_record.expires_at.replace(
+        tzinfo=tz.utc
+    ) < datetime.now(tz.utc):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key has expired",
+        )
+
+    # Verify the key
+    if not api_key_record.verify(api_key):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key",
+        )
+
+    # Update last used timestamp
+    api_key_record.update_last_used()
+
+    return api_key_record.user
+
+
+async def get_current_user_or_api_key(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    request: Request = Depends(Request),
+):
+    """
+    Try to authenticate via API key first, then fall back to JWT.
+    Either authentication method returns the authenticated user.
+    """
+    # Try API key first
+    user_from_api_key = await get_current_user_from_api_key(request)
+    if user_from_api_key is not None:
+        return user_from_api_key
+
+    # Fall back to JWT
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return await get_current_user(credentials)

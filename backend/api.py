@@ -20,6 +20,7 @@ from backend.models import (
     Team,
     TeamMember,
     BetaSignup,
+    ApiKey,
 )
 
 api = APIRouter()
@@ -245,6 +246,30 @@ class UserCreate(BaseModel):
 
 class BetaSignupRequest(BaseModel):
     email: str
+
+
+# API Key models
+class ApiKeyCreate(BaseModel):
+    name: str
+    expires_at: Optional[datetime] = None
+
+
+class ApiKeyResponse(BaseModel):
+    id: int
+    name: str
+    prefix: str
+    created_at: datetime
+    last_used_at: Optional[datetime]
+    expires_at: Optional[datetime]
+    is_active: bool
+
+
+class ApiKeyCreateResponse(BaseModel):
+    id: int
+    name: str
+    key: str  # The actual key (shown only once)
+    prefix: str
+    created_at: datetime
 
 
 class UserUpdate(BaseModel):
@@ -1827,3 +1852,66 @@ async def beta_signup(request: BetaSignupRequest):
     # Create signup
     BetaSignup.create_signup(request.email)
     return {"message": "Thanks for signing up! We'll be in touch soon."}
+
+
+# API Key management endpoints
+@api.get("/api-keys", response_model=list[ApiKeyResponse])
+async def list_api_keys(current_user: User = Depends(get_current_user)):
+    """List all API keys for the current user"""
+    keys = (
+        ApiKey.select()
+        .where(ApiKey.user == current_user)
+        .order_by(ApiKey.created_at.desc())
+    )
+    return [
+        {
+            "id": key.id,
+            "name": key.name,
+            "prefix": key.prefix,
+            "created_at": key.created_at,
+            "last_used_at": key.last_used_at,
+            "expires_at": key.expires_at,
+            "is_active": key.is_active,
+        }
+        for key in keys
+    ]
+
+
+@api.post("/api-keys", response_model=ApiKeyCreateResponse)
+async def create_api_key(
+    key_data: ApiKeyCreate, current_user: User = Depends(get_current_user)
+):
+    """Create a new API key. Returns the key only once - save it securely!"""
+    api_key, raw_key = ApiKey.create_key(
+        user=current_user, name=key_data.name, expires_at=key_data.expires_at
+    )
+    return {
+        "id": api_key.id,
+        "name": api_key.name,
+        "key": raw_key,  # Only returned once!
+        "prefix": api_key.prefix,
+        "created_at": api_key.created_at,
+    }
+
+
+@api.delete("/api-keys/{key_id}")
+async def delete_api_key(key_id: int, current_user: User = Depends(get_current_user)):
+    """Deactivate an API key"""
+    key = ApiKey.get_or_none((ApiKey.id == key_id) & (ApiKey.user == current_user))
+    if not key:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    key.deactivate()
+    return {"ok": True, "message": "API key has been deactivated"}
+
+
+@api.post("/api-keys/{key_id}/activate")
+async def activate_api_key(key_id: int, current_user: User = Depends(get_current_user)):
+    """Reactivate a deactivated API key"""
+    key = ApiKey.get_or_none((ApiKey.id == key_id) & (ApiKey.user == current_user))
+    if not key:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    key.is_active = True
+    key.save()
+    return {"ok": True, "message": "API key has been activated"}
