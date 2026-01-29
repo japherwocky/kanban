@@ -25,6 +25,11 @@ def setup_test_db():
     # Override database path for tests
     os.environ["DATABASE_PATH"] = "test_kanban.db"
 
+    # Clean up any existing test database before starting
+    for db_file in ["test_kanban.db", "test_kanban_cli.db"]:
+        if os.path.exists(db_file):
+            os.remove(db_file)
+
     yield
 
     # Restore original database path
