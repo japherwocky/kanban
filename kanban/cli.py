@@ -4,6 +4,7 @@ from typing import Optional
 import typer
 from rich import print as rprint
 
+from kanban.client import KanbanClient
 from kanban.config import (
     get_server_url,
     set_server_url,

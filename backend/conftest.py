@@ -103,3 +103,14 @@ def test_user(db_session):
 def test_db(db_session):
     """Alias for db_session for backwards compatibility."""
     return db_session
+
+
+@pytest.fixture
+def test_cli_user(db_session):
+    """Create a unique CLI test user."""
+    from backend.models import User
+
+    random_suffix = "".join(random.choices(string.ascii_lowercase, k=8))
+    username = f"testuser_{random_suffix}"
+    user = User.create_user(username, "testpassword")
+    return user
