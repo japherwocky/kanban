@@ -1,152 +1,105 @@
-import os
 import pytest
 import random
 import string
-from backend.database import db
-from backend.models import (
-    User,
-    Board,
-    Column,
-    Card,
-    Comment,
-    Organization,
-    OrganizationMember,
-    Team,
-    TeamMember,
-    ApiKey,
-)
+from peewee import SqliteDatabase
+
+# Create an in-memory database for tests
+_test_db = SqliteDatabase(":memory:")
 
 
 @pytest.fixture(scope="session")
-def setup_test_db():
-    """Session-scoped fixture to manage database state across tests"""
-    original_db_path = os.environ.get("DATABASE_PATH")
+def _setup_test_db():
+    """Session-scoped fixture to create tables once."""
+    import backend.database as db_module
+    from backend.models import (
+        User,
+        Board,
+        Column,
+        Card,
+        Comment,
+        Organization,
+        OrganizationMember,
+        Team,
+        TeamMember,
+        ApiKey,
+        BetaSignup,
+    )
 
-    # Override database path for tests
-    os.environ["DATABASE_PATH"] = "test_kanban.db"
+    # Replace the module-level db with our test database
+    db_module.db = _test_db
 
-    # Clean up any existing test database before starting
-    for db_file in ["test_kanban.db", "test_kanban_cli.db"]:
-        if os.path.exists(db_file):
-            os.remove(db_file)
-
+    # Connect and create tables
+    _test_db.connect()
+    _test_db.create_tables(
+        [
+            User,
+            Board,
+            Column,
+            Card,
+            Comment,
+            Organization,
+            OrganizationMember,
+            Team,
+            TeamMember,
+            ApiKey,
+            BetaSignup,
+        ]
+    )
     yield
-
-    # Restore original database path
-    if original_db_path:
-        os.environ["DATABASE_PATH"] = original_db_path
-    else:
-        os.environ.pop("DATABASE_PATH", None)
-
-    # Clean up any test database files
-    for db_file in ["test_kanban.db", "test_kanban_cli.db"]:
-        if os.path.exists(db_file):
-            os.remove(db_file)
+    _test_db.close()
 
 
 @pytest.fixture
-def test_db(setup_test_db):
-    """Per-test database fixture"""
-    # Clean up any existing test database
-    if os.path.exists("test_kanban.db"):
-        os.remove("test_kanban.db")
-
-    # Close any existing connections
-    try:
-        db.close()
-    except:
-        pass
-
-    db.connect()
-    db.create_tables(
-        [
-            User,
-            Board,
-            Column,
-            Card,
-            Comment,
-            Organization,
-            OrganizationMember,
-            Team,
-            TeamMember,
-            ApiKey,
-        ]
+def db_session(_setup_test_db):
+    """Per-test database fixture that clears all data between tests."""
+    from backend.models import (
+        User,
+        Board,
+        Column,
+        Card,
+        Comment,
+        Organization,
+        OrganizationMember,
+        Team,
+        TeamMember,
+        ApiKey,
+        BetaSignup,
     )
 
-    yield db
-
-    # Close connection cleanly
-    try:
-        db.close()
-    except:
-        pass
-
-    # Clean up test database
-    if os.path.exists("test_kanban.db"):
-        os.remove("test_kanban.db")
+    # Clear all table data (in reverse dependency order to avoid FK issues)
+    for table in [
+        Card,
+        Comment,
+        Column,
+        Board,
+        TeamMember,
+        Team,
+        OrganizationMember,
+        Organization,
+        ApiKey,
+        BetaSignup,
+        User,
+    ]:
+        try:
+            _test_db.execute_sql(f"DELETE FROM {table._meta.table_name}")
+        except:
+            pass
+    yield _test_db
 
 
 @pytest.fixture
-def test_user(test_db):
+def test_user(db_session):
     """Create a unique test user"""
+    from backend.models import User
+
     random_suffix = "".join(random.choices(string.ascii_lowercase, k=8))
     username = f"testuser_{random_suffix}"
     user = User.create_user(username, "testpassword")
     return user
 
 
+# Alias for backwards compatibility with tests expecting test_db
 @pytest.fixture
-def test_cli_db(setup_test_db):
-    """CLI test database fixture"""
-    # Override for CLI tests
-    os.environ["DATABASE_PATH"] = "test_kanban_cli.db"
-
-    # Clean up any existing test database
-    if os.path.exists("test_kanban_cli.db"):
-        os.remove("test_kanban_cli.db")
-
-    # Close any existing connections
-    try:
-        db.close()
-    except:
-        pass
-
-    db.connect()
-    db.create_tables(
-        [
-            User,
-            Board,
-            Column,
-            Card,
-            Comment,
-            Organization,
-            OrganizationMember,
-            Team,
-            TeamMember,
-            ApiKey,
-        ]
-    )
-
-    yield db
-
-    # Close connection cleanly
-    try:
-        db.close()
-    except:
-        pass
-
-    # Clean up test database
-    if os.path.exists("test_kanban_cli.db"):
-        os.remove("test_kanban_cli.db")
-
-    # Restore to regular test database
-    os.environ["DATABASE_PATH"] = "test_kanban.db"
-
-
-@pytest.fixture
-def test_cli_user(test_cli_db):
-    """Create a unique CLI test user"""
-    random_suffix = "".join(random.choices(string.ascii_lowercase, k=8))
-    username = f"testuser_{random_suffix}"
-    user = User.create_user(username, "testpassword")
-    return user
+def test_db(db_session):
+    """Alias for db_session for backwards compatibility."""
+    return db_session
