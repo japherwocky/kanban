@@ -8,14 +8,9 @@ from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 
 
-security = HTTPBearer()
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-this-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
-
-security = HTTPBearer()
 
 
 class Token(BaseModel):
@@ -58,7 +53,7 @@ def decode_token(token: str):
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
 ):
     token = credentials.credentials
     token_data = decode_token(token)
@@ -76,7 +71,7 @@ async def get_current_user(
 
 
 async def get_current_admin(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
 ):
     token = credentials.credentials
     token_data = decode_token(token)
@@ -98,15 +93,8 @@ async def get_current_admin(
     return user
 
 
-async def get_current_user_from_api_key(request: Request):
-    """
-    Validate an API key from the X-API-Key header.
-    Returns the user if valid, raises HTTPException if not.
-    """
-    api_key = request.headers.get("X-API-Key")
-    if not api_key:
-        return None
-
+async def get_current_user_from_api_key_header(api_key: str):
+    """Validate an API key from the header value."""
     from backend.models import ApiKey
     from datetime import timezone as tz
 
@@ -146,24 +134,35 @@ async def get_current_user_from_api_key(request: Request):
 
 
 async def get_current_user_or_api_key(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    request: Request = Depends(Request),
+    request: Request,
 ):
     """
     Try to authenticate via API key first, then fall back to JWT.
     Either authentication method returns the authenticated user.
     """
-    # Try API key first
-    user_from_api_key = await get_current_user_from_api_key(request)
-    if user_from_api_key is not None:
-        return user_from_api_key
+    # Check for API key first
+    api_key = request.headers.get("X-API-Key")
+    if api_key:
+        user_from_api_key = await get_current_user_from_api_key_header(api_key)
+        if user_from_api_key is not None:
+            return user_from_api_key
 
-    # Fall back to JWT
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    # Fall back to JWT Bearer token
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        try:
+            token_data = decode_token(token)
+            from backend.models import User
 
-    return await get_current_user(credentials)
+            user = User.get_or_none(User.id == token_data.user_id)
+            if user is not None:
+                return user
+        except Exception:
+            pass
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+        headers={"WWW-Authenticate": "Bearer"},
+    )

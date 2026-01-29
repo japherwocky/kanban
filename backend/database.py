@@ -19,6 +19,7 @@ def init_db():
         Team,
         TeamMember,
         BetaSignup,
+        ApiKey,
     )
 
     db.create_tables(
@@ -33,6 +34,7 @@ def init_db():
             Team,
             TeamMember,
             BetaSignup,
+            ApiKey,
         ]
     )
     db.close()
