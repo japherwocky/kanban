@@ -55,8 +55,9 @@
           </div>
 
           {#if !isPublicToOrg}
-            <label class="share-label">Share with team:</label>
+            <label class="share-label" for="team-select">Share with team:</label>
             <select
+              id="team-select"
               class="team-select"
               bind:value={selectedTeamId}
               disabled={isPublicToOrg}
@@ -258,3 +259,4 @@
      cursor: not-allowed;
    }
  </style>
+
