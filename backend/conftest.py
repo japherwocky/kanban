@@ -66,7 +66,7 @@ def db_session(_setup_test_db):
         BetaSignup,
     )
 
-    # Clear all table data (in reverse dependency order to avoid FK issues)
+    # Clear all table data using peewee's delete method
     for table in [
         Card,
         Comment,
@@ -81,7 +81,7 @@ def db_session(_setup_test_db):
         User,
     ]:
         try:
-            _test_db.execute_sql(f"DELETE FROM {table._meta.table_name}")
+            table.delete().execute()
         except:
             pass
     yield _test_db

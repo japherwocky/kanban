@@ -7,6 +7,10 @@ db = SqliteDatabase(DATABASE_PATH)
 
 
 def init_db():
+    # Skip if already connected (e.g., in tests)
+    if db.is_connection_usable():
+        return
+
     db.connect()
     from backend.models import (
         User,

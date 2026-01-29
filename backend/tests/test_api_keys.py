@@ -21,7 +21,7 @@ def auth_headers(test_user):
 
 
 @pytest.fixture
-def client():
+def client(_setup_test_db):
     return TestClient(app)
 
 
@@ -185,29 +185,18 @@ class TestApiKeyEndpoints:
 class TestApiKeyAuthentication:
     """Tests for using API keys for authentication"""
 
-    def test_authenticate_with_api_key(self, test_user):
-        """Test that API keys can be used for authentication.
-
-        Note: This test may be flaky due to test database isolation issues.
-        The API key authentication requires database lookups which may not
-        work correctly with TestClient in the current test setup.
-        """
+    def test_authenticate_with_api_key(self, client, test_user, db_session):
+        """Test that API keys can be used for authentication."""
         from backend.models import ApiKey
 
         # Create API key directly via model (bypasses HTTP)
         api_key, raw_key = ApiKey.create_key(test_user, "Auth Test")
 
         # Use the API key for authentication
-        client = TestClient(app)
         response = client.get("/api/boards", headers={"X-API-Key": raw_key})
-        # This may fail due to test database isolation issues
-        # For now, we document the expected behavior
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list)
-        else:
-            # Skip if database isolation issue (known problem with test setup)
-            pytest.skip("API key auth failed due to test database isolation issue")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
 
     def test_authenticate_with_invalid_api_key(self, client):
         """Test that invalid API keys are rejected"""
@@ -236,26 +225,23 @@ class TestApiKeyAuthentication:
         response = client.get("/api/boards", headers={"X-API-Key": raw_key})
         assert response.status_code == 401
 
-    def test_api_key_updates_last_used(self, client, auth_headers):
-        """Test that using an API key updates last_used_at.
-
-        Note: This test may be flaky due to test database isolation issues.
-        """
+    def test_api_key_updates_last_used(self, client, auth_headers, db_session):
+        """Test that using an API key updates last_used_at."""
         # Create an API key via the API
         create_response = client.post(
             "/api/api-keys",
             json={"name": "Last Used Test"},
             headers=auth_headers,
         )
-        if create_response.status_code != 200:
-            pytest.skip("Failed to create API key")
+        assert create_response.status_code == 200, (
+            f"Failed to create API key: {create_response.text}"
+        )
         key_id = create_response.json()["id"]
         raw_key = create_response.json()["key"]
 
         # First use
         response = client.get("/api/boards", headers={"X-API-Key": raw_key})
-        if response.status_code != 200:
-            pytest.skip("API key auth failed due to test database isolation issue")
+        assert response.status_code == 200, f"API key auth failed: {response.text}"
 
         # Verify last_used_at is updated by checking the API key list
         list_response = client.get("/api/api-keys", headers=auth_headers)
