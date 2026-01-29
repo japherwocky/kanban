@@ -72,11 +72,11 @@
   {:else}
     <div class="organizations-grid">
       {#each organizations as org (org.id)}
-        <div class="org-card" onclick={() => navigate(`/organizations/${org.id}`)}>
+        <button class="org-card" onclick={() => navigate(`/organizations/${org.id}`)} type="button">
           <h3>{org.name}</h3>
           <div class="org-slug">@{org.slug}</div>
           <div class="org-meta">Created {formatDate(org.created_at)}</div>
-        </div>
+        </button>
       {/each}
       <button class="org-card create-card" onclick={() => showCreateModal = true}>
         <span class="plus">+</span>
