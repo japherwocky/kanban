@@ -22,7 +22,7 @@ kanban config --url https://kanban.pearachute.com
 kanban config --url http://localhost:8000
 
 # Login
-kanban login <username> <password>
+kanban login <username> --password <password>
 
 # Or use an API key (for agents/CI)
 kanban --api-key <key> boards
@@ -38,14 +38,27 @@ kanban board 1
 
 # Create a card
 kanban card-create 1 "To Do" "First task" --position 0
+
+# Share a board with a team
+kanban share 1 <team-id>
+# Or make a board private
+kanban share 1 private
+
+# Organization management
+kanban org create "My Company"
+kanban org get 1
+
+# Team management
+kanban team create 1 "Engineering"
+kanban team list --org-id 1
 ```
 
 ### Available Commands
 
 | Command | Description |
 |---------|-------------|
-| `kanban config --url <url>` | Set the server URL |
-| `kanban login <user> <pass>` | Login to the server |
+| `kanban config [--url URL]` | Show or set server URL |
+| `kanban login <user> --password <pass>` | Login to the server |
 | `kanban logout` | Logout and clear credentials |
 | `kanban --api-key <key>` | Use API key for authentication (global option) |
 | `kanban apikey create <name>` | Generate a new API key |
@@ -56,11 +69,24 @@ kanban card-create 1 "To Do" "First task" --position 0
 | `kanban board-create <name>` | Create a new board |
 | `kanban board <id>` | Show board details |
 | `kanban board-delete <id>` | Delete a board |
+| `kanban share <board_id> <team_id\|private>` | Share board with team or make private |
 | `kanban column-create <board_id> <name> <position>` | Create a column |
 | `kanban column-delete <id>` | Delete a column |
-| `kanban card-create <column_id> <title>` | Create a card |
-| `kanban card-update <id> <title>` | Update a card |
+| `kanban card-create <column_id> <title> [--description TEXT] [--position NUM]` | Create a card |
+| `kanban card-update <id> <title> [--description TEXT] [--position NUM] [--column NUM]` | Update a card |
 | `kanban card-delete <id>` | Delete a card |
+| `kanban org list` | List all organizations |
+| `kanban org create <name>` | Create a new organization |
+| `kanban org get <org-id>` | Show organization details |
+| `kanban org members <org-id>` | List organization members |
+| `kanban org member-add <org-id> <username>` | Add member to organization |
+| `kanban org member-remove <org-id> <user-id>` | Remove member from organization |
+| `kanban team list --org-id <org-id>` | List teams in organization |
+| `kanban team create <org-id> <name>` | Create a new team |
+| `kanban team get <team-id>` | Show team details |
+| `kanban team members <team-id>` | List team members |
+| `kanban team member-add <team-id> <username>` | Add member to team |
+| `kanban team member-remove <team-id> <user-id>` | Remove member from team |
 
 ## 📚 CLI Documentation for Agents
 
