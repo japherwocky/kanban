@@ -54,22 +54,22 @@ kanban board-delete <board-id>
 ### Card Management
 ```bash
 # Create a card
-kanban card-create <column-id> "Task title" --description "Details" --position 0
+kanban card create <column-id> "Task title" --description "Details" --position 0
 
 # Update a card (move between columns)
-kanban card-update <card-id> "Updated title" --column <new-column-id> --position 0
+kanban card update <card-id> "Updated title" --column <new-column-id> --position 0
 
 # Delete a card
-kanban card-delete <card-id>
+kanban card delete <card-id>
 ```
 
 ### Column Management
 ```bash
 # Create a column
-kanban column-create <board-id> "In Progress" 1
+kanban column create <board-id> "In Progress" 1
 
 # Delete a column
-kanban column-delete <column-id>
+kanban column delete <column-id>
 ```
 
 ## 🏢 Organization & Team Commands
@@ -135,9 +135,12 @@ kanban logout
 ## 📊 Command Structure
 
 The CLI uses a nested structure:
-- **Root commands**: `kanban <command>` (boards, cards, columns)
+- **Root commands**: `kanban <command>` (boards, config, share)
 - **Organization sub-commands**: `kanban org <subcommand>`
 - **Team sub-commands**: `kanban team <subcommand>`
+- **Column sub-commands**: `kanban column <subcommand>`
+- **Card sub-commands**: `kanban card <subcommand>`
+- **API key sub-commands**: `kanban apikey <subcommand>`
 
 ## 💡 Pro Tips
 
@@ -145,7 +148,7 @@ The CLI uses a nested structure:
 2. **Board IDs are numbers** - use them in other commands
 3. **Teams exist within organizations** - create org first, then teams
 4. **Board sharing is team-based** - share with teams, not individual users
-5. **Use `--help`** on any command for options: `kanban board-create --help`
+5. **Use `--help`** on any command for options: `kanban card --help`
 
 ## 🚨 Common Gotchas
 
@@ -161,9 +164,9 @@ The CLI uses a nested structure:
 ```bash
 kanban board-create "New Project"
 kanban board <new-board-id>  # Get default columns
-kanban column-create <board-id> "Backlog" 0
-kanban column-create <board-id> "In Progress" 1
-kanban column-create <board-id> "Done" 2
+kanban column create <board-id> "Backlog" 0
+kanban column create <board-id> "In Progress" 1
+kanban column create <board-id> "Done" 2
 ```
 
 ### Setting up team collaboration:

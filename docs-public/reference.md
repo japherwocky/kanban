@@ -29,16 +29,18 @@ Complete reference for all Kanban CLI commands. Perfect for quick lookups during
 
 | Command | Usage | Description |
 |---------|-------|-------------|
-| `kanban column-create` | `kanban column-create <board-id> <name> <position>` | Create column |
-| `kanban column-delete` | `kanban column-delete <column-id>` | Delete column |
+| `kanban column` | `kanban column <subcommand>` | Column management commands |
+| `kanban column create` | `kanban column create <board-id> <name> <position>` | Create column |
+| `kanban column delete` | `kanban column delete <column-id>` | Delete column |
 
 ## 🃏 Card Management
 
 | Command | Usage | Description |
 |---------|-------|-------------|
-| `kanban card-create` | `kanban card-create <column-id> <title> [--description TEXT] [--position NUM]` | Create card |
-| `kanban card-update` | `kanban card-update <card-id> <title> [--description TEXT] [--position NUM] [--column NUM]` | Update card |
-| `kanban card-delete` | `kanban card-delete <card-id>` | Delete card |
+| `kanban card` | `kanban card <subcommand>` | Card management commands |
+| `kanban card create` | `kanban card create <column-id> <title> [--description TEXT] [--position NUM]` | Create card |
+| `kanban card update` | `kanban card update <card-id> <title> [--description TEXT] [--position NUM] [--column NUM]` | Update card |
+| `kanban card delete` | `kanban card delete <card-id>` | Delete card |
 
 ## 🏢 Organization Commands (`kanban org`)
 
@@ -83,7 +85,7 @@ Complete reference for all Kanban CLI commands. Perfect for quick lookups during
 kanban board-create "Board Name"
 
 # Optional parameters (shown in brackets)
-kanban card-create 1 "Title" --description "Optional" --position 0
+kanban card create 1 "Title" --description "Optional" --position 0
 ```
 
 ## 🚀 Quick Command Sequences
@@ -92,9 +94,9 @@ kanban card-create 1 "Title" --description "Optional" --position 0
 ```bash
 kanban board-create "Project Name"
 kanban board <new-board-id>  # Get default columns
-kanban column-create <board-id> "To Do" 0
-kanban column-create <board-id> "Doing" 1
-kanban column-create <board-id> "Done" 2
+kanban column create <board-id> "To Do" 0
+kanban column create <board-id> "Doing" 1
+kanban column create <board-id> "Done" 2
 ```
 
 ### Team Setup
@@ -107,9 +109,9 @@ kanban team member-add <team-id> <username>
 
 ### Card Workflow
 ```bash
-kanban card-create <todo-column-id> "New Task" --position 0
-kanban card-update <card-id> "Updated Task" --column <doing-column-id> --position 0
-kanban card-update <card-id> "Completed Task" --column <done-column-id> --position 0
+kanban card create <todo-column-id> "New Task" --position 0
+kanban card update <card-id> "Updated Task" --column <doing-column-id> --position 0
+kanban card update <card-id> "Completed Task" --column <done-column-id> --position 0
 ```
 
 ## 🔧 Help System
@@ -117,7 +119,8 @@ kanban card-update <card-id> "Completed Task" --column <done-column-id> --positi
 Get help for any command:
 ```bash
 kanban --help                    # All commands
-kanban board-create --help       # Specific command
+kanban card --help               # Card sub-commands
+kanban column --help             # Column sub-commands
 kanban org --help               # Organization sub-commands
 kanban team --help              # Team sub-commands
 ```
