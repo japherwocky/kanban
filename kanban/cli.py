@@ -124,8 +124,11 @@ def cmd_board_delete(board_id: int = typer.Argument(..., help="Board ID")):
 
 # === Column Commands ===
 
+column_app = typer.Typer(help="Column management commands", no_args_is_help=True)
+app.add_typer(column_app, name="column")
 
-@app.command("column-create")
+
+@column_app.command("create")
 def cmd_column_create(
     board_id: int = typer.Argument(..., help="Board ID"),
     name: str = typer.Argument(..., help="Column name"),
@@ -137,7 +140,7 @@ def cmd_column_create(
     rprint(f"Column created with [green]id={result['id']}[/green]")
 
 
-@app.command("column-delete")
+@column_app.command("delete")
 def cmd_column_delete(column_id: int = typer.Argument(..., help="Column ID")):
     """Delete a column."""
     client = make_client()
@@ -147,8 +150,11 @@ def cmd_column_delete(column_id: int = typer.Argument(..., help="Column ID")):
 
 # === Card Commands ===
 
+card_app = typer.Typer(help="Card management commands", no_args_is_help=True)
+app.add_typer(card_app, name="card")
 
-@app.command("card-create")
+
+@card_app.command("create")
 def cmd_card_create(
     column_id: int = typer.Argument(..., help="Column ID"),
     title: str = typer.Argument(..., help="Card title"),
@@ -163,7 +169,7 @@ def cmd_card_create(
     rprint(f"Card created with [green]id={result['id']}[/green]")
 
 
-@app.command("card-update")
+@card_app.command("update")
 def cmd_card_update(
     card_id: int = typer.Argument(..., help="Card ID"),
     title: str = typer.Argument(..., help="Card title"),
@@ -179,7 +185,7 @@ def cmd_card_update(
     rprint("[green]Card updated[/green]")
 
 
-@app.command("card-delete")
+@card_app.command("delete")
 def cmd_card_delete(card_id: int = typer.Argument(..., help="Card ID")):
     """Delete a card."""
     client = make_client()
