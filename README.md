@@ -37,12 +37,15 @@ kanban board-create "My Project"
 kanban board 1
 
 # Create a card
-kanban card-create 1 "To Do" "First task" --position 0
+kanban card create 1 "To Do" "First task" --position 0
 
 # Share a board with a team
 kanban share 1 <team-id>
 # Or make a board private
 kanban share 1 private
+
+# Column management
+kanban column create 1 "To Do" 0
 
 # Organization management
 kanban org create "My Company"
@@ -70,11 +73,11 @@ kanban team list --org-id 1
 | `kanban board <id>` | Show board details |
 | `kanban board-delete <id>` | Delete a board |
 | `kanban share <board_id> <team_id\|private>` | Share board with team or make private |
-| `kanban column-create <board_id> <name> <position>` | Create a column |
-| `kanban column-delete <id>` | Delete a column |
-| `kanban card-create <column_id> <title> [--description TEXT] [--position NUM]` | Create a card |
-| `kanban card-update <id> <title> [--description TEXT] [--position NUM] [--column NUM]` | Update a card |
-| `kanban card-delete <id>` | Delete a card |
+| `kanban column create <board_id> <name> <position>` | Create a column |
+| `kanban column delete <id>` | Delete a column |
+| `kanban card create <column_id> <title> [--description TEXT] [--position NUM]` | Create a card |
+| `kanban card update <id> <title> [--description TEXT] [--position NUM] [--column NUM]` | Update a card |
+| `kanban card delete <id>` | Delete a card |
 | `kanban org list` | List all organizations |
 | `kanban org create <name>` | Create a new organization |
 | `kanban org get <org-id>` | Show organization details |
