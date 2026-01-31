@@ -2,6 +2,8 @@
 
 Complete reference for all Kanban CLI commands. Perfect for quick lookups during agent operations.
 
+> **Interactive Version:** Visit [https://your-domain.com/docs/commands](/docs/commands) for a navigable command reference with individual pages for each command.
+
 ## 🔐 Authentication & Configuration
 
 | Command | Usage | Description |
@@ -56,6 +58,14 @@ Complete reference for all Kanban CLI commands. Perfect for quick lookups during
 | `kanban team members` | `kanban team members <team-id>` | List team members |
 | `kanban team member-add` | `kanban team member-add <team-id> <username>` | Add member |
 | `kanban team member-remove` | `kanban team member-remove <team-id> <user-id>` | Remove member |
+
+| Sub-command | Usage | Description |
+|-------------|-------|-------------|
+| `kanban apikey list` | `kanban apikey list` | List all API keys |
+| `kanban apikey create` | `kanban apikey create <name>` | Create new API key |
+| `kanban apikey revoke` | `kanban apikey revoke <key-id>` | Revoke/deactivate an API key |
+| `kanban apikey activate` | `kanban apikey activate <key-id>` | Reactivate a deactivated API key |
+| `kanban apikey use` | `kanban apikey use <key> <command>` | Run command using an API key |
 
 ## 🎯 Common Parameter Patterns
 

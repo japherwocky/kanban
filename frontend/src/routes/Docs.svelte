@@ -19,7 +19,8 @@
     { id: 'docs', title: 'Documentation', path: '/docs' },
     { id: 'quickstart', title: 'Quick Start', path: '/docs/quickstart' },
     { id: 'reference', title: 'Command Reference', path: '/docs/reference' },
-    { id: 'workflows', title: 'Common Workflows', path: '/docs/workflows' }
+    { id: 'workflows', title: 'Common Workflows', path: '/docs/workflows' },
+    { id: 'commands', title: 'All Commands', path: '/docs/commands' }
   ];
 
   // Configure marked options
@@ -181,144 +182,6 @@
     line-height: 1.6;
   }
 
-  .markdown-body h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 2rem 0 1rem 0;
-    color: var(--color-foreground);
-  }
-
-  .markdown-body h2 {
-    font-size: 2rem;
-    font-weight: 600;
-    margin: 1.5rem 0 0.75rem 0;
-    color: var(--color-foreground);
-    border-bottom: 2px solid var(--color-border);
-    padding-bottom: 0.5rem;
-  }
-
-  .markdown-body h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 1.25rem 0 0.5rem 0;
-    color: var(--color-foreground);
-  }
-
-  .markdown-body h4 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 1rem 0 0.5rem 0;
-    color: var(--color-foreground);
-  }
-
-  .markdown-body p {
-    margin: 1rem 0;
-    color: var(--color-muted-foreground);
-  }
-
-  .markdown-body ul, .markdown-body ol {
-    margin: 1rem 0;
-    padding-left: 2rem;
-  }
-
-  .markdown-body li {
-    margin: 0.5rem 0;
-    color: var(--color-muted-foreground);
-  }
-
-  .markdown-body a {
-    color: var(--color-primary);
-    text-decoration: none;
-    font-weight: 500;
-  }
-
-  .markdown-body a:hover {
-    text-decoration: underline;
-  }
-
-  .markdown-body blockquote {
-    border-left: 4px solid var(--color-primary);
-    padding-left: 1rem;
-    margin: 1rem 0;
-    font-style: italic;
-    color: var(--color-muted-foreground);
-  }
-
-  .markdown-body code {
-    background: var(--color-muted);
-    color: var(--color-foreground);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.875rem;
-  }
-
-  .markdown-body pre {
-    background: var(--color-muted);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 1rem;
-    margin: 1rem 0;
-    overflow-x: auto;
-    position: relative;
-  }
-
-  .markdown-body pre code {
-    background: transparent;
-    padding: 0;
-    border-radius: 0;
-    font-size: 0.875rem;
-    line-height: 1.5;
-  }
-
-  .code-block-wrapper {
-    position: relative;
-  }
-
-  .copy-button {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: var(--color-background);
-    border: 1px solid var(--color-border);
-    color: var(--color-muted-foreground);
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
-  }
-
-  .copy-button:hover {
-    background: var(--color-card);
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  .markdown-body table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-  }
-
-  .markdown-body th,
-  .markdown-body td {
-    border: 1px solid var(--color-border);
-    padding: 0.75rem;
-    text-align: left;
-  }
-
-  .markdown-body th {
-    background: var(--color-muted);
-    font-weight: 600;
-  }
-
-  .markdown-body hr {
-    border: none;
-    border-top: 2px solid var(--color-border);
-    margin: 2rem 0;
-  }
-
   /* Responsive */
   @media (max-width: 768px) {
     .docs-sidebar {
@@ -327,14 +190,6 @@
     
     .docs-main {
       padding: 1.5rem;
-    }
-    
-    .markdown-body h1 {
-      font-size: 2rem;
-    }
-    
-    .markdown-body h2 {
-      font-size: 1.5rem;
     }
   }
 

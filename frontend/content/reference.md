@@ -2,6 +2,10 @@
 
 Complete reference for all Kanban CLI commands. Perfect for quick lookups during agent operations.
 
+> **Tip:** Each command also has its own detailed page. Click on any command to see full documentation with examples.
+> 
+> [View all commands →](/docs/commands)
+
 ## 🔐 Authentication & Configuration
 
 | Command | Usage | Description |
