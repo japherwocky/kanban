@@ -1,6 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -49,6 +49,40 @@ if os.path.exists(CONTENT_PATH):
 else:
     # Debug: log if docs path doesn't exist
     print(f"WARNING: Docs path not found: {CONTENT_PATH}")
+
+
+@app.middleware("http")
+async def redirect_clean_docs_urls(request: Request, call_next):
+    """Redirect clean /docs/ URLs to .md files."""
+    path = request.url.path
+
+    # Only handle /docs/ paths that don't have .md extension
+    if path.startswith("/docs/") and not path.endswith(".md"):
+        from pathlib import Path
+
+        content_path = Path(__file__).parent.parent / "docs"
+
+        # Get the path after /docs/
+        relative_path = path[6:]  # remove "/docs/"
+
+        # First try direct .md file
+        md_path = content_path / f"{relative_path}.md"
+        if md_path.exists():
+            # Redirect to the .md version
+            from fastapi.responses import RedirectResponse
+
+            return RedirectResponse(f"{path}.md", status_code=302)
+
+        # Try in commands/ subdirectory
+        md_path = content_path / "commands" / f"{relative_path}.md"
+        if md_path.exists():
+            from fastapi.responses import RedirectResponse
+
+            return RedirectResponse(
+                f"/docs/commands/{relative_path}.md", status_code=302
+            )
+
+    return await call_next(request)
 
 
 @app.get("/")
