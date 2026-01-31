@@ -46,6 +46,9 @@ if os.path.exists(CONTENT_PATH):
     app.mount(
         "/content", StaticFiles(directory=CONTENT_PATH, html=True), name="content"
     )
+else:
+    # Debug: log if docs path doesn't exist
+    print(f"WARNING: Docs path not found: {CONTENT_PATH}")
 
 
 @app.get("/")
@@ -58,9 +61,23 @@ async def root():
     return {"message": "Kanban API is running. Build the frontend to serve it here."}
 
 
+@app.get("/api/debug/docs-path")
+async def debug_docs_path():
+    """Debug endpoint to check docs path configuration."""
+    from pathlib import Path
+
+    content_path = str(Path(__file__).parent.parent / "docs")
+    return {
+        "content_path": content_path,
+        "exists": os.path.exists(content_path),
+        "files": os.listdir(content_path) if os.path.exists(content_path) else [],
+    }
+
+
 @app.get("/{path:path}")
 async def catch_all(path: str):
-    """Serve index.html for all non-API routes (SPA fallback)"""
+    """Serve index.html for all non-API, non-docs routes (SPA fallback)"""
+    # Don't intercept /api or /docs routes - those are handled by router and mounts
     index_path = os.path.join(STATIC_PATH, "index.html")
     if os.path.exists(index_path):
         from fastapi.responses import FileResponse
