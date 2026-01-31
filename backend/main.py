@@ -74,10 +74,37 @@ async def debug_docs_path():
     }
 
 
+@app.get("/docs/{path}")
+async def docs_with_md(path: str):
+    """Redirect clean docs URLs to .md files for human-friendly navigation."""
+    from fastapi.responses import RedirectResponse
+    from pathlib import Path
+
+    content_path = Path(__file__).parent.parent / "docs"
+
+    # First try direct .md file
+    md_path = content_path / f"{path}.md"
+    if md_path.exists():
+        return RedirectResponse(f"/docs/{path}.md", status_code=302)
+
+    # Try in commands/ subdirectory
+    md_path = content_path / "commands" / f"{path}.md"
+    if md_path.exists():
+        return RedirectResponse(f"/docs/commands/{path}.md", status_code=302)
+
+    # Try index in commands/
+    md_path = content_path / "commands" / f"{path}.md"
+    if (content_path / path).exists() and (content_path / path).is_dir():
+        index_path = content_path / path / "index.md"
+        if index_path.exists():
+            return RedirectResponse(f"/docs/{path}/index.md", status_code=302)
+
+    return {"error": f"Documentation not found: {path}"}
+
+
 @app.get("/{path:path}")
 async def catch_all(path: str):
     """Serve index.html for all non-API, non-docs routes (SPA fallback)"""
-    # Don't intercept /api or /docs routes - those are handled by router and mounts
     index_path = os.path.join(STATIC_PATH, "index.html")
     if os.path.exists(index_path):
         from fastapi.responses import FileResponse

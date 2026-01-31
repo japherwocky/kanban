@@ -46,15 +46,19 @@
   }
 
   function convertMarkdownLinks(markdown) {
-    // Convert relative .md links to /docs/ routes
-    // [text](quickstart.md) → [text](/docs/quickstart)
-    // [text](reference.md#section) → [text](/docs/reference#section)
-    return markdown.replace(/\[([^\]]+)\]\(([^)]+?\.md[^)]*)\)/g, (match, text, href) => {
-      let newHref = href.replace('.md', '');
-      if (!newHref.startsWith('/')) {
-        newHref = '/docs/' + newHref;
+    // Keep .md extensions for correct backend routing
+    // Both /docs/reference and /docs/reference.md work the same
+    // [text](quickstart.md) → [text](/docs/quickstart.md)
+    // [text](commands/apikey.md) → [text](/docs/commands/apikey.md)
+    return markdown.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, href) => {
+      // Only convert relative links, keep .md extension
+      if (href.startsWith('http') || href.startsWith('#')) {
+        return match;
       }
-      return `[${text}](${newHref})`;
+      if (!href.startsWith('/')) {
+        href = '/docs/' + href;
+      }
+      return `[${text}](${href})`;
     });
   }
 
