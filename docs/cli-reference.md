@@ -59,6 +59,8 @@ Complete reference for all Kanban CLI commands. Perfect for quick lookups during
 | `kanban team member-add` | `kanban team member-add <team-id> <username>` | Add member |
 | `kanban team member-remove` | `kanban team member-remove <team-id> <user-id>` | Remove member |
 
+## 🔑 API Key Commands (`kanban apikey`)
+
 | Sub-command | Usage | Description |
 |-------------|-------|-------------|
 | `kanban apikey list` | `kanban apikey list` | List all API keys |
