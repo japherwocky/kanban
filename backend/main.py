@@ -38,10 +38,14 @@ if os.path.exists(STATIC_PATH):
 
 app.include_router(api, prefix="/api")
 
-# Serve documentation content files
-CONTENT_PATH = os.path.join(os.path.dirname(__file__), "..", "frontend", "content")
+# Serve documentation content files from docs/
+CONTENT_PATH = os.path.join(os.path.dirname(__file__), "..", "docs")
 if os.path.exists(CONTENT_PATH):
-    app.mount("/content", StaticFiles(directory=CONTENT_PATH), name="content")
+    app.mount("/docs", StaticFiles(directory=CONTENT_PATH, html=True), name="docs")
+    # Also serve at /content for backward compatibility
+    app.mount(
+        "/content", StaticFiles(directory=CONTENT_PATH, html=True), name="content"
+    )
 
 
 @app.get("/")

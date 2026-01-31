@@ -63,7 +63,7 @@
     error = '';
     
     try {
-      const response = await fetch(`/content/${section}.md`);
+      const response = await fetch(`/docs/${section}.md`);
 
       if (!response.ok) {
         throw new Error(`Documentation not found: ${section}`);
