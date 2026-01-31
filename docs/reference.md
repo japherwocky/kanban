@@ -2,7 +2,15 @@
 
 Complete reference for all Kanban CLI commands. Perfect for quick lookups during agent operations.
 
-> **Interactive Version:** Visit [https://your-domain.com/docs/commands](/docs/commands) for a navigable command reference with individual pages for each command.
+> **Detailed Pages:** Each command group has a dedicated page with examples:
+> - [All Commands Index](/docs/commands) - Navigable command list
+> - [Authentication](/docs/commands/config) - config, login, logout
+> - [Boards](/docs/commands/boards) - boards, board-create, board, board-delete, share
+> - [Columns](/docs/commands/column) - column management
+> - [Cards](/docs/commands/card) - card management
+> - [Organizations](/docs/commands/org) - org management
+> - [Teams](/docs/commands/team) - team management
+> - [API Keys](/docs/commands/apikey) - apikey management
 
 ## 🔐 Authentication & Configuration
 
