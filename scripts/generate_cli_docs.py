@@ -9,7 +9,7 @@ Usage:
 from pathlib import Path
 
 # Output directory
-OUTPUT_DIR = Path(__file__).parent.parent / "frontend" / "content"
+OUTPUT_DIR = Path(__file__).parent.parent / "docs" / "commands"
 
 # Command definitions - each entry: (command_name, args, options, description)
 COMMANDS = [
