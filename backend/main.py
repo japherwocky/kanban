@@ -1,6 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -51,40 +51,6 @@ else:
     print(f"WARNING: Docs path not found: {CONTENT_PATH}")
 
 
-@app.middleware("http")
-async def redirect_clean_docs_urls(request: Request, call_next):
-    """Redirect clean /docs/ URLs to .md files."""
-    path = request.url.path
-
-    # Only handle /docs/ paths that don't have .md extension
-    if path.startswith("/docs/") and not path.endswith(".md"):
-        from pathlib import Path
-
-        content_path = Path(__file__).parent.parent / "docs"
-
-        # Get the path after /docs/
-        relative_path = path[6:]  # remove "/docs/"
-
-        # First try direct .md file
-        md_path = content_path / f"{relative_path}.md"
-        if md_path.exists():
-            # Redirect to the .md version
-            from fastapi.responses import RedirectResponse
-
-            return RedirectResponse(f"{path}.md", status_code=302)
-
-        # Try in commands/ subdirectory
-        md_path = content_path / "commands" / f"{relative_path}.md"
-        if md_path.exists():
-            from fastapi.responses import RedirectResponse
-
-            return RedirectResponse(
-                f"/docs/commands/{relative_path}.md", status_code=302
-            )
-
-    return await call_next(request)
-
-
 @app.get("/")
 async def root():
     index_path = os.path.join(STATIC_PATH, "index.html")
@@ -106,34 +72,6 @@ async def debug_docs_path():
         "exists": os.path.exists(content_path),
         "files": os.listdir(content_path) if os.path.exists(content_path) else [],
     }
-
-
-@app.get("/docs/{path}")
-async def docs_with_md(path: str):
-    """Redirect clean docs URLs to .md files for human-friendly navigation."""
-    from fastapi.responses import RedirectResponse
-    from pathlib import Path
-
-    content_path = Path(__file__).parent.parent / "docs"
-
-    # First try direct .md file
-    md_path = content_path / f"{path}.md"
-    if md_path.exists():
-        return RedirectResponse(f"/docs/{path}.md", status_code=302)
-
-    # Try in commands/ subdirectory
-    md_path = content_path / "commands" / f"{path}.md"
-    if md_path.exists():
-        return RedirectResponse(f"/docs/commands/{path}.md", status_code=302)
-
-    # Try index in commands/
-    md_path = content_path / "commands" / f"{path}.md"
-    if (content_path / path).exists() and (content_path / path).is_dir():
-        index_path = content_path / path / "index.md"
-        if index_path.exists():
-            return RedirectResponse(f"/docs/{path}/index.md", status_code=302)
-
-    return {"error": f"Documentation not found: {path}"}
 
 
 @app.get("/{path:path}")
