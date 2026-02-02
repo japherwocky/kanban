@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from backend.api import api
 from backend.database import init_db
@@ -40,23 +41,28 @@ app.include_router(api, prefix="/api")
 
 # Serve documentation content files from docs/
 CONTENT_PATH = os.path.join(os.path.dirname(__file__), "..", "docs")
-if os.path.exists(CONTENT_PATH):
-    app.mount("/docs", StaticFiles(directory=CONTENT_PATH, html=True), name="docs")
-    # Also serve at /content for backward compatibility
-    app.mount(
-        "/content", StaticFiles(directory=CONTENT_PATH, html=True), name="content"
-    )
-else:
-    # Debug: log if docs path doesn't exist
-    print(f"WARNING: Docs path not found: {CONTENT_PATH}")
+
+
+@app.get("/docs/{path:path}")
+async def docs_handler(path: str):
+    """Serve docs: .md files serve raw markdown, clean URLs serve SPA."""
+    if path.endswith(".md"):
+        # Serve the markdown file
+        file_path = os.path.join(CONTENT_PATH, path)
+        if os.path.exists(file_path):
+            return FileResponse(file_path)
+
+    # Clean URL or missing file → serve SPA
+    index_path = os.path.join(STATIC_PATH, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"message": "Kanban API is running"}
 
 
 @app.get("/")
 async def root():
     index_path = os.path.join(STATIC_PATH, "index.html")
     if os.path.exists(index_path):
-        from fastapi.responses import FileResponse
-
         return FileResponse(index_path)
     return {"message": "Kanban API is running. Build the frontend to serve it here."}
 
@@ -79,7 +85,5 @@ async def catch_all(path: str):
     """Serve index.html for all non-API, non-docs routes (SPA fallback)"""
     index_path = os.path.join(STATIC_PATH, "index.html")
     if os.path.exists(index_path):
-        from fastapi.responses import FileResponse
-
         return FileResponse(index_path)
     return {"message": "Kanban API is running"}
