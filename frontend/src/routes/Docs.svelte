@@ -143,100 +143,167 @@
 
 <style>
   :global(.markdown-body h1) {
-    @apply text-3xl font-bold text-white mb-6 mt-8;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1.5rem;
+    margin-top: 2rem;
   }
 
   :global(.markdown-body h2) {
-    @apply text-2xl font-semibold text-white mb-4 mt-10 pb-2 border-b border-white/10;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 1rem;
+    margin-top: 2.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   :global(.markdown-body h3) {
-    @apply text-xl font-semibold text-white mb-3 mt-8;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.75rem;
+    margin-top: 2rem;
   }
 
   :global(.markdown-body h4) {
-    @apply text-lg font-medium text-white mb-2 mt-6;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 0.5rem;
+    margin-top: 1.5rem;
   }
 
   :global(.markdown-body p) {
-    @apply text-slate-300 leading-relaxed mb-4;
+    color: #cbd5e1;
+    line-height: 1.625;
+    margin-bottom: 1rem;
   }
 
   :global(.markdown-body a) {
-    @apply text-blue-500 hover:text-blue-400 transition-colors duration-200;
+    color: #3b82f6;
+    transition: color 0.2s;
+  }
+
+  :global(.markdown-body a:hover) {
+    color: #60a5fa;
   }
 
   :global(.markdown-body ul) {
-    @apply list-disc list-inside space-y-2 mb-6 text-slate-300;
+    list-style-type: disc;
+    padding-left: 1rem;
+    margin-bottom: 1.5rem;
+    color: #cbd5e1;
   }
 
   :global(.markdown-body ol) {
-    @apply list-decimal list-inside space-y-2 mb-6 text-slate-300;
+    list-style-type: decimal;
+    padding-left: 1rem;
+    margin-bottom: 1.5rem;
+    color: #cbd5e1;
   }
 
   :global(.markdown-body li) {
-    @apply leading-relaxed;
+    line-height: 1.625;
   }
 
   :global(.markdown-body strong) {
-    @apply text-white font-semibold;
+    color: white;
+    font-weight: 600;
   }
 
   :global(.markdown-body code) {
-    @apply bg-[#0F1117] border border-white/10 rounded px-1.5 py-0.5 text-sm font-mono text-pink-400;
+    background-color: #0F1117;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.875rem;
+    font-family: monospace;
+    color: #f472b6;
   }
 
   :global(.markdown-body pre) {
-    @apply bg-[#0F1117] border border-white/10 rounded-lg p-4 font-mono text-sm mb-6 overflow-x-auto;
+    background-color: #0F1117;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
   }
 
   :global(.markdown-body pre code) {
-    @apply bg-transparent border-none p-0 text-slate-300;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    color: #cbd5e1;
   }
 
   /* Terminal-style command blocks */
   :global(.markdown-body pre:has(> code.shell)) {
-    @apply relative;
+    position: relative;
   }
 
   :global(.markdown-body code.shell) {
-    @apply text-emerald-500;
+    color: #10b981;
   }
 
   /* Table styling */
   :global(.markdown-body table) {
-    @apply w-full mb-6 border-collapse;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border-collapse: collapse;
   }
 
   :global(.markdown-body thead) {
-    @apply border-b border-white/10;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   :global(.markdown-body th) {
-    @apply text-left text-xs uppercase text-gray-500 font-medium py-3 px-4;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
   }
 
   :global(.markdown-body td) {
-    @apply py-3 px-4 border-b border-white/10 text-slate-300;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
   }
 
   :global(.markdown-body tbody tr:hover) {
-    @apply bg-white/5;
+    background-color: rgba(255, 255, 255, 0.05);
   }
 
   /* Blockquotes */
   :global(.markdown-body blockquote) {
-    @apply border-l-4 border-blue-500 pl-4 py-2 my-6 bg-white/5 rounded-r-lg text-slate-300;
+    border-left: 4px solid #3b82f6;
+    padding-left: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0.5rem 0.5rem 0;
+    color: #cbd5e1;
   }
 
   /* Horizontal rules */
   :global(.markdown-body hr) {
-    @apply border-white/10 my-8;
+    border-color: rgba(255, 255, 255, 0.1);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
   }
 
   /* Inline code in tables */
   :global(.markdown-body td code) {
-    @apply text-xs;
+    font-size: 0.75rem;
   }
 
   /* Responsive */
@@ -256,11 +323,11 @@
     }
 
     :global(.markdown-body h1) {
-      @apply text-2xl;
+      font-size: 1.5rem;
     }
 
     :global(.markdown-body h2) {
-      @apply text-xl;
+      font-size: 1.25rem;
     }
   }
 </style>
