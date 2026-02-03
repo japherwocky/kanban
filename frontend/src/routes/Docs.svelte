@@ -221,7 +221,7 @@
     padding: 0.125rem 0.375rem;
     font-size: 0.875rem;
     font-family: monospace;
-    color: #f472b6;
+    color: #22c55e;
   }
 
   :global(.markdown-body pre) {
