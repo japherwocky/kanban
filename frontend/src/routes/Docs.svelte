@@ -111,11 +111,11 @@
   <!-- Main Content -->
   <div class="docs-content">
     <!-- Glow effect behind title -->
-    <div class="relative mb-8">
-      <div class="absolute -inset-4 bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-purple-500/20 rounded-xl blur-xl opacity-50"></div>
-      <div class="relative">
-        <h1 class="text-4xl font-bold mb-3" style="color: var(--color-foreground);">Documentation</h1>
-        <p class="text-lg" style="color: var(--color-muted-foreground);">Everything you need to build with Kanban CLI</p>
+    <div class="docs-title-wrapper">
+      <div class="docs-title-glow"></div>
+      <div class="docs-title-content">
+        <h1>Documentation</h1>
+        <p class="docs-subtitle">Everything you need to build with Kanban CLI</p>
       </div>
     </div>
 
@@ -177,6 +177,42 @@
     border-left: 2px solid var(--color-primary);
     color: var(--color-foreground);
     background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .docs-title-wrapper {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+
+  .docs-title-glow {
+    position: absolute;
+    inset: -1rem;
+    border-radius: 0.75rem;
+    opacity: 0.5;
+    filter: blur(1rem);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 20%, transparent) 0%,
+      color-mix(in srgb, var(--color-accent) 15%, transparent) 50%,
+      transparent 100%
+    );
+  }
+
+  .docs-title-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .docs-title-content h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--color-foreground);
+    margin-bottom: 0.75rem;
+  }
+
+  .docs-subtitle {
+    font-size: 1.125rem;
+    color: var(--color-muted-foreground);
   }
 
   :global(.markdown-body h1) {
@@ -362,7 +398,7 @@
       padding: 1.5rem;
     }
 
-    :global(.markdown-body h1) {
+    .docs-title-content h1 {
       font-size: 1.5rem;
     }
 
