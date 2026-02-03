@@ -89,9 +89,9 @@
   }
 </script>
 
-<div class="min-h-screen flex docs-container">
+<div class="docs-layout">
   <!-- Sidebar Navigation -->
-  <nav class="w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] border-r overflow-y-auto docs-sidebar">
+  <aside class="docs-sidebar">
     <ul class="py-4 px-3 space-y-1">
       {#each docsSections as section}
         <li>
@@ -106,28 +106,28 @@
         </li>
       {/each}
     </ul>
-  </nav>
+  </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 ml-64 p-8 max-w-4xl">
+  <div class="docs-content">
     <!-- Glow effect behind title -->
     <div class="relative mb-8">
       <div class="absolute -inset-4 bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-purple-500/20 rounded-xl blur-xl opacity-50"></div>
       <div class="relative">
-        <h1 class="text-4xl font-bold text-white mb-3">Documentation</h1>
-        <p class="text-slate-400 text-lg">Everything you need to build with Kanban CLI</p>
+        <h1 class="text-4xl font-bold mb-3" style="color: var(--color-foreground);">Documentation</h1>
+        <p class="text-lg" style="color: var(--color-muted-foreground);">Everything you need to build with Kanban CLI</p>
       </div>
     </div>
 
     {#if loading}
       <div class="flex items-center justify-center min-h-[400px]">
         <div class="text-center">
-          <div class="inline-flex items-center justify-center w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p class="text-slate-400">Loading documentation...</p>
+          <div class="inline-flex items-center justify-center w-8 h-8 border-2 rounded-full animate-spin mb-4" style="border-color: var(--color-primary); border-top-color: transparent;"></div>
+          <p style="color: var(--color-muted-foreground);">Loading documentation...</p>
         </div>
       </div>
     {:else if error}
-      <div class="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
+      <div class="rounded-lg p-4" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171;">
         {error}
       </div>
     {:else}
@@ -136,19 +136,33 @@
         {@html htmlContent}
       </div>
     {/if}
-  </main>
+  </div>
 </div>
 
 <style>
-  .docs-container {
-    min-height: 100vh;
+  .docs-layout {
+    display: flex;
+    min-height: calc(100vh - 4rem);
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
 
   .docs-sidebar {
+    width: 16rem;
+    flex-shrink: 0;
+    height: calc(100vh - 4rem);
+    position: sticky;
+    top: 4rem;
+    overflow-y: auto;
     background-color: var(--color-card);
-    border-color: var(--color-border);
+    border-right: 1px solid var(--color-border);
+  }
+
+  .docs-content {
+    flex: 1;
+    padding: 2rem;
+    max-width: 56rem;
+    overflow-y: auto;
   }
 
   .docs-nav-link {
@@ -160,7 +174,7 @@
   }
 
   .docs-nav-link.active {
-    border-left-color: var(--color-primary);
+    border-left: 2px solid var(--color-primary);
     color: var(--color-foreground);
     background-color: rgba(255, 255, 255, 0.05);
   }
@@ -331,17 +345,20 @@
 
   /* Responsive */
   @media (max-width: 768px) {
-    nav {
+    .docs-layout {
+      flex-direction: column;
+    }
+
+    .docs-sidebar {
       width: 100%;
+      height: auto;
       position: relative;
       top: 0;
-      height: auto;
       border-right: none;
       border-bottom: 1px solid var(--color-border);
     }
 
-    main {
-      margin-left: 0;
+    .docs-content {
       padding: 1.5rem;
     }
 
