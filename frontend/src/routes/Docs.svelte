@@ -89,18 +89,16 @@
   }
 </script>
 
-<div class="min-h-screen bg-[#050505] flex">
+<div class="min-h-screen flex docs-container">
   <!-- Sidebar Navigation -->
-  <nav class="w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] border-r border-white/10 bg-[#050505] overflow-y-auto">
+  <nav class="w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] border-r overflow-y-auto docs-sidebar">
     <ul class="py-4 px-3 space-y-1">
       {#each docsSections as section}
         <li>
           <a
             href="{section.path}"
-            class="block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                   {activeSection === section.id
-                     ? 'border-l-2 border-blue-500 text-white bg-white/5'
-                     : 'text-slate-300 hover:bg-white/5 hover:text-white'}"
+            class="block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 docs-nav-link"
+            class:active={activeSection === section.id}
             on:click={() => handleSectionClick(section.path, section.id)}
           >
             {section.title}
@@ -142,6 +140,31 @@
 </div>
 
 <style>
+  .docs-container {
+    min-height: 100vh;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .docs-sidebar {
+    background-color: var(--color-card);
+    border-color: var(--color-border);
+  }
+
+  .docs-nav-link {
+    color: var(--color-foreground);
+  }
+
+  .docs-nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .docs-nav-link.active {
+    border-left-color: var(--color-primary);
+    color: var(--color-foreground);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
   :global(.markdown-body h1) {
     font-size: 1.875rem;
     font-weight: 700;
@@ -153,17 +176,17 @@
   :global(.markdown-body h2) {
     font-size: 1.5rem;
     font-weight: 600;
-    color: white;
+    color: var(--color-foreground);
     margin-bottom: 1rem;
     margin-top: 2.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--color-border);
   }
 
   :global(.markdown-body h3) {
     font-size: 1.25rem;
     font-weight: 600;
-    color: white;
+    color: var(--color-foreground);
     margin-bottom: 0.75rem;
     margin-top: 2rem;
   }
@@ -171,38 +194,38 @@
   :global(.markdown-body h4) {
     font-size: 1.125rem;
     font-weight: 500;
-    color: white;
+    color: var(--color-foreground);
     margin-bottom: 0.5rem;
     margin-top: 1.5rem;
   }
 
   :global(.markdown-body p) {
-    color: #cbd5e1;
+    color: var(--color-muted-foreground);
     line-height: 1.625;
     margin-bottom: 1rem;
   }
 
   :global(.markdown-body a) {
-    color: #3b82f6;
+    color: var(--color-primary);
     transition: color 0.2s;
   }
 
   :global(.markdown-body a:hover) {
-    color: #60a5fa;
+    color: var(--color-accent);
   }
 
   :global(.markdown-body ul) {
     list-style-type: disc;
     padding-left: 1rem;
     margin-bottom: 1.5rem;
-    color: #cbd5e1;
+    color: var(--color-muted-foreground);
   }
 
   :global(.markdown-body ol) {
     list-style-type: decimal;
     padding-left: 1rem;
     margin-bottom: 1.5rem;
-    color: #cbd5e1;
+    color: var(--color-muted-foreground);
   }
 
   :global(.markdown-body li) {
@@ -210,13 +233,13 @@
   }
 
   :global(.markdown-body strong) {
-    color: white;
+    color: var(--color-foreground);
     font-weight: 600;
   }
 
   :global(.markdown-body code) {
-    background-color: #0F1117;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--color-code-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.25rem;
     padding: 0.125rem 0.375rem;
     font-size: 0.875rem;
@@ -225,8 +248,8 @@
   }
 
   :global(.markdown-body pre) {
-    background-color: #0F1117;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--color-code-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     padding: 1rem;
     font-family: monospace;
@@ -239,7 +262,7 @@
     background-color: transparent;
     border: none;
     padding: 0;
-    color: #cbd5e1;
+    color: var(--color-code-fg);
   }
 
   /* Terminal-style command blocks */
@@ -248,7 +271,7 @@
   }
 
   :global(.markdown-body code.shell) {
-    color: #10b981;
+    color: var(--color-success);
   }
 
   /* Table styling */
@@ -259,22 +282,22 @@
   }
 
   :global(.markdown-body thead) {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--color-border);
   }
 
   :global(.markdown-body th) {
     text-align: left;
     font-size: 0.75rem;
     text-transform: uppercase;
-    color: #6b7280;
+    color: var(--color-muted-foreground);
     font-weight: 500;
     padding: 0.75rem 1rem;
   }
 
   :global(.markdown-body td) {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: #cbd5e1;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-muted-foreground);
   }
 
   :global(.markdown-body tbody tr:hover) {
@@ -283,7 +306,7 @@
 
   /* Blockquotes */
   :global(.markdown-body blockquote) {
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid var(--color-primary);
     padding-left: 1rem;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
@@ -291,12 +314,12 @@
     margin-bottom: 1.5rem;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 0 0.5rem 0.5rem 0;
-    color: #cbd5e1;
+    color: var(--color-muted-foreground);
   }
 
   /* Horizontal rules */
   :global(.markdown-body hr) {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-border);
     margin-top: 2rem;
     margin-bottom: 2rem;
   }
@@ -314,7 +337,7 @@
       top: 0;
       height: auto;
       border-right: none;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--color-border);
     }
 
     main {
