@@ -173,6 +173,16 @@ export const api = {
         body: JSON.stringify({ name }),
       }),
     },
+    invites: {
+      list: (orgId) => apiFetch(`/api/organizations/${orgId}/invites`),
+      create: (orgId, email) => apiFetch(`/api/organizations/${orgId}/invites`, {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
+      revoke: (orgId, inviteId) => apiFetch(`/api/organizations/${orgId}/invites/${inviteId}`, {
+        method: 'DELETE',
+      }),
+    },
   },
   teams: {
     update: (id, name) => apiFetch(`/api/teams/${id}`, {

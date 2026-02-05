@@ -8,6 +8,7 @@
   let organization = $state(null);
   let members = $state([]);
   let teams = $state([]);
+  let invites = $state([]);
   let loading = $state(true);
   let activeTab = $state('members');
 
@@ -15,13 +16,16 @@
   let showAddMemberModal = $state(false);
   let showCreateTeamModal = $state(false);
   let showAddTeamMemberModal = $state(false);
+  let showCreateInviteModal = $state(false);
   let selectedTeam = $state(null);
   let teamMembers = $state([]);
   let teamMembersLoading = $state(false);
   let newMemberUsername = $state('');
   let newTeamName = $state('');
+  let newInviteEmail = $state('');
   let addMemberLoading = $state(false);
   let createTeamLoading = $state(false);
+  let createInviteLoading = $state(false);
   let addTeamMemberLoading = $state(false);
 
   // Store current username for permission checks
@@ -47,6 +51,7 @@
       organization = await api.organizations.get(params.id);
       members = await api.organizations.members.list(params.id);
       teams = await api.organizations.teams.list(params.id);
+      invites = await api.organizations.invites.list(params.id);
     } catch (e) {
       console.error('Failed to load organization:', e);
       alert('Failed to load organization');
@@ -151,6 +156,36 @@
     }
   }
 
+  async function createInvite() {
+    createInviteLoading = true;
+    try {
+      const result = await api.organizations.invites.create(params.id, newInviteEmail.trim() || null);
+      invites = [...invites, result];
+      newInviteEmail = '';
+      showCreateInviteModal = false;
+    } catch (e) {
+      alert('Failed to create invite: ' + e.message);
+    } finally {
+      createInviteLoading = false;
+    }
+  }
+
+  async function revokeInvite(inviteId, email) {
+    if (!confirm(`Revoke invite for ${email || 'anonymous'}?`)) return;
+    try {
+      await api.organizations.invites.revoke(params.id, inviteId);
+      invites = invites.filter(i => i.id !== inviteId);
+    } catch (e) {
+      alert('Failed to revoke invite: ' + e.message);
+    }
+  }
+
+  function copyInviteLink(invite) {
+    const link = `${window.location.origin}/#!/invite/${invite.token}`;
+    navigator.clipboard.writeText(link);
+    alert('Invite link copied to clipboard!');
+  }
+
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
@@ -194,6 +229,13 @@
           onclick={() => activeTab = 'teams'}
         >
           Teams ({teams.length})
+        </button>
+        <button
+          class="tab-btn"
+          class:active={activeTab === 'invites'}
+          onclick={() => activeTab = 'invites'}
+        >
+          Invites ({invites.length})
         </button>
       </div>
 
@@ -267,6 +309,43 @@
                         onclick={() => deleteTeam(team.id, team.name)}
                       >
                         Delete
+                      </button>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {:else if activeTab === 'invites'}
+        <div class="section">
+          <div class="section-header">
+            <h2>Invites</h2>
+            {#if isOwner()}
+              <button class="add-btn" onclick={() => showCreateInviteModal = true}>+ Create Invite</button>
+            {/if}
+          </div>
+
+          {#if invites.length === 0}
+            <div class="empty-state">No pending invites</div>
+          {:else}
+            <div class="invites-list">
+              {#each invites as invite (invite.id)}
+                <div class="invite-item">
+                  <div class="invite-info">
+                    <span class="invite-email">{invite.email || 'Anonymous'}</span>
+                    <span class="invite-meta">Created {formatDate(invite.created_at)}</span>
+                  </div>
+                  <div class="invite-actions">
+                    <button class="copy-btn" onclick={() => copyInviteLink(invite)}>
+                      Copy Link
+                    </button>
+                    {#if isOwner()}
+                      <button
+                        class="revoke-btn"
+                        onclick={() => revokeInvite(invite.id, invite.email)}
+                      >
+                        Revoke
                       </button>
                     {/if}
                   </div>
@@ -387,6 +466,29 @@
       <div class="modal-actions">
         <button type="button" class="cancel-btn" onclick={() => showAddTeamMemberModal = false}>Close</button>
       </div>
+    {/snippet}
+  </Modal>
+{/if}
+
+<!-- Create Invite Modal -->
+{#if showCreateInviteModal}
+  <Modal open={showCreateInviteModal} onClose={() => showCreateInviteModal = false} title="Create Invite">
+    {#snippet children()}
+      <h2 id="modal-title">Create Invite</h2>
+      <p class="modal-help">Generate an invite link to share with someone. They'll be able to join this organization.</p>
+      <form onsubmit={(e) => { e.preventDefault(); createInvite(); }}>
+        <input
+          bind:value={newInviteEmail}
+          placeholder="Email (optional)"
+          type="email"
+        />
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" onclick={() => showCreateInviteModal = false}>Cancel</button>
+          <button type="submit" class="create-btn" disabled={createInviteLoading}>
+            {createInviteLoading ? 'Creating...' : 'Create Invite'}
+          </button>
+        </div>
+      </form>
     {/snippet}
   </Modal>
 {/if}
@@ -629,6 +731,69 @@
   .leave-btn:hover {
     background: var(--color-muted);
     color: var(--color-destructive);
+  }
+
+  .invites-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .invite-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+
+  .invite-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .invite-email {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-foreground);
+  }
+
+  .invite-meta {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+  }
+
+  .invite-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .copy-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+    font-size: 0.875rem;
+  }
+
+  .copy-btn:hover {
+    background: var(--color-muted);
+    border-color: var(--color-primary);
+  }
+
+  .revoke-btn {
+    padding: 0.5rem 1rem;
+    background: var(--color-destructive, #ef4444);
+    color: white;
+    border: none;
+    font-size: 0.875rem;
+  }
+
+  .revoke-btn:hover {
+    opacity: 0.9;
   }
 
   .team-members-list {
