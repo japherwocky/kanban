@@ -133,6 +133,17 @@ def cmd_board_delete(board_id: int = typer.Argument(..., help="Board ID")):
     rprint("[green]Board deleted[/green]")
 
 
+@app.command("board-update")
+def cmd_board_update(
+    board_id: int = typer.Argument(..., help="Board ID"),
+    name: str = typer.Argument(..., help="New board name"),
+):
+    """Update board name."""
+    client = make_client()
+    client.board_update(board_id, name)
+    rprint("[green]Board updated[/green]")
+
+
 # === Column Commands ===
 
 column_app = typer.Typer(help="Column management commands", no_args_is_help=True)
