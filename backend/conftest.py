@@ -23,6 +23,7 @@ def _setup_test_db():
         TeamMember,
         ApiKey,
         BetaSignup,
+        OrganizationInvite,
     )
 
     # Replace the module-level db with our test database
@@ -43,6 +44,7 @@ def _setup_test_db():
             TeamMember,
             ApiKey,
             BetaSignup,
+            OrganizationInvite,
         ]
     )
     yield
@@ -64,6 +66,7 @@ def db_session(_setup_test_db):
         TeamMember,
         ApiKey,
         BetaSignup,
+        OrganizationInvite,
     )
 
     # Clear all table data using peewee's delete method
@@ -78,6 +81,7 @@ def db_session(_setup_test_db):
         Organization,
         ApiKey,
         BetaSignup,
+        OrganizationInvite,
         User,
     ]:
         try:
