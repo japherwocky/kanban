@@ -21,6 +21,10 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+keywords = ["kanban", "cli", "productivity", "task-management"]
+authors = [
+    {name = "Pearachute", email = "hello@pearachute.com"}
+]
 dependencies = [
     "requests>=2.31.0",
     "pyyaml>=6.0",
@@ -32,7 +36,11 @@ kanban = "kanban.cli:main"
 [project.urls]
 Homepage = "https://github.com/pearachute/kanban"
 Repository = "https://github.com/pearachute/kanban"
+Issues = "https://github.com/pearachute/kanban/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["kanban*"]
+
+[tool.setuptools.package-data]
+kanban = ["py.typed"]
