@@ -1652,8 +1652,8 @@ async def create_organization_invite(
         "email": invite.email,
         "token": token,
         "status": invite.status,
-        "created_at": invite.created_at,
-        "expires_at": invite.expires_at,
+        "created_at": invite.created_at.isoformat(),
+        "expires_at": invite.expires_at.isoformat(),
         "created_by_username": current_user.username,
     }
 
@@ -1667,26 +1667,33 @@ async def list_organization_invites(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Any member can see invites
+    # Any member OR owner can see invites
+    is_owner = org.owner == current_user
     member = OrganizationMember.get_or_none(
         (OrganizationMember.organization == org)
         & (OrganizationMember.user == current_user)
     )
-    if not member:
+    if not member and not is_owner:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
 
     invites = OrganizationInvite.select().where(
         (OrganizationInvite.organization == org)
         & (OrganizationInvite.status == "pending")
     )
+
+    def format_datetime(dt):
+        if isinstance(dt, str):
+            return dt
+        return dt.isoformat()
+
     return [
         {
             "id": invite.id,
             "email": invite.email,
             "token": invite.token,
             "status": invite.status,
-            "created_at": invite.created_at,
-            "expires_at": invite.expires_at,
+            "created_at": format_datetime(invite.created_at),
+            "expires_at": format_datetime(invite.expires_at),
             "created_by_username": invite.created_by.username,
         }
         for invite in invites

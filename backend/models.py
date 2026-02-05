@@ -255,7 +255,10 @@ class OrganizationInvite(BaseModel):
 
     def is_expired(self):
         """Check if invite has expired."""
-        return datetime.now(timezone.utc) > self.expires_at
+        expires_at = self.expires_at
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+        return datetime.now(timezone.utc) > expires_at
 
     def revoke(self):
         """Revoke this invite."""
