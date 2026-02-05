@@ -76,8 +76,11 @@ def cmd_logout():
 
 # === Board Commands ===
 
+board_app = typer.Typer(help="Board management commands", no_args_is_help=True)
+app.add_typer(board_app, name="board")
 
-@app.command("boards")
+
+@board_app.command("list")
 def cmd_boards():
     """List all boards."""
     client = make_client()
@@ -94,7 +97,7 @@ def cmd_boards():
         rprint(f"{b['id']:4}  [bold]{b['name']}[/bold]{shared_info}")
 
 
-@app.command("board-create")
+@board_app.command("create")
 def cmd_board_create(name: str = typer.Argument(..., help="Board name")):
     """Create a new board."""
     client = make_client()
@@ -102,7 +105,7 @@ def cmd_board_create(name: str = typer.Argument(..., help="Board name")):
     rprint(f"Board created with [green]id={result['id']}[/green]")
 
 
-@app.command("board")
+@board_app.command("get")
 def cmd_board_get(board_id: int = typer.Argument(..., help="Board ID")):
     """Show board details with column and card IDs."""
     from rich.text import Text
@@ -125,7 +128,7 @@ def cmd_board_get(board_id: int = typer.Argument(..., help="Board ID")):
             console.print(card_line)
 
 
-@app.command("board-delete")
+@board_app.command("delete")
 def cmd_board_delete(board_id: int = typer.Argument(..., help="Board ID")):
     """Delete a board."""
     client = make_client()
@@ -133,7 +136,7 @@ def cmd_board_delete(board_id: int = typer.Argument(..., help="Board ID")):
     rprint("[green]Board deleted[/green]")
 
 
-@app.command("board-update")
+@board_app.command("update")
 def cmd_board_update(
     board_id: int = typer.Argument(..., help="Board ID"),
     name: str = typer.Argument(..., help="New board name"),

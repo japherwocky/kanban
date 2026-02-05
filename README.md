@@ -25,16 +25,16 @@ kanban config --url http://localhost:8000
 kanban login <username> --password <password>
 
 # Or use an API key (for agents/CI)
-kanban --api-key <key> boards
+kanban --api-key <key> board list
 
 # List boards
-kanban boards
+kanban board list
 
 # Create a board
-kanban board-create "My Project"
+kanban board create "My Project"
 
 # Show board details
-kanban board 1
+kanban board get 1
 
 # Create a card
 kanban card create 1 "To Do" "First task" --position 0
@@ -68,10 +68,11 @@ kanban team list --org-id 1
 | `kanban apikey list` | List your API keys |
 | `kanban apikey revoke <id>` | Revoke (deactivate) an API key |
 | `kanban apikey activate <id>` | Reactivate a deactivated API key |
-| `kanban boards` | List all boards |
-| `kanban board-create <name>` | Create a new board |
-| `kanban board <id>` | Show board details |
-| `kanban board-delete <id>` | Delete a board |
+| `kanban board list` | List all boards |
+| `kanban board create <name>` | Create a new board |
+| `kanban board get <id>` | Show board details |
+| `kanban board delete <id>` | Delete a board |
+| `kanban board update <id> <name>` | Update board name |
 | `kanban share <board_id> <team_id\|private>` | Share board with team or make private |
 | `kanban column create <board_id> <name> <position>` | Create a column |
 | `kanban column delete <id>` | Delete a column |
@@ -108,11 +109,11 @@ Instead of sharing passwords, users can generate one-off API keys for agents and
 kanban apikey create "CI Agent"
 
 # Use the API key for any command
-kanban --api-key kanban_abc123... boards
+kanban --api-key kanban_abc123... board list
 
 # Or set it as default
 export KANBAN_API_KEY=kanban_abc123...
-kanban boards
+kanban board list
 ```
 
 ### API Key Features
