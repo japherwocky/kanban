@@ -8,7 +8,7 @@ from peewee import (
     BooleanField,
 )
 from playhouse.sqlite_ext import Model  # type: ignore
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from backend.database import db
 
@@ -216,4 +216,67 @@ class BetaSignup(BaseModel):
     def create_signup(cls, email):
         return cls.create(
             email=email, created_at=datetime.now(timezone.utc), status="pending"
+        )
+
+
+def generate_invite_token():
+    """Generate a secure random invite token."""
+    import secrets
+
+    return secrets.token_urlsafe(32)
+
+
+class OrganizationInvite(BaseModel):
+    """Invite tokens for joining an organization."""
+
+    organization = ForeignKeyField(Organization, backref="invites")
+    email = CharField(max_length=255, null=True)  # optional - can be anonymous invite
+    token = CharField(max_length=64, unique=True)
+    status = CharField(
+        max_length=20, default="pending"
+    )  # pending, accepted, revoked, expired
+    created_by = ForeignKeyField(User, backref="created_invites")
+    created_at = DateTimeField()
+    expires_at = DateTimeField()
+
+    @classmethod
+    def create_invite(cls, organization, created_by, email=None, expires_in_days=7):
+        """Create a new invite token."""
+        token = generate_invite_token()
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
+        return cls.create(
+            organization=organization,
+            email=email,
+            token=token,
+            created_by=created_by,
+            created_at=datetime.now(timezone.utc),
+            expires_at=expires_at,
+        ), token
+
+    def is_expired(self):
+        """Check if invite has expired."""
+        return datetime.now(timezone.utc) > self.expires_at
+
+    def revoke(self):
+        """Revoke this invite."""
+        self.status = "revoked"
+        self.save()
+
+    def accept(self, user):
+        """Accept invite - add user to organization."""
+        from backend.models import OrganizationMember
+
+        if self.status != "pending":
+            raise ValueError("Invite is not pending")
+        if self.is_expired():
+            self.status = "expired"
+            self.save()
+            raise ValueError("Invite has expired")
+        self.status = "accepted"
+        self.save()
+        # Add user to organization
+        return OrganizationMember.create(
+            user=user,
+            organization=self.organization,
+            joined_at=datetime.now(timezone.utc),
         )

@@ -288,6 +288,54 @@ def cmd_organization_member_remove(
     rprint(f"Removed user [green]{user_id}[/green] from organization")
 
 
+# === Organization Invite Commands ===
+
+
+@org_app.command("invite-create")
+def cmd_organization_invite_create(
+    org_id: int = typer.Argument(..., help="Organization ID"),
+    email: str = typer.Option(None, "--email", "-e", help="Email of person to invite"),
+):
+    """Create an invite link for an organization."""
+    client = make_client()
+    result = client.organization_invite_create(org_id, email)
+    server_url = get_server_url()
+    invite_link = f"{server_url.rstrip('/')}/#!/invite/{result['token']}"
+    rprint(f"[bold]Invite created![/bold]")
+    rprint(f"  ID:       {result['id']}")
+    rprint(f"  Email:    {email or '(anonymous)'}")
+    rprint(f"  Link:    [cyan]{invite_link}[/cyan]")
+    rprint("")
+    rprint("Share this link with the person you want to invite.")
+
+
+@org_app.command("invite-list")
+def cmd_organization_invites(org_id: int = typer.Argument(..., help="Organization ID")):
+    """List pending invites for an organization."""
+    client = make_client()
+    invites = client.organization_invites(org_id)
+    if not invites:
+        rprint("No pending invites")
+        return
+    rprint("[bold]Pending Invites:[/bold]")
+    for invite in invites:
+        rprint(f"  {invite['id']:4}  {invite['email'] or '(anonymous)'}")
+        rprint(
+            f"       Link: {get_server_url().rstrip('/')}/#!/invite/{invite['token']}"
+        )
+
+
+@org_app.command("invite-revoke")
+def cmd_organization_invite_revoke(
+    org_id: int = typer.Argument(..., help="Organization ID"),
+    invite_id: int = typer.Argument(..., help="Invite ID to revoke"),
+):
+    """Revoke a pending invite."""
+    client = make_client()
+    client.organization_invite_revoke(org_id, invite_id)
+    rprint(f"Invite [green]{invite_id}[/green] has been revoked")
+
+
 # === Team Commands ===
 
 team_app = typer.Typer(help="Team management commands", no_args_is_help=True)

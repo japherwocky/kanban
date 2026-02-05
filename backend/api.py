@@ -27,6 +27,7 @@ from backend.models import (
     TeamMember,
     BetaSignup,
     ApiKey,
+    OrganizationInvite,
 )
 
 api = APIRouter()
@@ -1606,6 +1607,169 @@ async def remove_organization_member(
         target.delete_instance()
 
     return {"ok": True}
+
+
+# === Organization Invite Endpoints ===
+
+
+class InviteCreateRequest(BaseModel):
+    email: Optional[str] = None
+
+
+class InviteResponse(BaseModel):
+    id: int
+    email: Optional[str]
+    token: str
+    status: str
+    created_at: datetime
+    expires_at: datetime
+    created_by_username: str
+
+
+@api.post("/organizations/{org_id}/invites", response_model=InviteResponse)
+async def create_organization_invite(
+    org_id: int,
+    request: InviteCreateRequest,
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Create an invite token for an organization. Owner only."""
+    org = Organization.get_or_none(Organization.id == org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Only owner can create invites
+    if org.owner != current_user:
+        raise HTTPException(status_code=403, detail="Only the owner can create invites")
+
+    invite, token = OrganizationInvite.create_invite(
+        organization=org,
+        created_by=current_user,
+        email=request.email,
+    )
+
+    return {
+        "id": invite.id,
+        "email": invite.email,
+        "token": token,
+        "status": invite.status,
+        "created_at": invite.created_at,
+        "expires_at": invite.expires_at,
+        "created_by_username": current_user.username,
+    }
+
+
+@api.get("/organizations/{org_id}/invites", response_model=list)
+async def list_organization_invites(
+    org_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
+    """List all pending invites for an organization."""
+    org = Organization.get_or_none(Organization.id == org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Any member can see invites
+    member = OrganizationMember.get_or_none(
+        (OrganizationMember.organization == org)
+        & (OrganizationMember.user == current_user)
+    )
+    if not member:
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
+
+    invites = OrganizationInvite.select().where(
+        (OrganizationInvite.organization == org)
+        & (OrganizationInvite.status == "pending")
+    )
+    return [
+        {
+            "id": invite.id,
+            "email": invite.email,
+            "token": invite.token,
+            "status": invite.status,
+            "created_at": invite.created_at,
+            "expires_at": invite.expires_at,
+            "created_by_username": invite.created_by.username,
+        }
+        for invite in invites
+    ]
+
+
+@api.delete("/organizations/{org_id}/invites/{invite_id}")
+async def revoke_organization_invite(
+    org_id: int,
+    invite_id: int,
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Revoke a pending invite."""
+    org = Organization.get_or_none(Organization.id == org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Only owner can revoke invites
+    if org.owner != current_user:
+        raise HTTPException(status_code=403, detail="Only the owner can revoke invites")
+
+    invite = OrganizationInvite.get_or_none(
+        (OrganizationInvite.id == invite_id) & (OrganizationInvite.organization == org)
+    )
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found")
+
+    invite.revoke()
+    return {"ok": True}
+
+
+@api.get("/invites/{token}")
+async def get_invite(token: str):
+    """Get invite details (for landing page)."""
+    invite = OrganizationInvite.get_or_none(
+        (OrganizationInvite.token == token) & (OrganizationInvite.status == "pending")
+    )
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found or expired")
+
+    if invite.is_expired():
+        invite.status = "expired"
+        invite.save()
+        raise HTTPException(status_code=404, detail="Invite has expired")
+
+    return {
+        "id": invite.id,
+        "organization_name": invite.organization.name,
+        "email": invite.email,
+        "status": invite.status,
+        "created_by_username": invite.created_by.username,
+    }
+
+
+@api.post("/invites/{token}/accept")
+async def accept_invite(
+    token: str,
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Accept an invite and join the organization."""
+    invite = OrganizationInvite.get_or_none(
+        (OrganizationInvite.token == token) & (OrganizationInvite.status == "pending")
+    )
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found or expired")
+
+    if invite.is_expired():
+        invite.status = "expired"
+        invite.save()
+        raise HTTPException(status_code=400, detail="Invite has expired")
+
+    # Check if user is already a member
+    existing = OrganizationMember.get_or_none(
+        (OrganizationMember.organization == invite.organization)
+        & (OrganizationMember.user == current_user)
+    )
+    if existing:
+        raise HTTPException(
+            status_code=400, detail="You are already a member of this organization"
+        )
+
+    invite.accept(current_user)
+    return {"ok": True, "organization_name": invite.organization.name}
 
 
 @api.post("/organizations/{org_id}/teams", response_model=TeamResponse)

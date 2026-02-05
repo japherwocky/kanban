@@ -114,6 +114,31 @@ class KanbanClient:
         self._request("DELETE", f"/api/organizations/{org_id}/members/{user_id}")
         return True
 
+    # Invite methods
+    def organization_invite_create(self, org_id, email=None):
+        """Create an invite for an organization."""
+        data = {}
+        if email:
+            data["email"] = email
+        return self._request("POST", f"/api/organizations/{org_id}/invites", json=data)
+
+    def organization_invites(self, org_id):
+        """List pending invites for an organization."""
+        return self._request("GET", f"/api/organizations/{org_id}/invites")
+
+    def organization_invite_revoke(self, org_id, invite_id):
+        """Revoke an invite."""
+        self._request("DELETE", f"/api/organizations/{org_id}/invites/{invite_id}")
+        return True
+
+    def invite_get(self, token):
+        """Get invite details."""
+        return self._request("GET", f"/api/invites/{token}")
+
+    def invite_accept(self, token):
+        """Accept an invite."""
+        return self._request("POST", f"/api/invites/{token}/accept")
+
     # Team methods
     def organization_teams(self, org_id):
         return self._request("GET", f"/api/organizations/{org_id}/teams")
