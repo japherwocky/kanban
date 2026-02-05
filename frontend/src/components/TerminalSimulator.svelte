@@ -1,63 +1,89 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  import { executeCommand, getDemoState } from '$lib/demoApi';
 
-  const COMMANDS = [
-    { text: 'pkanban add "Fix API latency"', action: 'add' },
-    { text: 'pkanban move 12 --to "In Progress"', action: 'move' }
+  // Demo command sequence - uses actual CLI syntax
+  const DEMO_COMMANDS = [
+    'kanban board get 1',
+    'kanban card create 1 "Fix API latency"',
+    'kanban card update 12 "Fix API latency" --column 2',
+    'kanban card update 12 "Fix API latency" --description "Optimize DB queries"'
   ];
 
   let displayedText = '';
   let currentLineIndex = 0;
   let currentCharIndex = 0;
   let isPaused = false;
+  let showOutput = false;
+  let outputLines = [];
+  let commandHistory = [];
   let animationFrame;
   let timeoutId;
+  let currentCommand = '';
 
-  const TYPING_SPEED = 50;
-  const PAUSE_AFTER_COMMAND = 2000;
-  const PAUSE_BETWEEN_LINES = 500;
+  const TYPING_SPEED = 40;
+  const PAUSE_AFTER_COMMAND = 1500;
+  const PAUSE_BETWEEN_LINES = 300;
 
   function typeCharacter() {
-    if (currentLineIndex >= COMMANDS.length) {
-      // Reset animation after completing all lines
+    if (currentLineIndex >= DEMO_COMMANDS.length) {
+      // Reset after completing all commands
       setTimeout(resetAnimation, PAUSE_AFTER_COMMAND);
       return;
     }
 
-    const currentLine = COMMANDS[currentLineIndex].text;
+    currentCommand = DEMO_COMMANDS[currentLineIndex];
 
-    if (currentCharIndex < currentLine.length) {
-      displayedText = currentLine.substring(0, currentCharIndex + 1);
+    if (currentCharIndex < currentCommand.length) {
+      displayedText = currentCommand.substring(0, currentCharIndex + 1);
       currentCharIndex++;
-      animationFrame = setTimeout(typeCharacter, TYPING_SPEED);
+      animationFrame = setTimeout(typeCharacter, TYPING_SPEED + Math.random() * 20);
     } else {
-      // Line complete, dispatch event and pause
-      dispatchCommand(COMMANDS[currentLineIndex].action);
+      // Command complete - execute it
+      showOutput = true;
+      const result = executeCommand(currentCommand);
+      outputLines = result.stdout.split('\n');
+      commandHistory = [...commandHistory, {
+        command: currentCommand,
+        output: result.stdout,
+        exitCode: result.exitCode
+      }];
+
       isPaused = true;
       timeoutId = setTimeout(() => {
         isPaused = false;
+        showOutput = false;
         currentLineIndex++;
         currentCharIndex = 0;
         displayedText = '';
+        // Dispatch state update for KanbanDemo
+        window.dispatchEvent(new CustomEvent('demo-state-update', {
+          detail: { state: getDemoState() }
+        }));
         timeoutId = setTimeout(typeCharacter, PAUSE_BETWEEN_LINES);
       }, PAUSE_AFTER_COMMAND);
     }
   }
 
   function resetAnimation() {
+    // Reset to beginning of demo
     currentLineIndex = 0;
     currentCharIndex = 0;
     displayedText = '';
+    commandHistory = [];
     isPaused = false;
+    showOutput = false;
+    outputLines = [];
+    // Reset demo state
+    executeCommand('reset');
+    window.dispatchEvent(new CustomEvent('demo-state-update', {
+      detail: { state: getDemoState() }
+    }));
     timeoutId = setTimeout(typeCharacter, PAUSE_BETWEEN_LINES);
   }
 
-  function dispatchCommand(action) {
-    window.dispatchEvent(new CustomEvent('terminal-command', { detail: { action } }));
-  }
-
   onMount(() => {
-    timeoutId = setTimeout(typeCharacter, 1000);
+    timeoutId = setTimeout(typeCharacter, 800);
   });
 
   onDestroy(() => {
@@ -76,11 +102,25 @@
     <div class="terminal-title">Terminal — zsh</div>
   </div>
   <div class="terminal-content">
+    {#each commandHistory as entry}
+      <div class="command-entry">
+        <div class="command-line">
+          <span class="prompt">➜  ~</span>
+          <span class="command">{entry.command}</span>
+        </div>
+        <pre class="output {entry.exitCode !== 0 ? 'error' : ''}">{entry.output}</pre>
+      </div>
+    {/each}
+
     <div class="command-line">
       <span class="prompt">➜  ~</span>
       <span class="command">{displayedText}</span>
       <span class="cursor" class:hidden={isPaused}></span>
     </div>
+
+    {#if showOutput && outputLines.length > 0}
+      <pre class="output">{outputLines.join('\n')}</pre>
+    {/if}
   </div>
 </div>
 
@@ -135,8 +175,18 @@
     padding: 16px 20px;
     font-family: var(--font-mono);
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.5;
     color: var(--color-code-fg);
+    overflow-y: auto;
+    max-height: calc(100% - 50px);
+  }
+
+  .command-entry {
+    margin-bottom: 8px;
+  }
+
+  .command-entry:last-of-type {
+    margin-bottom: 0;
   }
 
   .command-line {
@@ -153,6 +203,18 @@
 
   .command {
     color: var(--color-code-fg);
+  }
+
+  .output {
+    margin: 4px 0 8px 24px;
+    color: var(--color-muted-foreground);
+    font-size: 13px;
+    white-space: pre-wrap;
+    line-height: 1.4;
+  }
+
+  .output.error {
+    color: var(--color-error);
   }
 
   .cursor {
@@ -182,6 +244,11 @@
     .terminal-content {
       font-size: 13px;
       padding: 12px 16px;
+    }
+
+    .output {
+      margin-left: 20px;
+      font-size: 12px;
     }
   }
 </style>
