@@ -104,14 +104,25 @@ def cmd_board_create(name: str = typer.Argument(..., help="Board name")):
 
 @app.command("board")
 def cmd_board_get(board_id: int = typer.Argument(..., help="Board ID")):
-    """Show board details."""
+    """Show board details with column and card IDs."""
+    from rich.text import Text
+    from rich.console import Console
+
     client = make_client()
     board = client.board_get(board_id)
-    rprint(f"Board: [bold]{board['name']}[/bold]")
+    console = Console()
+    console.print(f"Board: [bold]{board['name']}[/bold]")
     for col in board.get("columns", []):
-        rprint(f"  [cyan]{col['name']}[/cyan] ({len(col['cards'])} cards)")
+        line = Text("  ")
+        line.append(f"#{col['id']}", style="yellow")
+        line.append(f" {col['name']}")
+        line.append(f" ({len(col['cards'])} cards)")
+        console.print(line)
         for card in col.get("cards", []):
-            rprint(f"    - {card['title']}")
+            card_line = Text("    - ")
+            card_line.append(f"#{card['id']}", style="yellow")
+            card_line.append(f" {card['title']}")
+            console.print(card_line)
 
 
 @app.command("board-delete")
