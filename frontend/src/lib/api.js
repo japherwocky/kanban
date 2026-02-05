@@ -200,4 +200,8 @@ export const api = {
     revoke: (id) => apiFetch(`/api/api-keys/${id}`, { method: 'DELETE' }),
     activate: (id) => apiFetch(`/api/api-keys/${id}/activate`, { method: 'POST' }),
   },
+  invites: {
+    get: (token) => apiFetch(`/api/invites/${token}`),
+    accept: (token) => apiFetch(`/api/invites/${token}/accept`, { method: 'POST' }),
+  },
 };

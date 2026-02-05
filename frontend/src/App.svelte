@@ -22,6 +22,7 @@
   import Settings from './routes/Settings.svelte';
   import SettingsApiKeys from './routes/SettingsApiKeys.svelte';
   import ApiKeyCreated from './routes/ApiKeyCreated.svelte';
+  import Invite from './routes/Invite.svelte';
 
   onMount(() => {
     theme.init();
@@ -125,6 +126,10 @@
     <ProtectedRoute>
       <ApiKeyCreated {params} />
     </ProtectedRoute>
+  </Route>
+
+  <Route path="/invite/:token" let:params>
+    <Invite {params} />
   </Route>
 
   <Route path="/settings/api-keys" let:params>
