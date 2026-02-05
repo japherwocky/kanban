@@ -483,6 +483,16 @@ def cmd_apikey_use(
         raise typer.Exit(1)
 
 
+@apikey_app.command("save")
+def cmd_apikey_save(key: str = typer.Argument(..., help="API key to save")):
+    """Save API key to config file for future use."""
+    from kanban.config import set_api_key
+
+    set_api_key(key)
+    rprint("[green]API key saved to ~/.kanban.yaml[/green]")
+    rprint("Run commands without --api-key from now on.")
+
+
 def main():
     """Main entry point for the CLI."""
     # Check for --api-key option

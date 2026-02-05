@@ -2,12 +2,11 @@ import os
 import yaml
 from pathlib import Path
 
-CONFIG_DIR = Path(os.environ.get("KANBAN_CONFIG_DIR", Path.home() / ".kanban"))
-CONFIG_FILE = CONFIG_DIR / "config.yaml"
+CONFIG_FILE = Path(os.environ.get("KANBAN_CONFIG_PATH", Path.home() / ".kanban.yaml"))
 
 
 def ensure_config_dir():
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 
 def load_config():
