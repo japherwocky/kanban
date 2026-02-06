@@ -26,7 +26,7 @@ jobs:
 
       - name: Install CLI dependencies
         run: |
-          pip install -e ./kanban
+          pip install -e .
 
       - name: Run backend tests
         working-directory: ./backend
