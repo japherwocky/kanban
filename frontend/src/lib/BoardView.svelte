@@ -616,6 +616,11 @@
     color: var(--color-muted-foreground);
     margin: 0.5rem 0 0 0;
     line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    word-break: break-word;
   }
 
   .card-meta {
