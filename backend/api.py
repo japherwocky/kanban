@@ -1078,9 +1078,11 @@ async def get_board(
     if not can_access_board(current_user, board):
         raise HTTPException(status_code=403, detail="Not authorized")
     columns = []
-    for column in board.columns:
+    # Get columns sorted by position
+    for column in board.columns.order_by(Column.position):
         cards = []
-        for card in column.cards:
+        # Get cards sorted by position
+        for card in column.cards.order_by(Card.position):
             # Get comments for this card
             comments = (
                 Comment.select()

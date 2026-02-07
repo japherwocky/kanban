@@ -266,3 +266,113 @@ def test_delete_board(client, auth_headers, test_user):
 
     response = client.get(f"/api/boards/{board_id}", headers=auth_headers)
     assert response.status_code == 404
+
+
+def test_reorder_cards(client, auth_headers, test_user):
+    """Test reordering cards within a column"""
+    # Create board and column
+    response = client.post(
+        "/api/boards",
+        json={"name": "Reorder Cards Board"},
+        headers=auth_headers,
+    )
+    board_id = response.json()["id"]
+
+    response = client.post(
+        "/api/columns",
+        json={"board_id": board_id, "name": "To Do", "position": 0},
+        headers=auth_headers,
+    )
+    column_id = response.json()["id"]
+
+    # Create multiple cards
+    card_ids = []
+    for i in range(3):
+        response = client.post(
+            "/api/cards",
+            json={"column_id": column_id, "title": f"Card {i}", "position": i},
+            headers=auth_headers,
+        )
+        card_ids.append(response.json()["id"])
+
+    # Reorder cards: reverse their order
+    reorder_request = [
+        {"id": card_ids[0], "position": 2},
+        {"id": card_ids[1], "position": 1},
+        {"id": card_ids[2], "position": 0},
+    ]
+
+    response = client.post(
+        "/api/cards/reorder",
+        json={"cards": reorder_request},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+
+    # Verify the reorder persisted by fetching the board
+    response = client.get(f"/api/boards/{board_id}", headers=auth_headers)
+    assert response.status_code == 200
+    cards = response.json()["columns"][0]["cards"]
+    card_titles = [c["title"] for c in cards]
+    assert card_titles == ["Card 2", "Card 1", "Card 0"]
+
+
+def test_reorder_columns(client, auth_headers, test_user):
+    """Test reordering columns on a board"""
+    # Create board
+    response = client.post(
+        "/api/boards",
+        json={"name": "Reorder Columns Board"},
+        headers=auth_headers,
+    )
+    board_id = response.json()["id"]
+
+    # Create multiple columns
+    column_ids = []
+    for i in range(3):
+        response = client.post(
+            "/api/columns",
+            json={"board_id": board_id, "name": f"Column {i}", "position": i},
+            headers=auth_headers,
+        )
+        column_ids.append(response.json()["id"])
+
+    # Reorder columns: reverse their order
+    reorder_request = [
+        {"id": column_ids[0], "position": 2},
+        {"id": column_ids[1], "position": 1},
+        {"id": column_ids[2], "position": 0},
+    ]
+
+    response = client.post(
+        "/api/columns/reorder",
+        json={"columns": reorder_request},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+
+    # Verify the reorder persisted by fetching the board
+    response = client.get(f"/api/boards/{board_id}", headers=auth_headers)
+    assert response.status_code == 200
+    column_names = [c["name"] for c in response.json()["columns"]]
+    assert column_names == ["Column 2", "Column 1", "Column 0"]
+
+
+def test_reorder_cards_requires_auth(client):
+    """Test that reordering cards requires authentication"""
+    response = client.post(
+        "/api/cards/reorder",
+        json={"cards": [{"id": 1, "position": 0}]},
+    )
+    assert response.status_code == 401
+
+
+def test_reorder_columns_requires_auth(client):
+    """Test that reordering columns requires authentication"""
+    response = client.post(
+        "/api/columns/reorder",
+        json={"columns": [{"id": 1, "position": 0}]},
+    )
+    assert response.status_code == 401
