@@ -56,10 +56,14 @@
     if (!newCardTitle.trim() || !selectedColumnId) return;
     createLoading = true;
     try {
-      const card = await api.cards.create(selectedColumnId, newCardTitle.trim(), 0);
+      // Find the column to get current card count for position
+      const column = columns.find(c => c.id === selectedColumnId);
+      const position = column ? column.cards.length : 0;
+
+      const card = await api.cards.create(selectedColumnId, newCardTitle.trim(), position);
       columns = columns.map(col => {
         if (col.id === selectedColumnId) {
-          return { ...col, cards: [card, ...col.cards] };
+          return { ...col, cards: [...col.cards, card] };
         }
         return col;
       });
@@ -177,25 +181,74 @@
 
   async function handleDndFinalize(columnId, e) {
     const { items } = e.detail;
+    const columnCards = items.map((card, index) => ({
+      ...card,
+      position: index
+    }));
+
     columns = columns.map(col => {
       if (col.id === columnId) {
-        return { ...col, cards: items };
+        return { ...col, cards: columnCards };
       }
       return col;
     });
-    if (draggedCard && draggedCard.columnId !== columnId) {
-      try {
-        await api.cards.update(draggedCard.id, draggedCard.title, null, 0, columnId);
-      } catch (e) {
-        console.error('Failed to move card:', e);
-        loadBoard();
+
+    // Prepare reorder request for this column's cards
+    const reorderItems = columnCards.map((card, index) => ({
+      id: card.id,
+      position: index
+    }));
+
+    try {
+      await api.cards.reorder(reorderItems);
+
+      // If card moved to a different column, update its column_id
+      if (draggedCard && draggedCard.columnId !== columnId) {
+        const movedCard = columnCards.find(c => c.id === draggedCard.id);
+        if (movedCard) {
+          await api.cards.update(
+            movedCard.id,
+            movedCard.title,
+            null,
+            movedCard.position,
+            columnId
+          );
+        }
       }
+    } catch (e) {
+      console.error('Failed to reorder cards:', e);
+      loadBoard();
     }
     draggedCard = null;
   }
 
   function handleDragStart(e, card, columnId) {
     draggedCard = { ...card, columnId };
+  }
+
+  function handleColumnConsider(e) {
+    columns = e.detail.items;
+  }
+
+  async function handleColumnFinalize(e) {
+    const newColumns = e.detail.items.map((col, index) => ({
+      ...col,
+      position: index
+    }));
+    columns = newColumns;
+
+    // Sync column order to backend
+    const reorderItems = newColumns.map((col, index) => ({
+      id: col.id,
+      position: index
+    }));
+
+    try {
+      await api.columns.reorder(reorderItems);
+    } catch (e) {
+      console.error('Failed to reorder columns:', e);
+      loadBoard();
+    }
   }
 
   // Sync columns with board changes
@@ -250,9 +303,16 @@
   {#if loading}
     <div class="loading">Loading board...</div>
   {:else}
-    <div class="columns-container">
+    <div class="columns-container"
+      dndzone={{ items: columns, flipDurationMs: 200 }}
+      onconsider={handleColumnConsider}
+      onfinalize={handleColumnFinalize}
+    >
       {#each columns as column (column.id)}
-        <div class="column">
+        <div
+          class="column"
+          draggable="true"
+        >
           <div class="column-header">
             <h3>{column.name}</h3>
             <div class="column-actions">

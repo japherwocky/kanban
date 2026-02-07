@@ -137,6 +137,15 @@ class ColumnUpdate(BaseModel):
     position: int
 
 
+class ColumnReorderItem(BaseModel):
+    id: int
+    position: int
+
+
+class ColumnReorderRequest(BaseModel):
+    columns: list[ColumnReorderItem]
+
+
 class ColumnResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -158,6 +167,15 @@ class CardUpdate(BaseModel):
     description: Optional[str] = None
     position: Optional[int] = None
     column_id: Optional[int] = None
+
+
+class CardReorderItem(BaseModel):
+    id: int
+    position: int
+
+
+class CardReorderRequest(BaseModel):
+    cards: list[CardReorderItem]
 
 
 class CardResponse(BaseModel):
@@ -1230,6 +1248,28 @@ async def delete_column(
     return {"ok": True}
 
 
+@api.post("/columns/reorder")
+async def reorder_columns(
+    reorder_data: ColumnReorderRequest,
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Reorder multiple columns by updating their positions."""
+    # Verify all columns belong to boards the user can modify
+    for item in reorder_data.columns:
+        column = Column.get_or_none(Column.id == item.id)
+        if not column:
+            raise HTTPException(status_code=404, detail=f"Column {item.id} not found")
+        if not can_modify_board(current_user, column.board):
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Update all column positions in a single transaction
+    with db.atomic():
+        for item in reorder_data.columns:
+            Column.update(position=item.position).where(Column.id == item.id).execute()
+
+    return {"ok": True}
+
+
 @api.post("/cards", response_model=CardResponse)
 async def create_card(
     card_data: CardCreate,
@@ -1297,6 +1337,28 @@ async def delete_card(
     if not can_modify_board(current_user, card.column.board):
         raise HTTPException(status_code=403, detail="Not authorized")
     card.delete_instance()
+    return {"ok": True}
+
+
+@api.post("/cards/reorder")
+async def reorder_cards(
+    reorder_data: CardReorderRequest,
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Reorder multiple cards by updating their positions."""
+    # Verify all cards belong to boards the user can modify
+    for item in reorder_data.cards:
+        card = Card.get_or_none(Card.id == item.id)
+        if not card:
+            raise HTTPException(status_code=404, detail=f"Card {item.id} not found")
+        if not can_modify_board(current_user, card.column.board):
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Update all card positions in a single transaction
+    with db.atomic():
+        for item in reorder_data.cards:
+            Card.update(position=item.position).where(Card.id == item.id).execute()
+
     return {"ok": True}
 
 

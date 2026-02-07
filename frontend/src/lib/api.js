@@ -120,6 +120,14 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ board_id: boardId, name, position }),
     }),
+    update: (id, name, position) => apiFetch(`/api/columns/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, position }),
+    }),
+    reorder: (columns) => apiFetch('/api/columns/reorder', {
+      method: 'POST',
+      body: JSON.stringify({ columns }),
+    }),
     delete: (id) => apiFetch(`/api/columns/${id}`, { method: 'DELETE' }),
   },
   cards: {
@@ -130,6 +138,10 @@ export const api = {
     update: (id, title, description, position, column) => apiFetch(`/api/cards/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ title, description, position, column_id: column }),
+    }),
+    reorder: (cards) => apiFetch('/api/cards/reorder', {
+      method: 'POST',
+      body: JSON.stringify({ cards }),
     }),
     delete: (id) => apiFetch(`/api/cards/${id}`, { method: 'DELETE' }),
   },
