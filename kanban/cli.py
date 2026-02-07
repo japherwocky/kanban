@@ -3,6 +3,7 @@ from typing import Optional
 
 import typer
 from rich import print as rprint
+import requests
 
 from kanban.client import KanbanClient
 from kanban.config import (
@@ -206,16 +207,40 @@ def cmd_card_update(
 ):
     """Update a card."""
     client = make_client()
-    client.card_update(card_id, title, description, position, column)
-    rprint("[green]Card updated[/green]")
+    try:
+        client.card_update(card_id, title, description, position, column)
+        rprint("[green]Card updated[/green]")
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            rprint(f"[red]Card {card_id} not found. It may have been deleted.[/red]")
+        elif e.response.status_code == 403:
+            rprint("[red]You don't have permission to update this card.[/red]")
+        elif e.response.status_code == 422:
+            rprint(
+                "[red]Invalid data. Check that the card ID and column ID are correct.[/red]"
+            )
+        else:
+            rprint(f"[red]Error: {e.response.text}[/red]")
+        raise typer.Exit(1)
 
 
 @card_app.command("delete")
 def cmd_card_delete(card_id: int = typer.Argument(..., help="Card ID")):
     """Delete a card."""
     client = make_client()
-    client.card_delete(card_id)
-    rprint("[green]Card deleted[/green]")
+    try:
+        client.card_delete(card_id)
+        rprint("[green]Card deleted[/green]")
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            rprint(
+                f"[red]Card {card_id} not found. It may have already been deleted.[/red]"
+            )
+        elif e.response.status_code == 403:
+            rprint("[red]You don't have permission to delete this card.[/red]")
+        else:
+            rprint(f"[red]Error: {e.response.text}[/red]")
+        raise typer.Exit(1)
 
 
 # === Organization Commands ===
