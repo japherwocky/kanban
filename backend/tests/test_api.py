@@ -4,18 +4,30 @@ from httpx import AsyncClient
 
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.main import app
 from backend.database import db
-from backend.models import User, Board, Column, Card, Organization, OrganizationMember, Team, TeamMember
+from backend.models import (
+    User,
+    Board,
+    Column,
+    Card,
+    Organization,
+    OrganizationMember,
+    Team,
+    TeamMember,
+)
 
 
 @pytest.fixture
 def auth_headers(test_user):
     from backend.auth import create_access_token
 
-    token = create_access_token(data={"sub": test_user.id, "username": test_user.username})
+    token = create_access_token(
+        data={"sub": test_user.id, "username": test_user.username}
+    )
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -28,6 +40,7 @@ def test_server_launch():
     from backend.main import app
     from backend.database import db
     from backend.models import User, Board, Column, Card
+
     assert app is not None
     assert db is not None
 
@@ -220,6 +233,24 @@ def test_delete_card(client, auth_headers, test_user):
 
     response = client.delete(f"/api/cards/{card_id}", headers=auth_headers)
     assert response.status_code == 200
+
+
+def test_update_nonexistent_card_returns_404(client, auth_headers, test_user):
+    """Test that updating a non-existent card returns 404, not 422."""
+    response = client.put(
+        "/api/cards/99999",
+        json={"column_id": 1, "title": "Test", "description": "", "position": 0},
+        headers=auth_headers,
+    )
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
+
+
+def test_delete_nonexistent_card_returns_404(client, auth_headers, test_user):
+    """Test that deleting a non-existent card returns 404."""
+    response = client.delete("/api/cards/99999", headers=auth_headers)
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
 
 
 def test_delete_board(client, auth_headers, test_user):
