@@ -7,7 +7,18 @@ from fastapi.testclient import TestClient
 
 tmp_dir = tempfile.mkdtemp()
 
-os.environ["KANBAN_CONFIG_DIR"] = tmp_dir
+
+# Use a temporary config directory for tests
+@pytest.fixture(autouse=True)
+def temp_config_dir():
+    original_env = os.environ.get("KANBAN_CONFIG_DIR")
+    os.environ["KANBAN_CONFIG_DIR"] = tmp_dir
+    yield tmp_dir
+    if original_env is not None:
+        os.environ["KANBAN_CONFIG_DIR"] = original_env
+    else:
+        del os.environ["KANBAN_CONFIG_DIR"]
+
 
 import sys
 
