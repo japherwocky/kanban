@@ -381,50 +381,93 @@
     font-size: 0.75rem;
   }
 
-  /* Dark theme support */
-  @media (prefers-color-scheme: dark) {
-    .comments-section {
-      border-top-color: #444;
-    }
+  /* Light theme (default) */
+  .comments-title {
+    color: #333;
+  }
 
-    .comments-title {
-      color: #e0e0e0;
-    }
+  .comment {
+    background: #f8f9fa;
+    border-color: #e0e0e0;
+  }
 
-    .comment {
-      background: #2a2a2a;
-      border-color: #444;
-    }
+  .comment-author {
+    color: #007bff;
+  }
 
-    .comment-author {
-      color: #4dabf7;
-    }
+  .comment-time, .comment-edited, .no-comments {
+    color: #6c757d;
+  }
 
-    .comment-time, .comment-edited, .no-comments {
-      color: #adb5bd;
-    }
+  .comment-text {
+    color: #333;
+  }
 
-    .comment-text {
-      color: #e0e0e0;
-    }
+  .edit-textarea, .new-comment-input {
+    background: white;
+    border-color: #e0e0e0;
+    color: #333;
+  }
 
-    .edit-textarea, .new-comment-input {
-      background: #1a1a1a;
-      border-color: #444;
-      color: #e0e0e0;
-    }
+  .edit-textarea:focus, .new-comment-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
 
-    .edit-textarea:focus, .new-comment-input:focus {
-      border-color: #4dabf7;
-      box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
-    }
+  .comment-action-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
 
-    .comment-action-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
+  .comment-action-btn.delete:hover {
+    background: rgba(220, 53, 69, 0.1);
+  }
 
-    .comment-action-btn.delete:hover {
-      background: rgba(220, 53, 69, 0.2);
-    }
+  /* Dark theme */
+  :global(.dark) .comments-section {
+    border-top-color: #444;
+  }
+
+  :global(.dark) .comments-title {
+    color: #e0e0e0;
+  }
+
+  :global(.dark) .comment {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  :global(.dark) .comment-author {
+    color: #4dabf7;
+  }
+
+  :global(.dark) .comment-time, 
+  :global(.dark) .comment-edited, 
+  :global(.dark) .no-comments {
+    color: #adb5bd;
+  }
+
+  :global(.dark) .comment-text {
+    color: #e0e0e0;
+  }
+
+  :global(.dark) .edit-textarea, 
+  :global(.dark) .new-comment-input {
+    background: #1a1a1a;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+
+  :global(.dark) .edit-textarea:focus, 
+  :global(.dark) .new-comment-input:focus {
+    border-color: #4dabf7;
+    box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
+  }
+
+  :global(.dark) .comment-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  :global(.dark) .comment-action-btn.delete:hover {
+    background: rgba(220, 53, 69, 0.2);
   }
 </style>
