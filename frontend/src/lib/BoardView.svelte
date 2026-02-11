@@ -4,6 +4,7 @@
   import Modal from './Modal.svelte';
   import ShareModal from './ShareModal.svelte';
   import Comments from './Comments.svelte';
+  import { dndzone } from 'svelte-dnd-action';
 
   let { board, onBack, availableTeams = [], onShare } = $props();
 
