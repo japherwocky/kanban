@@ -44,29 +44,29 @@
           <span class="box-icon">🔐</span>
           <h3>Zero-Config Handshake</h3>
         </div>
-        <p class="box-description">One command to generate a key. One header to authenticate. No OAuth, no complexity.</p>
+        <p class="box-description">Generate a key once, save it, then let agents run CLI commands seamlessly.</p>
 
         <div class="code-panel">
           <div class="code-line">
-            <span class="code-comment"># 1. Generate a key (one-time)</span>
+            <span class="code-comment"># Human: Generate and save an API key</span>
           </div>
           <div class="code-line">
-            <span class="code-prompt">$</span> kanban apikey create <span class="code-string">"CI Agent"</span>
+            <span class="code-prompt">$</span> kanban apikey create <span class="code-string">"My Agent"</span>
           </div>
           <div class="code-line code-indent">
-            <span class="code-comment"># Returns: kanban_abc123xyz789...</span>
+            <span class="code-comment"># Output: kanban_abc123xyz789...</span>
+          </div>
+          <div class="code-line">
+            <span class="code-prompt">$</span> kanban apikey save <span class="code-string">kanban_abc123xyz789...</span>
           </div>
           <div class="code-line" style="margin-top: 8px;">
-            <span class="code-comment"># 2. Use in any request</span>
+            <span class="code-comment"># Agent: Just run CLI commands</span>
           </div>
           <div class="code-line">
-            <span class="code-keyword">import</span> requests
+            <span class="code-prompt">$</span> kanban board list
           </div>
           <div class="code-line code-indent">
-            headers = <span class="code-string">{"{"}"X-API-Key": "kanban_abc123..."{"}"}</span>
-          </div>
-          <div class="code-line code-indent">
-            requests.get(<span class="code-string">"https://pkanban.io/api/boards"</span>, headers=headers)
+            <span class="code-comment"># Works automatically - reads from ~/.kanban.yaml</span>
           </div>
         </div>
       </div>
