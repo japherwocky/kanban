@@ -6,6 +6,25 @@ The Kanban project is a full-stack application with:
 - **CLI**: Python CLI client using typer and rich
 - **Frontend**: Svelte (served from backend/static)
 
+## Remote Configuration
+
+This project uses a remote Kanban server at **kanban.pearachute.com**.
+
+### Config
+The CLI is configured to connect to:
+- **Server**: https://kanban.pearachute.com
+- **Auth**: API key (stored in `~/.kanban.yaml`)
+
+### Project Board
+The **Dev** board (id=1) is the board for this project.
+
+### Useful Commands
+```bash
+kanban board list                    # List all boards
+kanban board get 1                    # Show Dev board details
+kanban board get <id>                 # Show board with columns & cards
+```
+
 ## Build, Lint, and Test Commands
 
 ### Setup
