@@ -11,13 +11,14 @@ tmp_dir = tempfile.mkdtemp()
 # Use a temporary config directory for tests
 @pytest.fixture(autouse=True)
 def temp_config_dir():
-    original_env = os.environ.get("KANBAN_CONFIG_DIR")
-    os.environ["KANBAN_CONFIG_DIR"] = tmp_dir
-    yield tmp_dir
+    original_env = os.environ.get("KANBAN_CONFIG_PATH")
+    tmp_config = os.path.join(tmp_dir, ".kanban.yaml")
+    os.environ["KANBAN_CONFIG_PATH"] = tmp_config
+    yield tmp_config
     if original_env is not None:
-        os.environ["KANBAN_CONFIG_DIR"] = original_env
+        os.environ["KANBAN_CONFIG_PATH"] = original_env
     else:
-        del os.environ["KANBAN_CONFIG_DIR"]
+        del os.environ["KANBAN_CONFIG_PATH"]
 
 
 import sys
