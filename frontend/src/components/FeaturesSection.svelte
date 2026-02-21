@@ -94,13 +94,19 @@
         <div class="structure-display">
           <div class="json-tree">
             <div class="json-line"><span class="json-brace">{'{'}</span></div>
-            <div class="json-line code-indent"><span class="json-key">"board"</span>: <span class="json-string">"Sprint-24"</span>,</div>
+            <div class="json-line code-indent"><span class="json-key">"id"</span>: <span class="json-number">1</span>,</div>
+            <div class="json-line code-indent"><span class="json-key">"name"</span>: <span class="json-string">"Sprint-24"</span>,</div>
             <div class="json-line code-indent"><span class="json-key">"columns"</span>: [</div>
-            <div class="json-line code-indent-2"><span class="json-string">"Todo"</span>,</div>
-            <div class="json-line code-indent-2"><span class="json-string">"In Progress"</span>,</div>
-            <div class="json-line code-indent-2"><span class="json-string">"Done"</span></div>
+            <div class="json-line code-indent-2"><span class="json-brace">{'{'}</span></div>
+            <div class="json-line code-indent-3"><span class="json-key">"id"</span>: <span class="json-number">1</span>,</div>
+            <div class="json-line code-indent-3"><span class="json-key">"name"</span>: <span class="json-string">"Todo"</span>,</div>
+            <div class="json-line code-indent-3"><span class="json-key">"position"</span>: <span class="json-number">0</span>,</div>
+            <div class="json-line code-indent-3"><span class="json-key">"cards"</span>: [</div>
+            <div class="json-line code-indent-4"><span class="json-brace">{'{'}</span> <span class="json-key">"id"</span>: <span class="json-number">1</span>, <span class="json-key">"title"</span>: <span class="json-string">"Fix bug"</span> ... <span class="json-brace">{'}'}</span></div>
+            <div class="json-line code-indent-3"><span class="json-brace">]</span></div>
+            <div class="json-line code-indent-2"><span class="json-brace">{'}'}</span></div>
             <div class="json-line code-indent"><span class="json-brace">]</span>,</div>
-            <div class="json-line code-indent"><span class="json-key">"cards"</span>: <span class="json-number">3</span></div>
+            <div class="json-line code-indent"><span class="json-key">"owner_id"</span>: <span class="json-number">1</span></div>
             <div class="json-line"><span class="json-brace">{'}'}</span></div>
           </div>
 
@@ -293,6 +299,14 @@
 
   .code-indent-2 {
     padding-left: 48px;
+  }
+
+  .code-indent-3 {
+    padding-left: 72px;
+  }
+
+  .code-indent-4 {
+    padding-left: 96px;
   }
 
   .code-keyword { color: #c084fc; }
