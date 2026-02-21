@@ -203,10 +203,9 @@
     gap: 16px;
     height: 100%;
     padding: 20px;
-    background: color-mix(in srgb, var(--color-code-bg) 60%, transparent);
+    background: var(--color-surface);
     border-radius: 12px;
     border: 1px solid var(--color-border);
-    backdrop-filter: blur(10px);
   }
 
   .column {
@@ -230,16 +229,38 @@
     border-radius: 50%;
   }
 
-  .column-dot.todo { background: var(--color-muted-foreground); }
-  .column-dot.in-progress { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-  .column-dot.done { background: var(--color-success); box-shadow: 0 0 8px var(--color-success); }
+  .column-dot.todo {
+    background: var(--color-muted-foreground);
+  }
+
+  .column-dot.in-progress {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+  }
+
+  .column-dot.done {
+    background: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success);
+  }
+
+  /* Light mode status dots - more vibrant */
+  :global(.light) .column-dot.in-progress {
+    background: #d97706;
+    box-shadow: 0 0 6px #f59e0b80;
+  }
+
+  :global(.light) .column-dot.done {
+    background: #16a34a;
+    box-shadow: 0 0 6px #22c55e80;
+  }
 
   .column-title {
     font-size: 13px;
     font-weight: 600;
-    color: var(--color-muted-foreground);
+    color: var(--color-foreground);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    opacity: 0.7;
   }
 
   .column-count {

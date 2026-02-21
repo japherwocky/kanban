@@ -3,12 +3,12 @@ import { writable } from 'svelte/store';
 const THEME_STORAGE_KEY = 'kanban-theme';
 
 const getInitialTheme = () => {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') return 'dark';
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored && ['light', 'dark', 'system'].includes(stored)) {
+  if (stored && ['light', 'dark'].includes(stored)) {
     return stored;
   }
-  return 'system';
+  return 'dark';
 };
 
 const getSystemTheme = () => {
@@ -29,14 +29,14 @@ const createThemeStore = () => {
   return {
     subscribe,
     setTheme: (theme) => {
-      if (!['light', 'dark', 'system'].includes(theme)) return;
+      if (!['light', 'dark'].includes(theme)) return;
       set(theme);
       localStorage.setItem(THEME_STORAGE_KEY, theme);
       applyTheme(theme);
     },
     cycleTheme: () => {
       update(current => {
-        const next = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
+        const next = current === 'light' ? 'dark' : 'light';
         localStorage.setItem(THEME_STORAGE_KEY, next);
         applyTheme(next);
         return next;
@@ -65,7 +65,6 @@ export const getThemeLabel = (theme) => {
   switch (theme) {
     case 'light': return 'Light';
     case 'dark': return 'Dark';
-    case 'system': return 'System';
-    default: return 'System';
+    default: return 'Dark';
   }
 };
