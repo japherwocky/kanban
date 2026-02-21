@@ -44,23 +44,29 @@
           <span class="box-icon">🔐</span>
           <h3>Zero-Config Handshake</h3>
         </div>
-        <p class="box-description">Connect agents without OAuth dancing or API key management.</p>
+        <p class="box-description">One command to generate a key. One header to authenticate. No OAuth, no complexity.</p>
 
         <div class="code-panel">
           <div class="code-line">
-            <span class="code-keyword">class</span> <span class="code-type">Agent</span>:
+            <span class="code-comment"># 1. Generate a key (one-time)</span>
+          </div>
+          <div class="code-line">
+            <span class="code-prompt">$</span> kanban apikey create <span class="code-string">"CI Agent"</span>
           </div>
           <div class="code-line code-indent">
-            <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self):
+            <span class="code-comment"># Returns: kanban_abc123xyz789...</span>
           </div>
-          <div
-            class="code-line code-indent highlight"
-            class:active={hoveredBox === 1}
-          >
-            &nbsp;&nbsp;&nbsp;&nbsp;api_key = <span class="code-string">None</span>  <span class="code-comment"># Auto-discovered</span>
+          <div class="code-line" style="margin-top: 8px;">
+            <span class="code-comment"># 2. Use in any request</span>
+          </div>
+          <div class="code-line">
+            <span class="code-keyword">import</span> requests
           </div>
           <div class="code-line code-indent">
-            &nbsp;&nbsp;&nbsp;&nbsp;endpoint = <span class="code-string">"wss://pkanban.io/stream"</span>
+            headers = <span class="code-string">{"{"}"X-API-Key": "kanban_abc123..."{"}"}</span>
+          </div>
+          <div class="code-line code-indent">
+            requests.get(<span class="code-string">"https://pkanban.io/api/boards"</span>, headers=headers)
           </div>
         </div>
       </div>
@@ -294,6 +300,7 @@
   .code-function { color: #fbbf24; }
   .code-string { color: var(--color-success); }
   .code-comment { color: var(--color-muted-foreground); opacity: 0.7; }
+  .code-prompt { color: var(--color-success); font-weight: 600; margin-right: 8px; }
 
   .code-line.highlight {
     background: color-mix(in srgb, var(--color-success) 10%, transparent);
