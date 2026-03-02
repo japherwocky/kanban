@@ -25,6 +25,7 @@
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.access_token);
+        localStorage.setItem('user', JSON.stringify({ username }));
         const redirectPath = localStorage.getItem('redirectPath') || '/boards';
         localStorage.removeItem('redirectPath');
         navigate(redirectPath);
