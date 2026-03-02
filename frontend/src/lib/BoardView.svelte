@@ -171,13 +171,23 @@
 
   // Track original column state at the start of each drag
   let originalColumnsState = null;
+  
+  // Track if a drag operation is in progress to prevent race conditions
+  let isDragInProgress = false;
 
   function handleDndConsider(columnId, e) {
     const { items, info } = e.detail;
     
     // Capture original state when drag first starts
-    if (info.trigger === TRIGGERS.DRAG_STARTED && !originalColumnsState) {
+    if (info.trigger === TRIGGERS.DRAG_STARTED) {
       originalColumnsState = JSON.parse(JSON.stringify(columns));
+      isDragInProgress = true;
+    }
+    
+    // Reset if drag was cancelled or dropped elsewhere
+    if (info.trigger === TRIGGERS.DRAG_STOPPED) {
+      isDragInProgress = false;
+      originalColumnsState = null;
     }
     
     columns = columns.map(col => {
@@ -189,6 +199,11 @@
   }
 
   async function handleDndFinalize(columnId, e) {
+    // Prevent race conditions: if another drag is in progress, ignore this one
+    if (!isDragInProgress) {
+      return;
+    }
+    
     const { items } = e.detail;
     
     // Get the original cards in this column BEFORE this drag started
@@ -239,8 +254,9 @@
       console.error('Failed to reorder cards:', e);
       loadBoard();
     } finally {
-      // Clear the original state after finalize is complete
+      // Clear the original state and drag flag after finalize is complete
       originalColumnsState = null;
+      isDragInProgress = false;
     }
   }
 
