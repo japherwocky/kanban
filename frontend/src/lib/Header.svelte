@@ -91,6 +91,13 @@
 
           {#if isUserMenuOpen}
             <div class="user-menu-dropdown">
+              <button class="dropdown-item" onclick={() => goTo('/boards')}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="2" y="2" width="12" height="12" rx="2"/>
+                  <path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3"/>
+                </svg>
+                My Boards
+              </button>
               <button class="dropdown-item" onclick={() => goTo('/settings/api-keys')}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="3" y="3" width="10" height="10" rx="1.5"/>
