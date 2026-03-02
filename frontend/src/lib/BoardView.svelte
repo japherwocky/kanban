@@ -4,7 +4,7 @@
   import Modal from './Modal.svelte';
   import ShareModal from './ShareModal.svelte';
   import Comments from './Comments.svelte';
-  import { dndzone } from 'svelte-dnd-action';
+  import { dndzone, TRIGGERS } from 'svelte-dnd-action';
 
   let { board, onBack, availableTeams = [], onShare } = $props();
 
@@ -14,7 +14,6 @@
   let selectedColumnId = $state(null);
   let newCardTitle = $state('');
   let createLoading = $state(false);
-  let draggedCard = $state(null);
   let showEditCardModal = $state(false);
   let editingCard = $state(null);
   let editTitle = $state('');
@@ -170,8 +169,17 @@
     }
   }
 
+  // Track original column state at the start of each drag
+  let originalColumnsState = null;
+
   function handleDndConsider(columnId, e) {
-    const { items } = e.detail;
+    const { items, info } = e.detail;
+    
+    // Capture original state when drag first starts
+    if (info.trigger === TRIGGERS.DRAG_STARTED && !originalColumnsState) {
+      originalColumnsState = JSON.parse(JSON.stringify(columns));
+    }
+    
     columns = columns.map(col => {
       if (col.id === columnId) {
         return { ...col, cards: items };
@@ -182,17 +190,31 @@
 
   async function handleDndFinalize(columnId, e) {
     const { items } = e.detail;
+    
+    // Get the original cards in this column BEFORE this drag started
+    // If we haven't captured original state yet, capture it now
+    if (!originalColumnsState) {
+      originalColumnsState = JSON.parse(JSON.stringify(columns));
+    }
+    
+    const originalColumn = originalColumnsState.find(col => col.id === columnId);
+    const originalCardIds = new Set(originalColumn?.cards.map(c => c.id) || []);
+    
     const columnCards = items.map((card, index) => ({
       ...card,
       position: index
     }));
 
+    // Update local state optimistically
     columns = columns.map(col => {
       if (col.id === columnId) {
         return { ...col, cards: columnCards };
       }
       return col;
     });
+
+    // Find cards that are new to this column (moved from another column)
+    const newCards = columnCards.filter(card => !originalCardIds.has(card.id));
 
     // Prepare reorder request for this column's cards
     const reorderItems = columnCards.map((card, index) => ({
@@ -203,28 +225,23 @@
     try {
       await api.cards.reorder(reorderItems);
 
-      // If card moved to a different column, update its column_id
-      if (draggedCard && draggedCard.columnId !== columnId) {
-        const movedCard = columnCards.find(c => c.id === draggedCard.id);
-        if (movedCard) {
-          await api.cards.update(
-            movedCard.id,
-            movedCard.title,
-            null,
-            movedCard.position,
-            columnId
-          );
-        }
+      // Update column_id for cards that moved from another column
+      for (const card of newCards) {
+        await api.cards.update(
+          card.id,
+          card.title,
+          card.description || null,
+          card.position,
+          columnId
+        );
       }
     } catch (e) {
       console.error('Failed to reorder cards:', e);
       loadBoard();
+    } finally {
+      // Clear the original state after finalize is complete
+      originalColumnsState = null;
     }
-    draggedCard = null;
-  }
-
-  function handleDragStart(e, card, columnId) {
-    draggedCard = { ...card, columnId };
   }
 
   function handleColumnConsider(e) {
@@ -335,7 +352,6 @@
                   <div
                     class="card"
                     draggable="true"
-                    ondragstart={(e) => handleDragStart(e, card, column.id)}
                     onclick={() => openEditCard(card)}
                     onkeydown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
