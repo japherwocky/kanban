@@ -5,6 +5,7 @@ The Kanban project is a full-stack application with:
 - **Backend**: FastAPI server (Python) with Peewee ORM and SQLite
 - **CLI**: Python CLI client using typer and rich
 - **Frontend**: Svelte (served from backend/static)
+- **Features**: Multi-tenancy with organizations, teams, API keys, and board sharing
 
 ## Remote Configuration
 
@@ -37,10 +38,14 @@ pip install -e .
 
 then run it like `kanban --help`
 
+# Environment Variables
+- `KANBAN_CONFIG_PATH`: Path to config file (default: ~/.kanban.yaml)
+- `KANBAN_API_KEY`: Default API key for authentication
+
 
 ### Running the Server
 
-# Development server with auto-reload
+# Development server with auto-reload (default port 8080)
 python manage.py server
 
 # Custom host/port
@@ -48,6 +53,9 @@ python manage.py server --host 127.0.0.1 --port 9000
 
 # Disable auto-reload
 python manage.py server --no-reload
+
+# Set log level
+python manage.py server --log-level debug
 
 ### Database Management
 
