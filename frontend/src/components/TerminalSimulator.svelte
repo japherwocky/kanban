@@ -10,20 +10,22 @@
     'kanban card update 12 "Fix API latency" --description "Optimize DB queries"'
   ];
 
-  let displayedText = '';
-  let currentLineIndex = 0;
-  let currentCharIndex = 0;
-  let isPaused = false;
-  let showOutput = false;
-  let outputLines = [];
-  let commandHistory = [];
-  let animationFrame;
-  let timeoutId;
-  let currentCommand = '';
+let displayedText = '';
+let currentLineIndex = 0;
+let currentCharIndex = 0;
+let isPaused = false;
+let showOutput = false;
+let outputLines = [];
+let commandHistory = [];
+let animationFrame;
+let timeoutId;
+let currentCommand = '';
+let isResetting = false;
 
-  const TYPING_SPEED = 40;
-  const PAUSE_AFTER_COMMAND = 1500;
-  const PAUSE_BETWEEN_LINES = 300;
+const TYPING_SPEED = 40;
+const PAUSE_AFTER_COMMAND = 1500;
+const PAUSE_BETWEEN_LINES = 300;
+const RESET_PAUSE = 2000; // Longer pause during reset to make it more noticeable
 
   function typeCharacter() {
     if (currentLineIndex >= DEMO_COMMANDS.length) {
@@ -65,7 +67,23 @@
     }
   }
 
-  function resetAnimation() {
+function resetAnimation() {
+  // Prevent multiple resets
+  if (isResetting) return;
+  isResetting = true;
+  
+  // Show a visual indication that we're resetting
+  displayedText = '[RESETTING DEMO...]';
+  isPaused = true;
+  
+  // Reset demo state
+  executeCommand('reset');
+  window.dispatchEvent(new CustomEvent('demo-state-update', {
+    detail: { state: getDemoState() }
+  }));
+  
+  // Wait a bit longer during reset to make it noticeable
+  timeoutId = setTimeout(() => {
     // Reset to beginning of demo
     currentLineIndex = 0;
     currentCharIndex = 0;
@@ -74,13 +92,12 @@
     isPaused = false;
     showOutput = false;
     outputLines = [];
-    // Reset demo state
-    executeCommand('reset');
-    window.dispatchEvent(new CustomEvent('demo-state-update', {
-      detail: { state: getDemoState() }
-    }));
+    isResetting = false;
+    
+    // Start typing again
     timeoutId = setTimeout(typeCharacter, PAUSE_BETWEEN_LINES);
-  }
+  }, RESET_PAUSE);
+}
 
   onMount(() => {
     timeoutId = setTimeout(typeCharacter, 800);
