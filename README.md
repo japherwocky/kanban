@@ -1,90 +1,93 @@
-# Kanban Board
+# pkanban
 
-A full-stack Kanban board application with Python/FastAPI backend, Svelte frontend, and CLI client.
+A command-line tool for managing Kanban boards. (The "p" is silent, like in "pneumonia".)
 
-## CLI Installation
+Most users will connect to our hosted service at [kanban.pearachute.com](https://kanban.pearachute.com). If you want to run your own server, see the Self-Hosting section below.
 
-Install the CLI to manage your Kanban boards from the command line:
+## Quick Start
 
 ```bash
 pip install pkanban
 ```
 
-## CLI Usage
-
-Configure the CLI to use our hosted service or your self-hosted instance:
+Configure the CLI to connect to the hosted service:
 
 ```bash
-# Use our hosted service (kanban.pearachute.com)
 kanban config --url https://kanban.pearachute.com
-
-# Or use a local/self-hosted instance
-kanban config --url http://localhost:8000
-
-# Login
 kanban login <username> --password <password>
+```
 
-# Or use an API key (for agents/CI)
-kanban --api-key <key> board list
+That's it! You can now manage your boards from the command line.
 
-# List boards
+## Common Commands
+
+```bash
+# List your boards
 kanban board list
 
-# Create a board
+# Create a new board
 kanban board create "My Project"
 
-# Show board details
+# View a board with its columns and cards
 kanban board get 1
 
-# Create a card
-kanban card create 1 "To Do" "First task" --position 0
+# Add a column
+kanban column create 1 "To Do" 0
+
+# Add a card
+kanban card create 1 "First task" --description "Getting started"
 
 # Share a board with a team
 kanban share 1 <team-id>
-# Or make a board private
-kanban share 1 private
-
-# Column management
-kanban column create 1 "To Do" 0
-
-# Organization management
-kanban org create "My Company"
-kanban org get 1
-
-# Team management
-kanban team create 1 "Engineering"
-kanban team list --org-id 1
 ```
 
-### Available Commands
+## API Keys
+
+For automation, CI/CD, or giving access to agents, use API keys instead of passwords:
+
+```bash
+# Create a key (shown only once!)
+kanban apikey create "CI Agent"
+
+# Use it
+kanban --api-key kanban_abc123... board list
+
+# Or set it as an environment variable
+export KANBAN_API_KEY=kanban_abc123...
+kanban board list
+```
+
+API keys can be revoked and reactivated at any time. They're stored securely (bcrypt-hashed) and track their last usage.
+
+## Command Reference
 
 | Command | Description |
 |---------|-------------|
 | `kanban config [--url URL]` | Show or set server URL |
 | `kanban login <user> --password <pass>` | Login to the server |
 | `kanban logout` | Logout and clear credentials |
-| `kanban --api-key <key>` | Use API key for authentication (global option) |
+| `kanban --api-key <key>` | Use API key for authentication |
 | `kanban apikey create <name>` | Generate a new API key |
 | `kanban apikey list` | List your API keys |
-| `kanban apikey revoke <id>` | Revoke (deactivate) an API key |
-| `kanban apikey activate <id>` | Reactivate a deactivated API key |
+| `kanban apikey revoke <id>` | Revoke an API key |
+| `kanban apikey activate <id>` | Reactivate a revoked key |
 | `kanban board list` | List all boards |
 | `kanban board create <name>` | Create a new board |
 | `kanban board get <id>` | Show board details |
 | `kanban board delete <id>` | Delete a board |
 | `kanban board update <id> <name>` | Update board name |
-| `kanban share <board_id> <team_id\|private>` | Share board with team or make private |
+| `kanban share <board_id> <team_id\|private>` | Share board or make private |
 | `kanban column create <board_id> <name> <position>` | Create a column |
 | `kanban column delete <id>` | Delete a column |
-| `kanban card create <column_id> <title> [--description TEXT] [--position NUM]` | Create a card |
-| `kanban card update <id> <title> [--description TEXT] [--position NUM] [--column NUM]` | Update a card |
+| `kanban card create <column_id> <title> [options]` | Create a card |
+| `kanban card update <id> <title> [options]` | Update a card |
 | `kanban card delete <id>` | Delete a card |
 | `kanban org list` | List all organizations |
-| `kanban org create <name>` | Create a new organization |
+| `kanban org create <name>` | Create an organization |
 | `kanban org get <org-id>` | Show organization details |
 | `kanban org members <org-id>` | List organization members |
 | `kanban org member-add <org-id> <username>` | Add member to organization |
-| `kanban org member-remove <org-id> <user-id>` | Remove member from organization |
+| `kanban org member-remove <org-id> <user-id>` | Remove member |
 | `kanban team list --org-id <org-id>` | List teams in organization |
 | `kanban team create <org-id> <name>` | Create a new team |
 | `kanban team get <team-id>` | Show team details |
@@ -92,191 +95,89 @@ kanban team list --org-id 1
 | `kanban team member-add <team-id> <username>` | Add member to team |
 | `kanban team member-remove <team-id> <user-id>` | Remove member from team |
 
-## 📚 CLI Documentation for Agents
-
-For agents who need to quickly get up to speed with the CLI tool:
-
-- **[CLI Quick Start Guide](docs/cli-quickstart.md)** - Get productive in minutes
-- **[CLI Command Reference](docs/cli-reference.md)** - Complete command cheat sheet
-- **[Common Workflows](docs/cli-workflows.md)** - Real-world examples and patterns
-
-## 🔑 API Keys for Agents
-
-Instead of sharing passwords, users can generate one-off API keys for agents and CI/CD pipelines:
-
-```bash
-# Generate an API key (shown only once - save it securely!)
-kanban apikey create "CI Agent"
-
-# Use the API key for any command
-kanban --api-key kanban_abc123... board list
-
-# Or set it as default
-export KANBAN_API_KEY=kanban_abc123...
-kanban board list
-```
-
-### API Key Features
-
-- **Secure**: API keys are bcrypt-hashed in the database (like passwords)
-- **Revokable**: Deactivate or reactivate keys at any time
-- **Identifiable**: Each key has a prefix for identification in logs
-- **Trackable**: Last used timestamp recorded for each key
-
-### Security Notes
-
-- API keys are shown only once at creation time - copy and store securely
-- Use environment variables or secure secret management for CI/CD
-- Rotate keys periodically and revoke compromised keys
-
 ## Self-Hosting
 
-### 1. Clone the repository
+Want to run your own server? Here's how:
+
+### 1. Clone and setup
 
 ```bash
 git clone https://github.com/pearachute/kanban.git
 cd kanban
-```
-
-### 2. Set up the virtualenv and install dependencies
-
-```bash
-# Create virtualenv (if not already created)
 python -m venv venv
-
-# Activate the virtualenv
-source venv/bin/activate  # Linux/Mac
-# or on Windows:
-venv\Scripts\activate
-
-# Install backend dependencies
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r backend/requirements.txt
-
-# Install frontend dependencies
-cd frontend
-npm install
+cd frontend && npm install && cd ..
 ```
 
-### 3. Initialize the database and create a user
+### 2. Initialize and run
 
 ```bash
-# From the project root, with venv activated
 python manage.py init
 python manage.py user-create admin mypassword --admin
-```
-
-### 4. Run the server
-
-```bash
-# From the project root, with venv activated
 python manage.py server
 ```
 
-The server will start at http://localhost:8000.
+The server runs at http://localhost:8000 by default.
 
-The frontend will be built to `backend/static/` and served automatically.
+### 3. Connect the CLI
+
+```bash
+kanban config --url http://localhost:8000
+kanban login admin --password mypassword
+```
 
 ## Development
 
-The virtualenv is at `./venv` in the project root.
-
 ```bash
-# Activate the virtualenv
-source venv/bin/activate  # Linux/Mac
-# or on Windows:
-venv\Scripts\activate
-```
-
-### Running the Server
-
-```bash
-# With auto-reload (default)
+# Run the server with auto-reload
 python manage.py server
 
-# With custom host/port
-python manage.py server --host 127.0.0.1 --port 9000
+# Run frontend dev server (hot reload)
+cd frontend && npm run dev
 
-# Disable auto-reload
-python manage.py server --no-reload
-
-# Set log level
-python manage.py server --log-level debug
+# Run tests
+python -m pytest backend/tests/
 ```
 
-### Frontend (with hot reload)
+### Database commands
 
 ```bash
-cd frontend
-npm run dev
+python manage.py init          # Create tables
+python manage.py wipe          # Drop and recreate tables
+python manage.py status        # Check database status
+python manage.py user-create <user> <pass> [--admin]
 ```
-
-### Database Management
-
-```bash
-# Initialize database (create all tables)
-python manage.py init
-
-# Wipe database (drop all tables and recreate)
-python manage.py wipe
-
-# Check database status
-python manage.py status
-
-# Create a user
-python manage.py user-create <username> <password> [--email EMAIL] [--admin]
-```
-
-### Server Options
-
-| Option | Description |
-|--------|-------------|
-| `--host HOST` | Host to bind to (default: 0.0.0.0) |
-| `--port PORT` | Port to bind to (default: 8000) |
-| `--reload` | Enable auto-reload (default) |
-| `--no-reload` | Disable auto-reload |
-| `--log-level LEVEL` | Set logging level (debug, info, warning, error) |
-
-## Multi-Tenant Organizations
-
-See [docs/multi-tenant.md](docs/multi-tenant.md) for details on the organization model, team-based board sharing, and API endpoints.
 
 ## API Reference
 
-### Authentication
+The backend exposes a REST API at `/api/`:
 
+**Authentication**
 - `POST /api/token` - Login (returns JWT)
-- `X-API-Key` header - Use API key for authentication (alternative to Bearer token)
+- `X-API-Key` header - Alternative auth via API key
 
-### API Keys
+**API Keys**
+- `GET /api/api-keys` - List your keys
+- `POST /api/api-keys` - Create a key
+- `DELETE /api/api-keys/{id}` - Revoke a key
+- `POST /api/api-keys/{id}/activate` - Reactivate a key
 
-- `GET /api/api-keys` - List your API keys
-- `POST /api/api-keys` - Create a new API key (returns key once)
-- `DELETE /api/api-keys/{id}` - Revoke (deactivate) an API key
-- `POST /api/api-keys/{id}/activate` - Reactivate a deactivated API key
+**Boards**
+- `GET /api/boards` - List accessible boards
+- `POST /api/boards` - Create a board
+- `GET /api/boards/{id}` - Get board details
+- `POST /api/boards/{id}` - Update board
+- `DELETE /api/boards/{id}` - Delete board
 
-### Boards
-
-- `GET /api/boards` - List accessible boards (owned + shared)
-- `POST /api/boards` - Create a new board
-- `GET /api/boards/{id}` - Get board with columns and cards
-- `POST /api/boards/{id}` - Update board (owner or team member)
-- `DELETE /api/boards/{id}` - Delete board (owner only)
-
-### Columns
-
+**Columns**
 - `POST /api/columns` - Create column
 - `PUT /api/columns/{id}` - Update column
 - `DELETE /api/columns/{id}` - Delete column
 
-### Cards
-
+**Cards**
 - `POST /api/cards` - Create card
-- `PUT /api/cards/{id}` - Update card (including position)
+- `PUT /api/cards/{id}` - Update card
 - `DELETE /api/cards/{id}` - Delete card
 
-## Tests
-
-```bash
-# Run all tests
-python -m pytest backend/tests/
-```
+For multi-tenant organization details, see [docs/multi-tenant.md](docs/multi-tenant.md).
