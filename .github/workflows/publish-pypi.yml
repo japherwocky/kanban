@@ -12,8 +12,8 @@ jobs:
 
     # Use PyPI's trusted publishing (no API token needed)
     permissions:
-      id-token: write
-      contents: read
+      id-token: write      # For PyPI trusted publishing
+      contents: write      # For creating GitHub releases
 
     steps:
       - name: Checkout code
