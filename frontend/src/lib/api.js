@@ -109,6 +109,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
+    update: (id, name) => apiFetch(`/api/boards/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
     delete: (id) => apiFetch(`/api/boards/${id}`, { method: 'DELETE' }),
     share: (id, teamId, isPublicToOrg = false) => apiFetch(`/api/boards/${id}/share`, {
       method: 'POST',
@@ -131,9 +135,9 @@ export const api = {
     delete: (id) => apiFetch(`/api/columns/${id}`, { method: 'DELETE' }),
   },
   cards: {
-    create: (columnId, title, position) => apiFetch('/api/cards', {
+    create: (columnId, title, position, description = null) => apiFetch('/api/cards', {
       method: 'POST',
-      body: JSON.stringify({ column_id: columnId, title, position }),
+      body: JSON.stringify({ column_id: columnId, title, position, description }),
     }),
     update: (id, title, description, position, column) => apiFetch(`/api/cards/${id}`, {
       method: 'PUT',

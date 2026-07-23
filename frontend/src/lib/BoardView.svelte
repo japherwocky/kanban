@@ -6,13 +6,14 @@
   import Comments from './Comments.svelte';
   import { dndzone, TRIGGERS } from 'svelte-dnd-action';
 
-  let { board, onBack, availableTeams = [], onShare } = $props();
+  let { board, onBack, availableTeams = [], onShare, onRename } = $props();
 
   let columns = $state([]);
   let loading = $state(false);
   let showCreateCardModal = $state(false);
   let selectedColumnId = $state(null);
   let newCardTitle = $state('');
+  let newCardDescription = $state('');
   let createLoading = $state(false);
   let showEditCardModal = $state(false);
   let editingCard = $state(null);
@@ -23,6 +24,9 @@
   let newColumnName = $state('');
   let createColumnLoading = $state(false);
   let showShareModal = $state(false);
+  let showRenameBoardModal = $state(false);
+  let renameBoardName = $state('');
+  let renameLoading = $state(false);
 
   // Get current user's id from token
   let currentUserId = $state(null);
@@ -60,7 +64,12 @@
       const column = columns.find(c => c.id === selectedColumnId);
       const position = column ? column.cards.length : 0;
 
-      const card = await api.cards.create(selectedColumnId, newCardTitle.trim(), position);
+      const card = await api.cards.create(
+        selectedColumnId,
+        newCardTitle.trim(),
+        position,
+        newCardDescription.trim() || null
+      );
       columns = columns.map(col => {
         if (col.id === selectedColumnId) {
           return { ...col, cards: [...col.cards, card] };
@@ -68,6 +77,7 @@
         return col;
       });
       newCardTitle = '';
+      newCardDescription = '';
       showCreateCardModal = false;
     } catch (e) {
       alert('Failed to create card: ' + e.message);
@@ -92,9 +102,32 @@
     }
   }
 
+  function openRenameBoard() {
+    renameBoardName = board.name;
+    showRenameBoardModal = true;
+  }
+
+  async function saveRenameBoard() {
+    const name = renameBoardName.trim();
+    if (!name || name === board.name) {
+      showRenameBoardModal = false;
+      return;
+    }
+    renameLoading = true;
+    try {
+      await onRename(name);
+      showRenameBoardModal = false;
+    } catch (e) {
+      alert('Failed to rename board: ' + e.message);
+    } finally {
+      renameLoading = false;
+    }
+  }
+
   function openCreateCard(columnId) {
     selectedColumnId = columnId;
     newCardTitle = '';
+    newCardDescription = '';
     showCreateCardModal = true;
   }
 
@@ -310,7 +343,16 @@
         </svg>
         Back
       </button>
-      <h1>{board.name}</h1>
+      {#if isBoardOwner()}
+        <button class="board-title-btn" onclick={openRenameBoard} title="Rename board">
+          <h1>{board.name}</h1>
+          <svg class="rename-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      {:else}
+        <h1>{board.name}</h1>
+      {/if}
     </div>
     <div class="header-actions">
       {#if isBoardOwner()}
@@ -409,6 +451,29 @@
     </div>
   {/if}
 
+    {#if showRenameBoardModal}
+      <Modal open={showRenameBoardModal} onClose={() => showRenameBoardModal = false} title="Rename Board">
+        {#snippet children()}
+          <h2 id="modal-title">Rename Board</h2>
+          <form onsubmit={(e) => { e.preventDefault(); saveRenameBoard(); }}>
+            <!-- svelte-ignore a11y_autofocus -->
+            <input
+              bind:value={renameBoardName}
+              placeholder="Board name"
+              autofocus
+              required
+            />
+            <div class="modal-actions">
+              <button type="button" class="cancel-btn" onclick={() => showRenameBoardModal = false}>Cancel</button>
+              <button type="submit" class="create-btn" disabled={renameLoading}>
+                {renameLoading ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </form>
+        {/snippet}
+      </Modal>
+    {/if}
+
     {#if showCreateCardModal}
       <Modal open={showCreateCardModal} onClose={() => showCreateCardModal = false} title="Add Card">
         {#snippet children()}
@@ -419,6 +484,11 @@
               placeholder="Card title"
               required
             />
+            <textarea
+              bind:value={newCardDescription}
+              placeholder="Description (optional)"
+              rows="3"
+            ></textarea>
             <div class="modal-actions">
               <button type="button" class="cancel-btn" onclick={() => showCreateCardModal = false}>Cancel</button>
               <button type="submit" class="create-btn" disabled={createLoading}>
@@ -537,6 +607,35 @@
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0;
+  }
+
+  .board-title-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    margin-left: -0.5rem;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--color-foreground);
+    transition: background 0.15s ease;
+  }
+
+  .board-title-btn:hover {
+    background: var(--color-muted);
+  }
+
+  .rename-icon {
+    opacity: 0;
+    color: var(--color-muted-foreground);
+    transition: opacity 0.15s ease;
+  }
+
+  .board-title-btn:hover .rename-icon,
+  .board-title-btn:focus-visible .rename-icon {
+    opacity: 1;
   }
 
   .card-count {

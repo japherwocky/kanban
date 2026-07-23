@@ -22,15 +22,17 @@
     await Promise.all([loadTeams(), loadOrganizations()]);
   });
 
-  async function loadTeams() {
-    teamsLoading = true;
+  // silent: refresh the list in place without flashing the loading state,
+  // used when the members modal is open over it.
+  async function loadTeams({ silent = false } = {}) {
+    if (!silent) teamsLoading = true;
     try {
       teams = await api.admin.teams.list();
     } catch (e) {
       console.error('Failed to load teams:', e);
-      alert('Failed to load teams: ' + e.message);
+      if (!silent) alert('Failed to load teams: ' + e.message);
     } finally {
-      teamsLoading = false;
+      if (!silent) teamsLoading = false;
     }
   }
 
@@ -127,7 +129,12 @@
     try {
       await api.admin.teams.members.add(selectedTeam.id, addMemberUsername.trim());
       addMemberUsername = '';
-      await Promise.all([loadTeamMembers(selectedTeam.id), loadAvailableMembers(selectedTeam.id)]);
+      // loadTeams keeps the member_count on the team cards accurate.
+      await Promise.all([
+        loadTeamMembers(selectedTeam.id),
+        loadAvailableMembers(selectedTeam.id),
+        loadTeams({ silent: true }),
+      ]);
     } catch (e) {
       alert('Failed to add member: ' + e.message);
     }
@@ -139,7 +146,10 @@
     try {
       await api.admin.teams.members.remove(selectedTeam.id, userId);
       teamMembers = teamMembers.filter(m => m.user_id !== userId);
-      await loadAvailableMembers(selectedTeam.id);
+      await Promise.all([
+        loadAvailableMembers(selectedTeam.id),
+        loadTeams({ silent: true }),
+      ]);
     } catch (e) {
       alert('Failed to remove member: ' + e.message);
     }

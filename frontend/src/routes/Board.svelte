@@ -58,6 +58,11 @@
     // Reload board to get updated shared_team_id and is_public_to_org
     board = await api.boards.get(board.id);
   }
+
+  async function handleRename(name) {
+    const updated = await api.boards.update(board.id, name);
+    board = { ...board, name: updated.name };
+  }
 </script>
 
 {#if loading}
@@ -68,7 +73,7 @@
     <button onclick={goBack}>Back to Boards</button>
   </div>
  {:else if board}
-  <BoardView board={board} onBack={goBack} availableTeams={availableTeams} onShare={handleShare} />
+  <BoardView board={board} onBack={goBack} availableTeams={availableTeams} onShare={handleShare} onRename={handleRename} />
  {/if}
 
 <style>
