@@ -2,6 +2,14 @@ import requests
 
 from kanban.config import get_server_url, get_token, get_api_key
 
+# Seconds before giving up on the server. Without this a hung or black-holed
+# host makes the CLI wait forever with no output.
+DEFAULT_TIMEOUT = 30
+
+
+class KanbanError(Exception):
+    """A problem the user can act on, reported without a traceback."""
+
 
 class KanbanClient:
     def __init__(self, server_url=None, token=None, api_key=None):
@@ -16,7 +24,37 @@ class KanbanClient:
 
     def _request(self, method, path, **kwargs):
         url = f"{self.server_url.rstrip('/')}{path}"
-        response = self.session.request(method, url, **kwargs)
+        kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
+
+        try:
+            response = self.session.request(method, url, **kwargs)
+        except requests.exceptions.Timeout:
+            raise KanbanError(
+                f"The server at {self.server_url} took too long to respond "
+                f"(waited {DEFAULT_TIMEOUT}s). Try again shortly."
+            )
+        except requests.exceptions.SSLError as e:
+            raise KanbanError(f"Could not verify the TLS certificate for {self.server_url}: {e}")
+        except (
+            requests.exceptions.MissingSchema,
+            requests.exceptions.InvalidSchema,
+            requests.exceptions.InvalidURL,
+        ):
+            # e.g. "localhost:8000", which requests reads as scheme "localhost".
+            raise KanbanError(
+                f"'{self.server_url}' is not a valid server URL - it needs an "
+                f"http:// or https:// prefix.\n"
+                f"Set one with: kanban config --url https://kanban.pearachute.com"
+            )
+        except requests.exceptions.ConnectionError:
+            raise KanbanError(
+                f"Could not reach the Kanban server at {self.server_url}.\n"
+                f"Check that the server is running and the URL is right "
+                f"(see: kanban config)."
+            )
+
+        # HTTPError is left alone: individual commands catch it to explain
+        # domain-specific failures, and main() handles whatever they don't.
         response.raise_for_status()
         return response.json()
 

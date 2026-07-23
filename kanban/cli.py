@@ -5,7 +5,7 @@ import typer
 from rich import print as rprint
 import requests
 
-from kanban.client import KanbanClient
+from kanban.client import KanbanClient, KanbanError
 from kanban.config import (
     get_server_url,
     set_server_url,
@@ -19,6 +19,41 @@ from kanban.config import (
 app = typer.Typer(
     help="Kanban board CLI", no_args_is_help=True, invoke_without_command=True
 )
+
+
+def describe_http_error(e):
+    """Turn an HTTP failure into something a user can act on.
+
+    Commands that can say something more specific catch HTTPError themselves;
+    this is the fallback so nothing reaches the user as a traceback.
+    """
+    response = e.response
+    if response is None:
+        return f"Request failed: {e}"
+
+    detail = None
+    try:
+        body = response.json()
+        if isinstance(body, dict):
+            detail = body.get("detail")
+    except ValueError:
+        pass
+
+    status = response.status_code
+    if status == 401:
+        return (
+            "Not authenticated. Run 'kanban login', or check that your API key "
+            "is still active (kanban apikey list)."
+        )
+    if status == 403:
+        return detail or "You don't have permission to do that."
+    if status == 404:
+        return detail or "Not found. Check the ID and try again."
+    if status == 422:
+        return f"Invalid request: {detail or response.text}"
+    if status >= 500:
+        return f"The server returned an error ({status}). Try again shortly."
+    return detail or f"Request failed ({status}): {response.text}"
 
 
 def make_client():
@@ -588,7 +623,14 @@ def main():
             clear_token()
             set_api_key(api_key)
 
-    app()
+    try:
+        app()
+    except KanbanError as e:
+        rprint(f"[red]{e}[/red]")
+        raise SystemExit(1)
+    except requests.exceptions.HTTPError as e:
+        rprint(f"[red]{describe_http_error(e)}[/red]")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

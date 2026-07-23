@@ -209,3 +209,111 @@ def test_cli_card_delete_command(client, auth_headers, test_user):
         cmd_card_delete(card_id=99)
 
         mock_client.card_delete.assert_called_once_with(99)
+
+
+# === Network / HTTP error reporting ===
+
+
+def _client_raising(exc):
+    """A KanbanClient whose underlying session always raises exc."""
+    from kanban.client import KanbanClient
+
+    kanban_client = KanbanClient(server_url="http://localhost:9999", token="t")
+    kanban_client.session = MagicMock()
+    kanban_client.session.request.side_effect = exc
+    return kanban_client
+
+
+def test_client_connection_error_is_actionable():
+    import requests
+    from kanban.client import KanbanError
+
+    kanban_client = _client_raising(requests.exceptions.ConnectionError())
+
+    with pytest.raises(KanbanError) as excinfo:
+        kanban_client.boards()
+
+    message = str(excinfo.value)
+    assert "Could not reach the Kanban server" in message
+    assert "http://localhost:9999" in message
+
+
+def test_client_timeout_is_actionable():
+    import requests
+    from kanban.client import KanbanError
+
+    kanban_client = _client_raising(requests.exceptions.Timeout())
+
+    with pytest.raises(KanbanError) as excinfo:
+        kanban_client.boards()
+
+    assert "took too long to respond" in str(excinfo.value)
+
+
+def test_client_url_without_scheme_is_actionable():
+    import requests
+    from kanban.client import KanbanError
+
+    kanban_client = _client_raising(requests.exceptions.InvalidSchema())
+
+    with pytest.raises(KanbanError) as excinfo:
+        kanban_client.boards()
+
+    assert "http:// or https://" in str(excinfo.value)
+
+
+def test_client_sets_a_request_timeout():
+    """Without a timeout a hung server makes the CLI wait forever."""
+    from kanban.client import KanbanClient, DEFAULT_TIMEOUT
+
+    kanban_client = KanbanClient(server_url="http://localhost:9999", token="t")
+    kanban_client.session = MagicMock()
+    kanban_client.session.request.return_value.json.return_value = []
+
+    kanban_client.boards()
+
+    assert kanban_client.session.request.call_args.kwargs["timeout"] == DEFAULT_TIMEOUT
+
+
+def test_client_http_error_still_propagates():
+    """Commands catch HTTPError themselves; the client must not swallow it."""
+    import requests
+
+    kanban_client = _client_raising(requests.exceptions.HTTPError())
+
+    with pytest.raises(requests.exceptions.HTTPError):
+        kanban_client.boards()
+
+
+@pytest.mark.parametrize(
+    "status,expected",
+    [
+        (401, "Not authenticated"),
+        (403, "permission"),
+        (404, "Not found"),
+        (500, "server returned an error"),
+    ],
+)
+def test_describe_http_error(status, expected):
+    import requests
+    from kanban.cli import describe_http_error
+
+    response = MagicMock()
+    response.status_code = status
+    response.json.side_effect = ValueError
+    response.text = "boom"
+
+    message = describe_http_error(requests.exceptions.HTTPError(response=response))
+    assert expected.lower() in message.lower()
+
+
+def test_describe_http_error_prefers_server_detail():
+    import requests
+    from kanban.cli import describe_http_error
+
+    response = MagicMock()
+    response.status_code = 404
+    response.json.return_value = {"detail": "Board not found"}
+
+    message = describe_http_error(requests.exceptions.HTTPError(response=response))
+    assert message == "Board not found"
