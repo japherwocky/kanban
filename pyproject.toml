@@ -43,6 +43,3 @@ Issues = "https://github.com/pearachute/kanban/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["kanban*"]
-
-[tool.setuptools.package-data]
-kanban = ["py.typed"]

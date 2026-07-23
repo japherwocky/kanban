@@ -1,38 +1,51 @@
-import pytest
-import random
-import string
-from peewee import SqliteDatabase
+import os
 
-# Create an in-memory database for tests
-_test_db = SqliteDatabase(":memory:")
+# MUST run before anything imports backend.database, which builds its
+# SqliteDatabase from DATABASE_PATH at import time.
+#
+# Rebinding the db afterwards does not work: backend/models.py captures the
+# database OBJECT in BaseModel.Meta.database, and backend/api.py captures the
+# same object via `from backend.database import db` for its db.atomic() calls.
+# Reassigning backend.database.db only moves the module attribute, leaving
+# both pointing at the real kanban.db -- which is how the suite used to wipe
+# the developer's local database on every run. Pointing DATABASE_PATH at a
+# test database before import means only one db object is ever created, so
+# models, transactions, and fixtures all agree on it.
+#
+# A shared-cache URI rather than plain ":memory:" because the FastAPI
+# TestClient serves requests on a different thread, and peewee opens a
+# connection per thread. Plain ":memory:" would give each thread its own
+# empty database; cache=shared makes them the same one for the process.
+os.environ["DATABASE_PATH"] = "file:kanban_test?mode=memory&cache=shared"
+
+import pytest  # noqa: E402
+import random  # noqa: E402
+import string  # noqa: E402
+
+from backend.database import db as _db  # noqa: E402
+
+TEST_MODELS = None
 
 
-@pytest.fixture(scope="session")
-def _setup_test_db():
-    """Session-scoped fixture to create tables once."""
-    import backend.database as db_module
-    from backend.models import (
-        User,
-        Board,
-        Column,
-        Card,
-        Comment,
-        Organization,
-        OrganizationMember,
-        Team,
-        TeamMember,
-        ApiKey,
-        BetaSignup,
-        OrganizationInvite,
-    )
+def _models():
+    global TEST_MODELS
+    if TEST_MODELS is None:
+        from backend.models import (
+            User,
+            Board,
+            Column,
+            Card,
+            Comment,
+            Organization,
+            OrganizationMember,
+            Team,
+            TeamMember,
+            ApiKey,
+            BetaSignup,
+            OrganizationInvite,
+        )
 
-    # Replace the module-level db with our test database
-    db_module.db = _test_db
-
-    # Connect and create tables
-    _test_db.connect()
-    _test_db.create_tables(
-        [
+        TEST_MODELS = [
             User,
             Board,
             Column,
@@ -46,9 +59,23 @@ def _setup_test_db():
             BetaSignup,
             OrganizationInvite,
         ]
+    return TEST_MODELS
+
+
+@pytest.fixture(scope="session")
+def _setup_test_db():
+    """Session-scoped fixture to create tables once."""
+    assert _db.database.startswith("file:kanban_test"), (
+        f"tests are pointed at {_db.database!r}, not the test database. "
+        "Something imported backend.database before conftest set DATABASE_PATH."
     )
+
+    # Held open for the whole session: the shared-cache in-memory database is
+    # discarded once the last connection to it closes.
+    _db.connect()
+    _db.create_tables(_models())
     yield
-    _test_db.close()
+    _db.close()
 
 
 @pytest.fixture
@@ -88,7 +115,7 @@ def db_session(_setup_test_db):
             table.delete().execute()
         except:
             pass
-    yield _test_db
+    yield _db
 
 
 @pytest.fixture
