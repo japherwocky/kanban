@@ -20,7 +20,10 @@
     { id: 'quickstart', title: 'Quick Start', path: '/docs/quickstart' },
     { id: 'reference', title: 'Command Reference', path: '/docs/reference' },
     { id: 'workflows', title: 'Common Workflows', path: '/docs/workflows' },
-    { id: 'commands', title: 'All Commands', path: '/docs/commands' }
+    { id: 'commands', title: 'All Commands', path: '/docs/commands' },
+    { id: 'auth', title: 'Authentication', path: '/docs/auth' },
+    { id: 'multi-tenant', title: 'Organizations & Teams', path: '/docs/multi-tenant' },
+    { id: 'theme-system', title: 'Theme System', path: '/docs/theme-system' }
   ];
 
   // Configure marked options

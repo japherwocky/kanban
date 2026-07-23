@@ -67,19 +67,6 @@ async def root():
     return {"message": "Kanban API is running. Build the frontend to serve it here."}
 
 
-@app.get("/api/debug/docs-path")
-async def debug_docs_path():
-    """Debug endpoint to check docs path configuration."""
-    from pathlib import Path
-
-    content_path = str(Path(__file__).parent.parent / "docs")
-    return {
-        "content_path": content_path,
-        "exists": os.path.exists(content_path),
-        "files": os.listdir(content_path) if os.path.exists(content_path) else [],
-    }
-
-
 @app.get("/{path:path}")
 async def catch_all(path: str):
     """Serve index.html for all non-API, non-docs routes (SPA fallback)"""

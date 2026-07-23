@@ -21,6 +21,28 @@ app = typer.Typer(
 )
 
 
+def _version_callback(value: bool):
+    if value:
+        from kanban import __version__
+
+        rprint(f"kanban {__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def _root(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-V",
+        help="Show the installed version and exit.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
+):
+    """Kanban board CLI"""
+
+
 def describe_http_error(e):
     """Turn an HTTP failure into something a user can act on.
 
