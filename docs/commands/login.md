@@ -2,37 +2,20 @@
 
 Login to the Kanban server.
 
-## Usage
-
 ```bash
-kanban login <username> [--password <password>] [--server <url>]
+kanban login <username> --password PASSWORD [--server SERVER]
 ```
 
-## Arguments
+**Arguments**
 
-- `username`: Your username
+- `username` (str) — Username
 
-## Options
+**Options**
 
-- `--password`, `-p`: Your password (hidden input)
-- `--server`, `-s`: Server URL (default: `http://localhost:8000`)
-
-## Examples
-
-```bash
-# Interactive login (prompts for password)
-kanban login alice
-
-# With server URL
-kanban login alice --server https://kanban.example.com
-```
-
-## Authentication
-
-After successful login, credentials are stored in `~/.kanban/config.yaml`.
+- `--password`, `-p` (str) _(required)_ — Password
+- `--server`, `-s` (str) _(default: `http://localhost:8000`)_ — Server URL
 
 ## See Also
 
-- [Logout Command](/docs/commands/logout)
-- [API Key Authentication](/docs/commands/apikey)
+- [All Commands](/docs/commands)
 - [CLI Reference](/docs/reference)

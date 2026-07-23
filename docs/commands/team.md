@@ -1,76 +1,94 @@
 # kanban team
 
-Team management within organizations.
+Team management commands
 
-## Subcommands
+## Commands
 
-### list
+- [`kanban team create`](#kanban-team-create) — Create a new team.
+- [`kanban team get`](#kanban-team-get) — Show team details.
+- [`kanban team list`](#kanban-team-list) — List teams in an organization.
+- [`kanban team member-add`](#kanban-team-member-add) — Add member to team.
+- [`kanban team member-remove`](#kanban-team-member-remove) — Remove member from team.
+- [`kanban team members`](#kanban-team-members) — List team members.
 
-```bash
-kanban team list --org-id <org_id>
-```
+---
 
-List teams in an organization.
+## `kanban team create`
 
-### create
+Create a new team.
 
 ```bash
 kanban team create <org_id> <name>
 ```
 
-Create a new team within an organization.
+**Arguments**
 
-### get
+- `org_id` (int) — Organization ID
+- `name` (str) — Team name
+
+## `kanban team get`
+
+Show team details.
 
 ```bash
 kanban team get <team_id>
 ```
 
-Show team details and members.
+**Arguments**
 
-### members
+- `team_id` (int) — Team ID
+
+## `kanban team list`
+
+List teams in an organization.
 
 ```bash
-kanban team members <team_id>
+kanban team list --org-id ORG_ID
 ```
 
-List team members.
+**Options**
 
-### member-add
+- `--org-id`, `-o` (int) _(required)_ — Organization ID (required)
+
+## `kanban team member-add`
+
+Add member to team.
 
 ```bash
 kanban team member-add <team_id> <username>
 ```
 
-Add a member to a team.
+**Arguments**
 
-### member-remove
+- `team_id` (int) — Team ID
+- `username` (str) — Username to add
+
+## `kanban team member-remove`
+
+Remove member from team.
 
 ```bash
 kanban team member-remove <team_id> <user_id>
 ```
 
-Remove a member from a team.
+**Arguments**
 
-## Example Workflow
+- `team_id` (int) — Team ID
+- `user_id` (int) — User ID to remove
+
+## `kanban team members`
+
+List team members.
 
 ```bash
-# List teams in your organization
-kanban team list --org-id 1
-
-# Create a team
-kanban team create 1 "Engineering"
-
-# Get team details
-kanban team get 1
-
-# Add members
-kanban team member-add 1 alice
-kanban team member-add 1 bob
+kanban team members <team_id>
 ```
+
+**Arguments**
+
+- `team_id` (int) — Team ID
 
 ## See Also
 
-- [Organization Commands](/docs/commands/org)
-- [Board Sharing](/docs/commands/share)
+- [All Commands](/docs/commands)
 - [CLI Reference](/docs/reference)

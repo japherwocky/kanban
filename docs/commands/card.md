@@ -1,61 +1,65 @@
 # kanban card
 
-Card management within columns.
+Card management commands
 
-## Subcommands
+## Commands
 
-### create
+- [`kanban card create`](#kanban-card-create) — Create a new card.
+- [`kanban card delete`](#kanban-card-delete) — Delete a card.
+- [`kanban card update`](#kanban-card-update) — Update a card.
 
-```bash
-kanban card create <column_id> <title> [--description <text>] [--position <num>]
-```
+---
 
-Create a new card in a column.
+## `kanban card create`
 
-**Arguments:**
-- `column_id`: Column ID
-- `title`: Card title
-- `--description`, `-d`: Card description (optional)
-- `--position`, `-p`: Position (default: 0)
-
-### update
+Create a new card.
 
 ```bash
-kanban card update <card_id> <title> [--description <text>] [--position <num>] [--column <id>]
+kanban card create <column_id> <title> [--description DESCRIPTION] [--position POSITION]
 ```
 
-Update a card's title, description, position, or move to another column.
+**Arguments**
 
-**Arguments:**
-- `card_id`: Card ID
-- `title`: New card title
-- `--description`, `-d`: New description (optional)
-- `--position`, `-p`: New position (optional)
-- `--column`, `-c`: New column ID (optional)
+- `column_id` (int) — Column ID
+- `title` (str) — Card title
 
-### delete
+**Options**
+
+- `--description`, `-d` (str) — Card description
+- `--position`, `-p` (int) _(default: `0`)_ — Position
+
+## `kanban card delete`
+
+Delete a card.
 
 ```bash
 kanban card delete <card_id>
 ```
 
-Delete a card.
+**Arguments**
 
-## Example Workflow
+- `card_id` (int) — Card ID
+
+## `kanban card update`
+
+Update a card.
 
 ```bash
-# Create cards
-kanban card create 1 "Research competitor analysis" --position 0
-kanban card create 1 "Design system architecture" --position 1
-
-# Move cards between columns
-kanban card update 2 "Research complete" --column 3 --position 0
-
-# Update card details
-kanban card update 2 "Updated title" --description "New description"
+kanban card update <card_id> <title> [--description DESCRIPTION] [--position POSITION] [--column COLUMN]
 ```
+
+**Arguments**
+
+- `card_id` (int) — Card ID
+- `title` (str) — Card title
+
+**Options**
+
+- `--description`, `-d` (str) — Card description
+- `--position`, `-p` (int) — Position
+- `--column`, `-c` (int) — New column ID
 
 ## See Also
 
-- [Column Commands](/docs/commands/column)
+- [All Commands](/docs/commands)
 - [CLI Reference](/docs/reference)

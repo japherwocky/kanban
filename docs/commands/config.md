@@ -1,36 +1,16 @@
 # kanban config
 
-Configure the CLI settings.
-
-## Usage
+Configure the CLI or show current settings.
 
 ```bash
-kanban config [--url <url>]
+kanban config [--url URL]
 ```
 
-## Options
+**Options**
 
-- `--url`, `-u`: Set the server URL
-
-## Examples
-
-```bash
-# Show current configuration
-kanban config
-
-# Set server URL
-kanban config --url https://kanban.example.com
-```
-
-## Configuration File
-
-Settings are stored in `~/.kanban/config.yaml`:
-
-```yaml
-server_url: https://kanban.example.com
-```
+- `--url`, `-u` (str) — Set the server URL
 
 ## See Also
 
-- [Login Command](/docs/commands/login)
+- [All Commands](/docs/commands)
 - [CLI Reference](/docs/reference)

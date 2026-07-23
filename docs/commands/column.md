@@ -1,41 +1,41 @@
 # kanban column
 
-Column management within boards.
+Column management commands
 
-## Subcommands
+## Commands
 
-### create
+- [`kanban column create`](#kanban-column-create) — Create a new column.
+- [`kanban column delete`](#kanban-column-delete) — Delete a column.
+
+---
+
+## `kanban column create`
+
+Create a new column.
 
 ```bash
 kanban column create <board_id> <name> <position>
 ```
 
-Create a new column in a board.
+**Arguments**
 
-**Arguments:**
-- `board_id`: Board ID
-- `name`: Column name
-- `position`: 0-based position
+- `board_id` (int) — Board ID
+- `name` (str) — Column name
+- `position` (int) — Position
 
-### delete
+## `kanban column delete`
+
+Delete a column.
 
 ```bash
 kanban column delete <column_id>
 ```
 
-Delete a column and all its cards.
+**Arguments**
 
-## Example Workflow
-
-```bash
-# Create columns in a board
-kanban column create 1 "To Do" 0
-kanban column create 1 "Doing" 1
-kanban column create 1 "Done" 2
-```
+- `column_id` (int) — Column ID
 
 ## See Also
 
-- [Card Commands](/docs/commands/card)
-- [Board Commands](/docs/commands/board)
+- [All Commands](/docs/commands)
 - [CLI Reference](/docs/reference)

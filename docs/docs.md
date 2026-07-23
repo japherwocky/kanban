@@ -20,7 +20,7 @@ Browse all available commands:
 
 - [All Commands Index](/docs/commands) - Navigable list of every command
 - [Authentication](/docs/commands/config) - config, login, logout
-- [Boards](/docs/commands/boards) - List, create, view, delete boards
+- [Boards](/docs/commands/board) - List, create, view, delete boards
 - [Columns](/docs/commands/column) - Manage board columns
 - [Cards](/docs/commands/card) - Create and manage cards
 - [Organizations](/docs/commands/org) - Organization management

@@ -28,6 +28,10 @@ jobs:
         run: |
           pip install -e .
 
+      - name: Check CLI docs are up to date
+        run: |
+          python scripts/generate_cli_docs.py --check
+
       - name: Run backend tests
         working-directory: ./backend
         run: |

@@ -49,6 +49,13 @@
     </PublicLayout>
   </Route>
 
+  <!-- Per-command pages live at docs/commands/<name>.md -->
+  <Route path="/docs/commands/:page" let:params>
+    <PublicLayout>
+      <Docs params={{ section: `commands/${params.page}` }} />
+    </PublicLayout>
+  </Route>
+
   <Route path="/login" let:params>
     <PublicLayout>
       <Login {params} />

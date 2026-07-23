@@ -35,6 +35,29 @@
     }
   });
 
+  // Must stay in sync with anchor() in scripts/generate_cli_docs.py, which
+  // emits the in-page links these ids are the targets for.
+  function slugify(text) {
+    return text
+      .toLowerCase()
+      .replace(/`/g, '')
+      .replace(/[^a-z0-9 -]/g, '')
+      .trim()
+      .split(/\s+/)
+      .join('-');
+  }
+
+  // marked doesn't emit heading ids, so in-page anchors are dead without this.
+  marked.use({
+    renderer: {
+      heading({ tokens, depth }) {
+        const content = this.parser.parseInline(tokens);
+        const raw = tokens.map((t) => t.raw ?? '').join('');
+        return `<h${depth} id="${slugify(raw)}">${content}</h${depth}>\n`;
+      }
+    }
+  });
+
   onMount(async () => {
     await loadDocumentation(activeSection);
   });
@@ -87,6 +110,13 @@
   function handleSectionClick(sectionPath, sectionId) {
     navigate(sectionPath);
   }
+
+  // Per-command pages (commands/board, commands/card, ...) keep the
+  // "All Commands" nav entry highlighted.
+  function isActive(sectionId) {
+    return activeSection === sectionId
+      || (sectionId === 'commands' && activeSection.startsWith('commands/'));
+  }
 </script>
 
 <div class="docs-layout">
@@ -98,7 +128,7 @@
           <a
             href="{section.path}"
             class="block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 docs-nav-link"
-            class:active={activeSection === section.id}
+            class:active={isActive(section.id)}
             on:click={() => handleSectionClick(section.path, section.id)}
           >
             {section.title}

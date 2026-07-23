@@ -34,37 +34,37 @@ kanban login <username> --password <password>
 ### Basic Board Operations
 ```bash
 # List all boards you can access
-kanban boards
+kanban board list
 
 # Create a new board
-kanban board-create "My Project"
+kanban board create "My Project"
 
 # View board structure
-kanban board <board-id>
+kanban board get <board-id>
 
 # Delete a board
-kanban board-delete <board-id>
+kanban board delete <board-id>
 ```
 
 ### Card Management
 ```bash
 # Create a card
-kanban card-create <column-id> "Task title" --description "Details" --position 0
+kanban card create <column-id> "Task title" --description "Details" --position 0
 
 # Update a card (move between columns)
-kanban card-update <card-id> "Updated title" --column <new-column-id> --position 0
+kanban card update <card-id> "Updated title" --column <new-column-id> --position 0
 
 # Delete a card
-kanban card-delete <card-id>
+kanban card delete <card-id>
 ```
 
 ### Column Management
 ```bash
 # Create a column
-kanban column-create <board-id> "In Progress" 1
+kanban column create <board-id> "In Progress" 1
 
 # Delete a column
-kanban column-delete <column-id>
+kanban column delete <column-id>
 ```
 
 ## 🏢 Organization & Team Commands
@@ -136,11 +136,11 @@ The CLI uses a nested structure:
 
 ## 💡 Pro Tips
 
-1. **Use `kanban boards` first** to see what you can access
+1. **Use `kanban board list` first** to see what you can access
 2. **Board IDs are numbers** - use them in other commands
 3. **Teams exist within organizations** - create org first, then teams
 4. **Board sharing is team-based** - share with teams, not individual users
-5. **Use `--help`** on any command for options: `kanban board-create --help`
+5. **Use `--help`** on any command for options: `kanban board create --help`
 
 ## 🚨 Common Gotchas
 
@@ -154,11 +154,11 @@ The CLI uses a nested structure:
 
 ### Setting up a new project:
 ```bash
-kanban board-create "New Project"
-kanban board <new-board-id>  # Get default columns
-kanban column-create <board-id> "Backlog" 0
-kanban column-create <board-id> "In Progress" 1
-kanban column-create <board-id> "Done" 2
+kanban board create "New Project"
+kanban board get <new-board-id>  # Get default columns
+kanban column create <board-id> "Backlog" 0
+kanban column create <board-id> "In Progress" 1
+kanban column create <board-id> "Done" 2
 ```
 
 ### Setting up team collaboration:
