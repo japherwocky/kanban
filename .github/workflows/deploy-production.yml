@@ -95,6 +95,21 @@ jobs:
             deploy_needed=true
           fi
 
+          # Check documentation changes. The docs pages are served from docs/
+          # at runtime (backend reads the .md files directly), not built into
+          # the frontend bundle -- so a docs-only change is a real deploy.
+          # Without this, doc updates silently never reached production.
+          docs_changed=false
+          if echo "$CHANGED_FILES" | grep -qE "^docs/"; then
+            docs_changed=true
+            deploy_needed=true
+          fi
+
+          # NOTE: for a multi-commit push the baseline above is HEAD~1, so only
+          # the final commit is inspected. A push whose watched change is in an
+          # earlier commit can still be missed. Manual re-run via
+          # workflow_dispatch is the escape hatch until that's addressed.
+
           echo "deploy_needed=$deploy_needed" >> $GITHUB_OUTPUT
           echo "frontend_changed=$frontend_changed" >> $GITHUB_OUTPUT
           echo "backend_changed=$backend_changed" >> $GITHUB_OUTPUT
@@ -104,6 +119,7 @@ jobs:
           echo "  Frontend: $frontend_changed"
           echo "  Backend: $backend_changed"
           echo "  Config: $config_changed"
+          echo "  Docs: $docs_changed"
           echo "  Deploy needed: $deploy_needed"
 
   # Deploy to production
