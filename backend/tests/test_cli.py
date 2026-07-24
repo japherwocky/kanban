@@ -89,6 +89,69 @@ def test_cli_login_command(client, test_cli_user):
             assert token == "fake-jwt-token"
 
 
+def test_cli_login_uses_configured_url_when_server_omitted(client, test_cli_user):
+    """`kanban config --url ...` then `kanban login` must hit the configured
+    server, not a hardcoded localhost."""
+    from kanban.cli import cmd_login
+    from kanban.config import set_server_url, get_server_url
+    from kanban.client import KanbanClient
+
+    set_server_url("https://kanban.example.com")
+
+    with patch.object(KanbanClient, "__init__", return_value=None) as mock_init:
+        with patch.object(KanbanClient, "login", return_value="jwt"):
+            cmd_login(username="testuser", password="pw", server=None)
+
+    # The client was pointed at the configured URL...
+    assert mock_init.call_args.kwargs["server_url"] == "https://kanban.example.com"
+    # ...and an omitted --server leaves the configured URL untouched.
+    assert get_server_url() == "https://kanban.example.com"
+
+
+def test_cli_login_persists_explicit_server(client, test_cli_user):
+    """An explicit --server is saved so later commands reuse the same server."""
+    from kanban.cli import cmd_login
+    from kanban.config import set_server_url, get_server_url
+    from kanban.client import KanbanClient
+
+    set_server_url("http://localhost:8000")
+
+    with patch.object(KanbanClient, "__init__", return_value=None) as mock_init:
+        with patch.object(KanbanClient, "login", return_value="jwt"):
+            cmd_login(
+                username="testuser",
+                password="pw",
+                server="https://kanban.example.com",
+            )
+
+    assert mock_init.call_args.kwargs["server_url"] == "https://kanban.example.com"
+    assert get_server_url() == "https://kanban.example.com"
+
+
+def test_cli_login_failure_does_not_change_config(client, test_cli_user):
+    """A failed login must not persist the URL or a token."""
+    from kanban.cli import cmd_login
+    from kanban.config import set_server_url, get_server_url, get_token, clear_token
+    from kanban.client import KanbanClient
+    import typer
+
+    # The config file is shared across this module's tests, so start clean.
+    set_server_url("http://localhost:8000")
+    clear_token()
+
+    with patch.object(KanbanClient, "__init__", return_value=None):
+        with patch.object(KanbanClient, "login", side_effect=Exception("nope")):
+            with pytest.raises(typer.Exit):
+                cmd_login(
+                    username="testuser",
+                    password="pw",
+                    server="https://kanban.example.com",
+                )
+
+    assert get_server_url() == "http://localhost:8000"
+    assert get_token() is None
+
+
 def test_cli_logout_command():
     from kanban.cli import cmd_logout
     from kanban.config import set_token, get_token

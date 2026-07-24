@@ -110,19 +110,32 @@ def cmd_login(
     password: str = typer.Option(
         ..., "--password", "-p", help="Password", hide_input=True
     ),
-    server: str = typer.Option(
-        "http://localhost:8000", "--server", "-s", help="Server URL"
+    server: Optional[str] = typer.Option(
+        None,
+        "--server",
+        "-s",
+        help="Server URL. Defaults to the configured URL (see 'kanban config'). "
+        "Passing it also saves it as the configured URL.",
     ),
 ):
     """Login to the Kanban server."""
-    client = KanbanClient(server_url=server)
+    # Default to the configured URL so `kanban config --url ...` then `kanban
+    # login` works. Before this fell back to a hardcoded localhost, so login
+    # ignored config and quietly hit the wrong server.
+    server_url = server or get_server_url()
+    client = KanbanClient(server_url=server_url)
     try:
         token = client.login(username, password)
-        set_token(token)
-        rprint(f"Logged in as [green]{username}[/green]")
     except Exception as e:
         rprint(f"[red]Login failed: {e}[/red]")
         raise typer.Exit(1)
+    # Only after a successful login: the token was issued by server_url, so
+    # every later command has to talk to that same server. Persist an explicit
+    # --server so the token and the stored URL can't drift apart.
+    set_token(token)
+    if server is not None:
+        set_server_url(server_url)
+    rprint(f"Logged in as [green]{username}[/green]")
 
 
 @app.command("logout")

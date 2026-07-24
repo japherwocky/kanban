@@ -13,7 +13,7 @@ kanban login <username> --password PASSWORD [--server SERVER]
 **Options**
 
 - `--password`, `-p` (str) _(required)_ — Password
-- `--server`, `-s` (str) _(default: `http://localhost:8000`)_ — Server URL
+- `--server`, `-s` (str) — Server URL. Defaults to the configured URL (see 'kanban config'). Passing it also saves it as the configured URL.
 
 ## See Also
 
