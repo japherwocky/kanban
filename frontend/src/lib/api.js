@@ -1,5 +1,22 @@
 const API_BASE = '';
 
+// Set once we've started redirecting an expired session, so several in-flight
+// requests failing at the same time don't each kick off their own redirect.
+let redirectingToLogin = false;
+
+function handleExpiredSession() {
+  if (redirectingToLogin) return;
+  redirectingToLogin = true;
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  if (window.location.pathname !== '/login') {
+    // Mirror ProtectedRoute so the user lands back where they were after
+    // logging in again.
+    localStorage.setItem('redirectPath', window.location.pathname);
+    window.location.href = '/login';
+  }
+}
+
 export async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem('token');
   const headers = {
@@ -15,6 +32,15 @@ export async function apiFetch(endpoint, options = {}) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+    // A 401 on a request we sent a token with means the session is no longer
+    // valid (expired or revoked) -- the token passed ProtectedRoute's presence
+    // check but the server rejected it. Clear it and send the user to log in,
+    // instead of leaving them on a page that keeps firing doomed requests.
+    // Requests made without a token (e.g. a failed login) fall through and just
+    // surface their error as before.
+    if (response.status === 401 && token) {
+      handleExpiredSession();
+    }
     throw new Error(error.detail || 'Request failed');
   }
 
