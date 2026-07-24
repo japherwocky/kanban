@@ -108,7 +108,12 @@ def cmd_config(
 def cmd_login(
     username: str = typer.Argument(..., help="Username"),
     password: str = typer.Option(
-        ..., "--password", "-p", help="Password", hide_input=True
+        ...,
+        "--password",
+        "-p",
+        help="Password. Omit to be prompted (input hidden, stays out of shell history).",
+        hide_input=True,
+        prompt=True,
     ),
     server: Optional[str] = typer.Option(
         None,

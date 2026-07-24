@@ -4,6 +4,12 @@ from pathlib import Path
 
 CONFIG_FILE = Path(os.environ.get("KANBAN_CONFIG_PATH", Path.home() / ".kanban.yaml"))
 
+# Most installs talk to the hosted service, so default there rather than to a
+# localhost nobody is running -- a fresh `pip install` should reach a real
+# server on the first command, not a connection error. Self-hosters point
+# elsewhere with `kanban config --url http://localhost:8000`.
+DEFAULT_SERVER_URL = "https://kanban.pearachute.com"
+
 
 def ensure_config_dir():
     CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -12,10 +18,10 @@ def ensure_config_dir():
 def load_config():
     ensure_config_dir()
     if not CONFIG_FILE.exists():
-        return {"server": {"url": "http://localhost:8000"}, "auth": {}}
+        return {"server": {"url": DEFAULT_SERVER_URL}, "auth": {}}
     with open(CONFIG_FILE) as f:
         return yaml.safe_load(f) or {
-            "server": {"url": "http://localhost:8000"},
+            "server": {"url": DEFAULT_SERVER_URL},
             "auth": {},
         }
 
@@ -28,7 +34,7 @@ def save_config(config):
 
 def get_server_url():
     config = load_config()
-    return config.get("server", {}).get("url", "http://localhost:8000")
+    return config.get("server", {}).get("url", DEFAULT_SERVER_URL)
 
 
 def set_server_url(url):

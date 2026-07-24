@@ -10,14 +10,18 @@ Most users will connect to our hosted service at [kanban.pearachute.com](https:/
 pip install pkanban
 ```
 
-Configure the CLI to connect to the hosted service:
+The CLI connects to the hosted service at https://kanban.pearachute.com by
+default, so you can log in right away:
 
 ```bash
-kanban config --url https://kanban.pearachute.com
-kanban login <username> --password <password>
+kanban login <username>
 ```
 
+You'll be prompted for your password (it stays out of your shell history).
 That's it! You can now manage your boards from the command line.
+
+> Self-hosting? Point the CLI at your own server first with
+> `kanban config --url http://localhost:8000` — see [Self-Hosting](#self-hosting).
 
 ## Common Commands
 
@@ -49,12 +53,12 @@ For automation, CI/CD, or giving access to agents, use API keys instead of passw
 # Create a key (shown only once!)
 kanban apikey create "CI Agent"
 
-# Use it
-kanban --api-key kanban_abc123... board list
-
-# Or set it as an environment variable
-export KANBAN_API_KEY=kanban_abc123...
+# Save it once; subsequent commands use it automatically
+kanban apikey save kanban_abc123...
 kanban board list
+
+# Or pass it per command
+kanban --api-key kanban_abc123... board list
 ```
 
 API keys can be revoked and reactivated at any time. They're stored securely (bcrypt-hashed) and track their last usage.
@@ -122,9 +126,12 @@ The server runs at http://localhost:8000 by default.
 
 ### 3. Connect the CLI
 
+The CLI defaults to the hosted service, so point it at your local server first,
+then log in (you'll be prompted for the password):
+
 ```bash
 kanban config --url http://localhost:8000
-kanban login admin --password mypassword
+kanban login admin
 ```
 
 ## Development

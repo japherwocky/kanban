@@ -12,7 +12,7 @@ kanban login <username> --password PASSWORD [--server SERVER]
 
 **Options**
 
-- `--password`, `-p` (str) _(required)_ — Password
+- `--password`, `-p` (str) _(required)_ — Password. Omit to be prompted (input hidden, stays out of shell history).
 - `--server`, `-s` (str) — Server URL. Defaults to the configured URL (see 'kanban config'). Passing it also saves it as the configured URL.
 
 ## See Also
