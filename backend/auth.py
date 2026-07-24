@@ -38,10 +38,15 @@ def _secret_file_path() -> str:
 
 
 def _read_secret_file(path: str) -> str:
+    # Any failure to read means "no usable secret here" -- missing file, but
+    # also a non-directory in the path (NotADirectoryError) or a permission
+    # problem. Fall through to the create path, which turns the same OSError
+    # into an actionable message instead of a bare traceback. Catching only
+    # FileNotFoundError let NotADirectoryError escape raw on Linux.
     try:
         with open(path) as handle:
             return handle.read().strip()
-    except FileNotFoundError:
+    except OSError:
         return ""
 
 
