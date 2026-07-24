@@ -1,173 +1,238 @@
-# CLI Quick Start Guide for Agents
+# Quick Start
 
-This guide helps agents get up to speed quickly with the Kanban CLI tool for managing boards, organizations, and teams.
+Get from `pip install` to a working board in a couple of minutes. Every command
+below is copy-pasteable; the ones that print something show the output you
+should expect.
 
-## 🚀 Quick Setup
+This guide covers the day-to-day essentials. For the exhaustive list of
+commands and flags, see the [Command Reference](reference) and
+[All Commands](commands).
 
-### 1. Installation
+## 1. Install
+
 ```bash
 pip install pkanban
 ```
 
-### 2. Initial Configuration
-```bash
-# For hosted service (recommended)
-kanban config --url https://kanban.pearachute.com
+This gives you the `kanban` command. Check it:
 
-# OR for local development
+```bash
+kanban --version
+```
+
+## 2. Connect and log in
+
+Point the CLI at a server, then log in. The hosted service is the usual choice:
+
+```bash
+kanban config --url https://kanban.pearachute.com
+kanban login <your-username> --password <your-password>
+```
+
+```
+Server URL set to: https://kanban.pearachute.com
+Logged in as <your-username>
+```
+
+`login` uses whatever URL you configured, so you only set the URL once. Your
+token is saved to `~/.kanban.yaml` and reused by every later command — you stay
+logged in until you run `kanban logout`.
+
+Self-hosting instead? Point at your own server:
+
+```bash
 kanban config --url http://localhost:8000
 ```
 
-### 3. First Login
+> **Heads up:** the password is passed on the command line, so it lands in your
+> shell history. For anything unattended (CI, agents, scripts), use an
+> [API key](#4-automating-with-api-keys) instead of a password.
+
+Check your connection and identity any time:
+
 ```bash
-kanban login <username> --password <password>
+kanban config          # shows the current server URL
+kanban board list      # first thing to confirm you're authenticated
 ```
 
-## 📋 Core Concepts
+## 3. Your first board
 
-**Boards**: Kanban boards containing columns and cards  
-**Organizations**: Multi-tenant containers for teams and boards  
-**Teams**: Groups within organizations that can share boards  
+A new board starts **empty** — no columns, no cards. You add the columns you
+want, then drop cards into them. IDs are printed as you go; you'll pass them to
+the next command.
 
-## 🎯 Essential Commands (Must-Know)
+Create a board:
 
-### Basic Board Operations
 ```bash
-# List all boards you can access
-kanban board list
-
-# Create a new board
-kanban board create "My Project"
-
-# View board structure
-kanban board get <board-id>
-
-# Delete a board
-kanban board delete <board-id>
+kanban board create "Roadmap"
 ```
 
-### Card Management
-```bash
-# Create a card
-kanban card create <column-id> "Task title" --description "Details" --position 0
-
-# Update a card (move between columns)
-kanban card update <card-id> "Updated title" --column <new-column-id> --position 0
-
-# Delete a card
-kanban card delete <card-id>
+```
+Board created with id=7
 ```
 
-### Column Management
-```bash
-# Create a column
-kanban column create <board-id> "In Progress" 1
+Add a few columns. The last argument is the position (left to right, 0-based):
 
-# Delete a column
-kanban column delete <column-id>
+```bash
+kanban column create 7 "To Do" 0
+kanban column create 7 "In Progress" 1
+kanban column create 7 "Done" 2
 ```
 
-## 🏢 Organization & Team Commands
+```
+Column created with id=13
+Column created with id=14
+Column created with id=15
+```
 
-### Organization Management
+Add a card to the "To Do" column (id `13`):
+
 ```bash
-# List organizations
+kanban card create 13 "Ship v1" --description "Cut the first release" --position 0
+```
+
+```
+Card created with id=21
+```
+
+Now look at the whole board. `board get` is the command you'll reach for most —
+it prints every column and card with their IDs:
+
+```bash
+kanban board get 7
+```
+
+```
+Board: Roadmap
+  #13 To Do (1 cards)
+    - #21 Ship v1
+  #14 In Progress (0 cards)
+  #15 Done (0 cards)
+```
+
+Move the card to "In Progress" (id `14`) by updating its column:
+
+```bash
+kanban card update 21 "Ship v1" --column 14
+```
+
+That's the full loop: create a board, shape it with columns, and move cards
+across it.
+
+## 4. Automating with API keys
+
+For CI, scripts, or agents, authenticate with an API key instead of a password.
+Create one while logged in:
+
+```bash
+kanban apikey create "CI agent"
+```
+
+```
+API Key created!
+
+  Name:    CI agent
+  Key:     kanban_a1b2c3d4e5f6...
+  Prefix:  kanban_a....
+
+IMPORTANT: This key is shown only once! Copy it now and store it securely.
+```
+
+Save it once, and every later command uses it — no `kanban login` needed:
+
+```bash
+kanban apikey save kanban_a1b2c3d4e5f6...
+kanban board list          # now authenticated by the key
+```
+
+Manage keys as you'd expect:
+
+```bash
+kanban apikey list                 # see keys, when each was last used
+kanban apikey revoke <key-id>      # deactivate a key
+kanban apikey activate <key-id>    # turn it back on
+```
+
+Revoke a key the moment it leaks — that cuts off access without touching your
+password or other keys.
+
+## 5. Sharing with a team
+
+Boards are private to you until you share them. Sharing is **team-based**: you
+share a board with a team, and everyone on that team gets access. Teams live
+inside organizations, so the order is org → team → members → share.
+
+```bash
+kanban org create "Acme"                 # prints an org id
+kanban team create <org-id> "Engineering" # prints a team id
+kanban org member-add <org-id> <username> # add the person to the org
+kanban team member-add <team-id> <username> # then to the team
+kanban share 7 <team-id>                 # share board 7 with the team
+```
+
+Make a board private again at any time:
+
+```bash
+kanban share 7 private
+```
+
+Inspect what exists:
+
+```bash
 kanban org list
-
-# Create organization
-kanban org create "Company Name"
-
-# View organization details
-kanban org get <org-id>
-
-# Add member
-kanban org member-add <org-id> <username>
-
-# Remove member
-kanban org member-remove <org-id> <user-id>
-```
-
-### Team Management
-```bash
-# List teams in organization
+kanban org members <org-id>
 kanban team list --org-id <org-id>
-
-# Create team
-kanban team create <org-id> "Development Team"
-
-# View team details
-kanban team get <team-id>
-
-# Add member to team
-kanban team member-add <team-id> <username>
+kanban team members <team-id>
 ```
 
-### Board Sharing
-```bash
-# Share board with team
-kanban share <board-id> <team-id>
-
-# Make board private
-kanban share <board-id> private
-```
-
-## 🔧 Configuration & Auth
+Not everyone you want to share with has an account yet? Invite them:
 
 ```bash
-# View current config
-kanban config
-
-# Change server URL
-kanban config --url <new-url>
-
-# Login
-kanban login <username> --password <password>
-
-# Logout
-kanban logout
+kanban org invite-create <org-id> --email teammate@example.com
+kanban org invite-list <org-id>
 ```
 
-## 📊 Command Structure
+## How it fits together
 
-The CLI uses a nested structure:
-- **Root commands**: `kanban <command>` (boards, cards, columns)
-- **Organization sub-commands**: `kanban org <subcommand>`
-- **Team sub-commands**: `kanban team <subcommand>`
+```
+Organization
+  └─ Team ────────────── shared with ──┐
+       └─ Members                      │
+                                       ▼
+User ── owns ──► Board ─► Column ─► Card
+```
 
-## 💡 Pro Tips
+- **Boards** belong to a user and hold **columns**, which hold **cards**.
+- **Organizations** group people; **teams** are subsets of an org.
+- **Sharing** connects a board to a team — that's how other people see it.
 
-1. **Use `kanban board list` first** to see what you can access
-2. **Board IDs are numbers** - use them in other commands
-3. **Teams exist within organizations** - create org first, then teams
-4. **Board sharing is team-based** - share with teams, not individual users
-5. **Use `--help`** on any command for options: `kanban board create --help`
+## Common gotchas
 
-## 🚨 Common Gotchas
+- **New boards have no columns.** Create them yourself (step 3); there's no
+  default set.
+- **You need to be authenticated first.** Run `kanban login` (or save an API
+  key) before any board command, or you'll get an auth error.
+- **Positions are 0-based** for both columns and cards, ordered left-to-right
+  and top-to-bottom.
+- **Sharing replaces, it doesn't stack.** Sharing a board with a new team
+  removes the previous team's access rather than adding to it.
+- **IDs come from the command that made the thing.** `board get <id>` reprints
+  all of them if you lose track.
 
-- **Must login first** before any board operations
-- **Column positions** are 0-based integers
-- **Team operations require org-id** as a flag
-- **Board sharing replaces existing sharing** (not additive)
-- **Card positions** are relative within columns
+## Getting help
 
-## 🎭 Typical Agent Workflows
+Every command and subcommand supports `--help`, which lists its exact arguments
+and flags:
 
-### Setting up a new project:
 ```bash
-kanban board create "New Project"
-kanban board get <new-board-id>  # Get default columns
-kanban column create <board-id> "Backlog" 0
-kanban column create <board-id> "In Progress" 1
-kanban column create <board-id> "Done" 2
+kanban --help
+kanban board --help
+kanban card create --help
 ```
 
-### Setting up team collaboration:
-```bash
-kanban org create "Project Team"
-kanban team create <org-id> "Developers"
-kanban org member-add <org-id> <dev-username>
-kanban team member-add <team-id> <dev-username>
-kanban share <board-id> <team-id>
-```
+From here:
 
-This should get any agent productive with the Kanban CLI within minutes!
+- [Command Reference](reference) — every command, grouped and explained
+- [Common Workflows](workflows) — recipes for real tasks
+- [Authentication](auth) — tokens, API keys, and how sessions work
+- [Organizations & Teams](multi-tenant) — the multi-tenant model in depth
