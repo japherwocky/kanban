@@ -1,4 +1,6 @@
 import os
+import secrets
+import sys
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -8,7 +10,100 @@ from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 
 
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-this-in-production")
+# Secrets that have shipped in this repo as examples. The repo is public, so
+# anyone can sign a token with one and become any user. Refusing to start beats
+# running on a key an attacker can read off GitHub.
+PLACEHOLDER_SECRETS = frozenset(
+    {
+        "change-this-in-production",
+        "your-super-secret-jwt-key-here-change-this-in-production",
+    }
+)
+
+
+def _secret_file_path() -> str:
+    """Where a generated secret lives: beside the database, the other piece of
+    per-deployment state the service already owns and can write to."""
+    override = os.environ.get("JWT_SECRET_FILE")
+    if override:
+        return override
+
+    database_path = os.environ.get("DATABASE_PATH", "")
+    if database_path and not database_path.startswith("file:"):
+        directory = os.path.dirname(os.path.abspath(database_path))
+    else:
+        # No database file to sit next to (unset, or an in-memory URI).
+        directory = os.getcwd()
+    return os.path.join(directory, ".jwt_secret")
+
+
+def _read_secret_file(path: str) -> str:
+    try:
+        with open(path) as handle:
+            return handle.read().strip()
+    except FileNotFoundError:
+        return ""
+
+
+def _read_or_create_secret(path: str) -> str:
+    existing = _read_secret_file(path)
+    if existing:
+        return existing
+
+    generated = secrets.token_urlsafe(48)
+    try:
+        # O_EXCL so two workers starting at once cannot install competing
+        # secrets -- whoever loses the race reads the winner's file instead,
+        # and every process ends up signing with the same key.
+        descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        return _read_secret_file(path) or generated
+    except OSError as exc:
+        raise RuntimeError(
+            f"Could not write a JWT signing key to {path}: {exc}\n"
+            "Set JWT_SECRET_KEY in the environment, or point JWT_SECRET_FILE at "
+            "a writable path.\n"
+            "Generate one with: "
+            'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+        ) from exc
+
+    with os.fdopen(descriptor, "w") as handle:
+        handle.write(generated)
+
+    print(
+        f"kanban: no JWT_SECRET_KEY set, generated a signing key at {path}.\n"
+        "kanban: existing sessions are now invalid; users will need to log in "
+        "again.\n"
+        "kanban: set JWT_SECRET_KEY explicitly to manage the key yourself.",
+        file=sys.stderr,
+    )
+    return generated
+
+
+def _load_secret_key() -> str:
+    """Resolve the JWT signing key, refusing to fall back to a public constant.
+
+    An explicit JWT_SECRET_KEY always wins. Unset, we generate a real key and
+    persist it rather than failing to boot -- a self-hosted install that never
+    configured one should end up secure, not down.
+    """
+    configured = os.environ.get("JWT_SECRET_KEY", "").strip()
+    if configured in PLACEHOLDER_SECRETS:
+        raise RuntimeError(
+            "JWT_SECRET_KEY is still set to the example value from this "
+            "repository, which is public -- anyone could forge a login token "
+            "for any account.\n"
+            "Replace it with a real secret: "
+            'python -c "import secrets; print(secrets.token_urlsafe(48))"\n'
+            "Or unset JWT_SECRET_KEY entirely and one will be generated for you."
+        )
+    if configured:
+        return configured
+
+    return _read_or_create_secret(_secret_file_path())
+
+
+SECRET_KEY = _load_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 

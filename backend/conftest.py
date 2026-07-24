@@ -18,6 +18,11 @@ import os
 # empty database; cache=shared makes them the same one for the process.
 os.environ["DATABASE_PATH"] = "file:kanban_test?mode=memory&cache=shared"
 
+# Also set before import: backend.auth resolves its signing key at import time
+# and would otherwise generate one and write it to disk. Tests get a fixed key
+# so token fixtures are reproducible and the suite leaves no files behind.
+os.environ["JWT_SECRET_KEY"] = "test-only-signing-key-not-used-anywhere-real"
+
 import pytest  # noqa: E402
 import random  # noqa: E402
 import string  # noqa: E402

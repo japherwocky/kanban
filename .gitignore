@@ -9,6 +9,7 @@ venv/
 env/
 .venv/
 .env
+.jwt_secret
 *.db
 *.sqlite3
 *.egg-info/

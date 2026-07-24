@@ -125,9 +125,43 @@ sudo -u kanban cp /opt/kanban/sys/config/production.env /opt/kanban/.env
 
 Edit `/opt/kanban/.env` to configure:
 - Database path
-- JWT secret key (change this!)
+- JWT secret key (optional -- see below)
 - CORS origins
 - Email settings (optional)
+
+The systemd unit loads this file via `EnvironmentFile=`. If you are upgrading
+an install from before that line existed, reinstall the unit so your settings
+actually reach the service:
+
+```bash
+sudo cp /opt/kanban/sys/systemd/kanban.service /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl restart kanban
+```
+
+Confirm what the running service actually has:
+
+```bash
+systemctl show kanban --property=Environment
+```
+
+### JWT signing key
+
+You do not have to set one. With `JWT_SECRET_KEY` unset the service generates a
+random key on first start and stores it in `.jwt_secret` beside the database
+(mode 0600), reusing it across restarts.
+
+To manage the key yourself, generate one and put it in `/opt/kanban/.env`:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+The service **refuses to start** if `JWT_SECRET_KEY` is left as an example
+value from this repository. The repo is public, so those values are known to
+everyone -- a token signed with one can be forged for any account.
+
+Changing the key invalidates every existing session, so expect users to log in
+again after the first restart.
 
 ### Service Management
 
@@ -221,7 +255,10 @@ sudo certbot --nginx -d kanban.pearachute.com --force-renewal
 
 ## Security Considerations
 
-1. **Change JWT Secret**: Always change the JWT secret key in production
+1. **JWT Secret**: Never run on an example key. The service generates a real
+   one if you set nothing, and refuses to start on a placeholder -- but verify
+   with `systemctl show kanban --property=Environment` that what you *think*
+   is configured is what the process actually received
 2. **Regular Updates**: Keep system packages updated
 3. **Backups**: Regularly backup the SQLite database
 4. **Firewall**: Configure UFW or similar firewall

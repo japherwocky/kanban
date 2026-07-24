@@ -10,6 +10,10 @@ WorkingDirectory=/opt/kanban
 Environment=PATH=/opt/kanban/venv/bin
 Environment=DATABASE_PATH=/opt/kanban/kanban.db
 Environment=STATIC_PATH=/opt/kanban/backend/static
+# DEPLOYMENT.md tells operators to put their config here. Without this line it
+# was never read, so a JWT_SECRET_KEY set in that file had no effect at all.
+# Leading "-" keeps the service startable when the file does not exist.
+EnvironmentFile=-/opt/kanban/.env
 ExecStart=/opt/kanban/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8080 --app-dir /opt/kanban
 Restart=always
 RestartSec=10
