@@ -81,3 +81,18 @@ def clear_api_key():
     if "auth" in config:
         config["auth"].pop("api_key", None)
         save_config(config)
+
+
+# In-memory only, for `--api-key`/`-k` passed on a single command line. Must
+# never touch disk -- persisting it would silently overwrite the user's saved
+# token/API key just because they authenticated one command that way.
+_runtime_api_key = None
+
+
+def set_runtime_api_key(api_key):
+    global _runtime_api_key
+    _runtime_api_key = api_key
+
+
+def get_runtime_api_key():
+    return _runtime_api_key

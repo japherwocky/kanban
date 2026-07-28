@@ -14,6 +14,8 @@ from kanban.config import (
     clear_token,
     get_api_key,
     set_api_key,
+    get_runtime_api_key,
+    set_runtime_api_key,
 )
 
 app = typer.Typer(
@@ -79,6 +81,9 @@ def describe_http_error(e):
 
 
 def make_client():
+    runtime_api_key = get_runtime_api_key()
+    if runtime_api_key:
+        return KanbanClient(api_key=runtime_api_key)
     token = get_token()
     api_key = get_api_key()
     if not token and not api_key:
@@ -659,9 +664,9 @@ def main():
             # Remove --api-key and the key from sys.argv
             sys.argv.pop(idx)
             sys.argv.pop(idx)
-            # Set the API key for this command
-            clear_token()
-            set_api_key(api_key)
+            # Use this key for this invocation only -- do not touch the
+            # stored token/API key in ~/.kanban.yaml.
+            set_runtime_api_key(api_key)
 
     try:
         app()

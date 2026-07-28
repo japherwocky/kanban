@@ -163,6 +163,53 @@ def test_cli_logout_command():
     assert get_token() is None
 
 
+def test_cli_api_key_flag_does_not_persist_to_config():
+    """`kanban --api-key <key> <command>` must authenticate that one
+    invocation without overwriting the user's saved token/API key on disk
+    (regression: it used to call clear_token()+set_api_key(), silently
+    logging the user out and persisting the key to ~/.kanban.yaml)."""
+    import sys
+    from kanban import cli
+    from kanban.config import (
+        set_token,
+        get_token,
+        get_api_key,
+        set_runtime_api_key,
+        get_runtime_api_key,
+    )
+
+    set_token("existing-session-token")
+    set_runtime_api_key(None)
+
+    argv = ["kanban", "--api-key", "kanban_test_key", "board", "list"]
+    with patch.object(sys, "argv", argv):
+        with patch("kanban.cli.app"):
+            cli.main()
+
+    try:
+        assert get_runtime_api_key() == "kanban_test_key"
+        assert get_token() == "existing-session-token"
+        assert get_api_key() is None
+    finally:
+        set_runtime_api_key(None)
+
+
+def test_make_client_prefers_runtime_api_key_over_stored_credentials():
+    from kanban.cli import make_client
+    from kanban.config import set_token, set_runtime_api_key
+
+    set_token("stored-token")
+    set_runtime_api_key("kanban_runtime_key")
+
+    try:
+        client = make_client()
+        assert client.api_key == "kanban_runtime_key"
+        assert client.session.headers["X-API-Key"] == "kanban_runtime_key"
+        assert "Authorization" not in client.session.headers
+    finally:
+        set_runtime_api_key(None)
+
+
 def test_cli_boards_command(client, auth_headers, test_user):
     from kanban.cli import cmd_boards
     from kanban.config import set_token
