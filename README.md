@@ -106,7 +106,7 @@ Want to run your own server? Here's how:
 ### 1. Clone and setup
 
 ```bash
-git clone https://github.com/pearachute/kanban.git
+git clone https://github.com/japherwocky/kanban.git
 cd kanban
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate

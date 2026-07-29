@@ -12,7 +12,7 @@ This guide will help you deploy the Kanban Board application to production on an
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/pearachute/kanban.git /opt/kanban
+   git clone https://github.com/japherwocky/kanban.git /opt/kanban
    cd /opt/kanban
    ```
 
@@ -56,7 +56,7 @@ sudo chown -R kanban:kanban /opt/kanban
 
 ```bash
 # Clone repository
-sudo -u kanban git clone https://github.com/pearachute/kanban.git /opt/kanban
+sudo -u kanban git clone https://github.com/japherwocky/kanban.git /opt/kanban
 
 # Setup virtual environment
 sudo -u kanban python3 -m venv /opt/kanban/venv
