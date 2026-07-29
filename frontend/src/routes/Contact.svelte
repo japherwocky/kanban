@@ -18,7 +18,7 @@
 
       <div class="contact-item">
         <h3>Location</h3>
-        <p>Portland, OR</p>
+        <p>Michigan</p>
       </div>
     </section>
 
