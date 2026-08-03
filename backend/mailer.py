@@ -23,7 +23,13 @@ SEND_TIMEOUT_SECONDS = 10
 
 
 def _from_address() -> str:
-    return os.environ.get("RESEND_FROM", "Kanban <noreply@kanban.pearachute.com>")
+    # pearachute.com, not kanban.pearachute.com. In Resend a subdomain is a
+    # separate domain with its own DKIM records, and only the apex is
+    # verified -- it is also what the pearachute.com site sends from, so both
+    # apps share one verified domain. A default pointing at an unverified
+    # subdomain would have every send rejected while signup still succeeded,
+    # visible only in the service log.
+    return os.environ.get("RESEND_FROM", "Kanban <noreply@pearachute.com>")
 
 
 def public_base_url() -> str:

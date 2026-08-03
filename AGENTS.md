@@ -48,8 +48,12 @@ Server-side:
 
 - `RESEND_API_KEY`: Resend key for outbound email. Unset, mail is printed to
   stderr instead of sent — which is how local development works without a key.
-- `RESEND_FROM`: Sender address (default `Kanban <noreply@kanban.pearachute.com>`).
-  The domain must be verified in Resend.
+- `RESEND_FROM`: Sender address (default `Kanban <noreply@pearachute.com>`).
+  The domain must be verified in Resend, and a subdomain counts as a separate
+  domain there — hence the apex, which the main pearachute.com site also sends
+  from. Sending from an unverified domain fails every time, silently as far as
+  the user is concerned: signup still succeeds and the rejection only appears
+  in the service log.
 - `PUBLIC_BASE_URL`: Origin used to build links in email (default
   `https://kanban.pearachute.com`).
 
