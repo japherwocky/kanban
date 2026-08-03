@@ -75,3 +75,79 @@ def test_api_routes_still_work(client, test_user):
     response = client.get("/api/boards", headers=headers)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+
+
+def test_health_endpoint_reports_ok(client, db_session):
+    """The deploy pipeline gates on this response body."""
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_health_endpoint_is_public(client, db_session):
+    """No auth: the deploy check has no credentials."""
+    response = client.get("/api/health", headers={})
+    assert response.status_code == 200
+
+
+def test_health_is_a_real_route_not_the_spa_fallback(client, db_session):
+    """Regression guard for the check that could never fail.
+
+    An undefined /api/... path falls through to the SPA catch-all in main.py
+    and returns 200 with index.html. The deploy used to curl /api/health --
+    which did not exist -- and accept that as healthy. If this route is ever
+    removed, this test fails instead of the deploy silently going green.
+    """
+    response = client.get("/api/health")
+    assert "text/html" not in response.headers["content-type"]
+    assert response.headers["content-type"].startswith("application/json")
+
+
+def test_health_reports_503_when_the_database_is_broken(client, db_session, monkeypatch):
+    """A schema or connection failure must surface, not be swallowed.
+
+    This is the case the old check missed entirely: an unmigrated database
+    500s every real request while static files keep serving fine.
+    """
+    from backend.models import User
+
+    def boom(*args, **kwargs):
+        raise Exception("no such column: t1.email_verified")
+
+    monkeypatch.setattr(User, "select", boom)
+
+    response = client.get("/api/health")
+    assert response.status_code == 503
+    assert "Database unavailable" in response.json()["detail"]
+
+
+def test_health_query_names_every_user_column(client, db_session, monkeypatch):
+    """The health query must select real columns, not just count rows.
+
+    Regression guard with history: this endpoint originally used
+    User.select().limit(1).count(), which peewee compiles to
+    SELECT COUNT(1) FROM (SELECT 1 FROM user LIMIT 1). That names no model
+    columns, so it returned 200 against an unmigrated copy of production
+    while /api/token was dying on "no such column: t1.email_verified" --
+    the endpoint reproduced the exact blind spot it exists to close.
+
+    Simulated by failing any statement that mentions the newest column. A
+    query that does not reference it never trips this and the assertion below
+    fails, which is the point.
+    """
+    from backend.database import db
+
+    original = db.execute_sql
+
+    def fail_on_new_column(sql, *args, **kwargs):
+        if "email_verified" in str(sql):
+            raise Exception("no such column: t1.email_verified")
+        return original(sql, *args, **kwargs)
+
+    monkeypatch.setattr(db, "execute_sql", fail_on_new_column)
+
+    response = client.get("/api/health")
+    assert response.status_code == 503, (
+        "health passed without ever selecting email_verified -- it would not "
+        "notice an unmigrated database"
+    )

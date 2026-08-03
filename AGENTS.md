@@ -44,6 +44,39 @@ kanban --help
 - `KANBAN_CONFIG_PATH`: Path to config file (default: ~/.kanban.yaml)
 - `KANBAN_API_KEY`: Default API key for authentication
 
+Server-side:
+
+- `RESEND_API_KEY`: Resend key for outbound email. Unset, mail is printed to
+  stderr instead of sent — which is how local development works without a key.
+- `RESEND_FROM`: Sender address (default `Kanban <noreply@kanban.pearachute.com>`).
+  The domain must be verified in Resend.
+- `PUBLIC_BASE_URL`: Origin used to build links in email (default
+  `https://kanban.pearachute.com`).
+
+### Signup and Email Verification
+
+Signup is self-serve and open: `POST /api/signup` takes `{username, email,
+password}` and creates the account with `email_verified=False`, then emails a
+link. `POST /api/token` returns **403 "Email not verified"** until
+`POST /api/verify-email` consumes that token, which also returns a JWT so the
+user lands logged in.
+
+Two things to keep in mind when touching this:
+
+- `User.create_user()` defaults to `email_verified=True`. Admin- and
+  CLI-created accounts are trusted; only the signup endpoint passes False.
+  Flipping that default would make `manage.py user-create` produce accounts
+  that cannot log in.
+- Signup grants no organization access whatsoever. Joining an existing org
+  happens only via an owner calling `POST /organizations/{id}/members` or via
+  an `OrganizationInvite` token. Don't add an org field to signup.
+
+There is no rate limiting anywhere in the stack. The 60-second per-account
+resend cooldown is the only brake on outbound verification mail.
+
+Deploying this needs no manual migration step — `sys/scripts/deploy.sh` now runs
+`manage.py migrate` before restarting the service. See Database Migrations below.
+
 ### Running the Server
 
 ```bash
@@ -74,7 +107,47 @@ python manage.py user-create <username> <password> [--email EMAIL] [--admin]
 
 # Check database status
 python manage.py status
+
+# Apply pending migrations
+python manage.py migrate
+
+# Show what is applied and what is pending, without running anything
+python manage.py migrate --list
 ```
+
+### Database Migrations
+
+Migrations live in `backend/migrations/` and run under **peewee-migrate**.
+`sys/scripts/deploy.sh` calls `manage.py migrate` on every deploy, before the
+service restarts, and a failure aborts the deploy — the service keeps serving
+the old code rather than starting against a schema it does not match.
+
+Applied migrations are recorded in a `migratehistory` table, so running the
+command repeatedly is cheap and safe.
+
+Writing a new one — name it `NNN_description.py` (the three-digit prefix is how
+peewee-migrate finds and orders them) and define:
+
+```python
+def migrate(migrator, database, *, fake=False):
+    ...
+
+def rollback(migrator, database, *, fake=False):
+    ...
+```
+
+Two conventions worth keeping:
+
+- **Make it idempotent.** Check before you alter. Production applied migration
+  001 by hand years before there was a history table, and a fresh install gets
+  most columns from `create_tables()` in `init_db()` — so a migration routinely
+  meets a database that already has some of its changes.
+- **Match peewee's index names.** `create_tables()` names the index for
+  `email = CharField(unique=True)` as `user_email`. A migration that invents its
+  own name leaves fresh installs and migrated databases with different schemas.
+
+`init_db()` still creates *new tables* from the models on startup, so a
+migration only needs to handle columns, indexes and data.
 
 ### Running Tests
 

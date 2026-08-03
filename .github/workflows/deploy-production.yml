@@ -163,12 +163,26 @@ jobs:
           # Wait for service to be fully ready
           sleep 10
 
-          # Check if the application is responding
-          if curl -f -s -o /dev/null -w "%{http_code}" https://kanban.pearachute.com/api/health | grep -q "200\|404"; then
-            echo "✅ Application is responding"
+          # This step used to accept "200|404" against /api/health, an
+          # endpoint that did not exist. Undefined /api/... paths fall through
+          # to the SPA catch-all and return 200 with index.html, so the check
+          # passed unconditionally -- a broken database, a 500ing API and an
+          # unmigrated schema all reported success.
+          #
+          # /api/health now exists and queries the database, so a schema or
+          # connection problem surfaces as 503. Match on the JSON body rather
+          # than the status code alone, so the SPA fallback cannot satisfy it
+          # again if the route is ever removed.
+          BODY=$(curl -s --max-time 15 https://kanban.pearachute.com/api/health || true)
+          echo "Health response: $BODY"
+
+          if echo "$BODY" | grep -q '"status":"ok"'; then
+            echo "✅ Application is healthy"
           else
-            echo "❌ Application is not responding"
-            curl -I https://kanban.pearachute.com
+            echo "❌ Health check failed"
+            echo "--- /api/health ---"
+            curl -s -i --max-time 15 https://kanban.pearachute.com/api/health || true
+            echo "--- service logs ---"
             exit 1
           fi
 

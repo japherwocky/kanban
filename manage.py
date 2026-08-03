@@ -7,6 +7,7 @@ Usage:
     python manage.py wipe                         # Wipe database (destructive)
     python manage.py user-create <user> <pass>    # Create a user
     python manage.py server                       # Run the server
+    python manage.py migrate                      # Apply pending migrations
     python manage.py status                       # Show database status
 """
 import argparse
@@ -17,10 +18,15 @@ import subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from backend.database import db
-from backend.models import User, Board, Column, Card, Comment, Organization, OrganizationMember, Team, TeamMember
+from backend.models import ALL_MODELS, User
 
 
-TABLES = [User, Board, Column, Card, Comment, Organization, OrganizationMember, Team, TeamMember]
+# Read from backend.models rather than maintaining a second list. The old
+# hand-written copy here fell three tables behind (ApiKey, BetaSignup,
+# OrganizationInvite), so `init` built an incomplete schema and `status`
+# under-reported. This only ever went unnoticed because init_db() creates the
+# missing tables when the server next starts.
+TABLES = ALL_MODELS
 
 
 def cmd_init(args=None):
@@ -90,6 +96,65 @@ def cmd_server(args):
         print("\nServer stopped.")
 
 
+MIGRATIONS_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "backend", "migrations"
+)
+
+
+def _router():
+    import logging
+    from peewee_migrate import Router
+
+    # peewee-migrate reports what it applies through this logger; without a
+    # handler the deploy log would show nothing but our own prints.
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+    db.connect(reuse_if_open=True)
+    return Router(db, migrate_dir=MIGRATIONS_DIR)
+
+
+def cmd_migrate(args):
+    """Apply any migrations this database has not seen yet.
+
+    Safe to run on every deploy: peewee-migrate records applied migrations in
+    a migratehistory table and skips them next time. Each migration runs in a
+    transaction, so a failure rolls back rather than leaving a half-migrated
+    schema.
+    """
+    router = _router()
+
+    if args.list:
+        done = router.done
+        todo = [name for name in router.todo if name not in done]
+        print(f"Database: {db.database}")
+        print("Applied:")
+        for name in done or ["  (none)"]:
+            print(f"  {name}" if done else name)
+        print("Pending:")
+        for name in todo or ["  (none)"]:
+            print(f"  {name}" if todo else name)
+        return
+
+    pending = [name for name in router.todo if name not in router.done]
+    if not pending:
+        print("No pending migrations.")
+        return
+
+    print(f"Applying {len(pending)} migration(s): {', '.join(pending)}")
+    try:
+        applied = router.run(fake=args.fake)
+    except Exception as e:
+        # Non-zero exit matters: deploy.sh runs under `set -e`, and a deploy
+        # that restarts the service against an unmigrated database is an
+        # outage, not a warning.
+        print(f"\nMigration failed: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    for name in applied:
+        print(f"  applied {name}")
+    print("Migrations complete.")
+
+
 def cmd_status(args=None):
     """Show database status."""
     db.connect()
@@ -135,6 +200,11 @@ def main():
     sp_server.add_argument("--no-reload", dest="reload", action="store_false", help="Disable auto-reload")
     sp_server.set_defaults(func=cmd_server)
 
+    sp_migrate = subparsers.add_parser("migrate", help="Apply pending database migrations")
+    sp_migrate.add_argument("--list", action="store_true", help="Show applied and pending migrations without running any")
+    sp_migrate.add_argument("--fake", action="store_true", help="Record migrations as applied without running them")
+    sp_migrate.set_defaults(func=cmd_migrate)
+
     sp_status = subparsers.add_parser("status", help="Show database status")
     sp_status.set_defaults(func=cmd_status)
 
@@ -147,6 +217,7 @@ def main():
         print("  wipe               Wipe database (destructive)")
         print("  user-create        Create a new user")
         print("  server             Run the development server")
+        print("  migrate            Apply pending database migrations")
         print("  status             Show database status")
         print("\nServer options:")
         print("  --host HOST        Host to bind to (default: 0.0.0.0)")

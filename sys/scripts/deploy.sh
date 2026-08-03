@@ -38,17 +38,24 @@ git_pull() {
     echo "Code updated"
 }
 
-# Function to update dependencies (if requirements changed)
+# Function to update dependencies
 update_dependencies() {
-    echo -e "${YELLOW}📦 Checking Python dependencies...${NC}"
+    echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
 
-    # Check if requirements.txt changed
-    if git diff --name-only HEAD~1 HEAD | grep -q "backend/requirements.txt"; then
-        echo "Requirements changed, updating..."
-        $DEPLOY_DIR/venv/bin/pip install -r $DEPLOY_DIR/backend/requirements.txt
-    else
-        echo "Requirements unchanged, skipping"
-    fi
+    # Unconditional, for the same reason as run_migrations below. The old
+    # `git diff HEAD~1 HEAD` guard only inspected the final commit of a push,
+    # so a multi-commit push that touched requirements.txt in an earlier
+    # commit skipped this entirely and left production missing a package.
+    #
+    # It also has to run before run_migrations: the migration runner imports
+    # peewee-migrate, so gating this step would mean the very deploy that
+    # introduces a dependency is the one that cannot use it.
+    #
+    # pip is a no-op when everything is already satisfied, so the cost of
+    # running it every time is a few seconds.
+    $DEPLOY_DIR/venv/bin/pip install -q -r $DEPLOY_DIR/backend/requirements.txt
+
+    echo "Dependencies up to date"
 }
 
 # Function to build frontend
@@ -66,16 +73,22 @@ build_frontend() {
 
 # Function to run database migrations
 run_migrations() {
-    echo -e "${YELLOW}🗄️ Checking for database migrations...${NC}"
+    echo -e "${YELLOW}🗄️ Running database migrations...${NC}"
 
-    # Check if migration files changed
-    if git diff --name-only HEAD~1 HEAD | grep -q "backend/migrations/"; then
-        echo "Migration files changed, checking database..."
-        # Add migration logic here if needed
-        echo "Migrations complete"
-    else
-        echo "No migrations needed"
-    fi
+    # Run unconditionally rather than gating on `git diff HEAD~1 HEAD`.
+    # peewee-migrate records what it has applied and skips the rest, so an
+    # up-to-date database costs one query. Gating on the diff was how this
+    # step silently did nothing: it only ever inspected the final commit of a
+    # push, and the body was a stub that printed success without running
+    # anything.
+    #
+    # This must happen before restart_service. The old code is still serving
+    # traffic at this point and does not know about the new columns, so
+    # migrating first means the new code never starts against an old schema.
+    cd $DEPLOY_DIR
+    $DEPLOY_DIR/venv/bin/python manage.py migrate
+
+    echo "Migrations complete"
 }
 
 # Function to restart service

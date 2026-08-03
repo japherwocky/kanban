@@ -553,6 +553,39 @@ async def resend_verification(
     return generic
 
 
+@api.get("/health")
+async def health():
+    """Liveness check for the deploy pipeline. Public, no auth.
+
+    Deliberately fetches a User row rather than returning a constant. A
+    constant would pass while the schema was unmigrated, which is exactly the
+    outage this is meant to catch.
+
+    It must be .first() and not .count(): peewee compiles .count() to
+    SELECT COUNT(1) FROM (SELECT 1 FROM user LIMIT 1), which names none of the
+    model's columns and therefore happily succeeds against a database missing
+    one. .first() emits the full column list, so a missing column fails here
+    the same way it fails for a real request. Verified against an unmigrated
+    copy of production, where .count() reported healthy while /api/token was
+    raising "no such column: t1.email_verified".
+
+    An empty table is fine -- the SELECT still names every column, so this
+    works on a brand new install with no users.
+
+    Note the endpoint has to exist for the check to mean anything: an
+    undefined /api/... path falls through to the SPA catch-all in main.py and
+    returns 200 with index.html, so a missing endpoint looks healthy.
+    """
+    try:
+        User.select().limit(1).first()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database unavailable: {exc}",
+        )
+    return {"status": "ok"}
+
+
 @api.get("/admin/status")
 async def admin_status(current_user: User = Depends(get_current_user_or_api_key)):
     """Check if current user has admin access"""
