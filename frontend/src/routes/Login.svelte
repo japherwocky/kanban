@@ -2,9 +2,18 @@
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
   import BetaSection from '../components/BetaSection.svelte';
+  import { api } from '../lib/api.js';
+
+  // Must match UNVERIFIED_EMAIL_DETAIL in backend/api.py.
+  const UNVERIFIED_DETAIL = 'Email not verified';
 
   let username = $state('');
   let password = $state('');
+  let error = $state(null);
+  let unverified = $state(false);
+  let resendEmail = $state('');
+  let resendNote = $state(null);
+  let resending = $state(false);
 
   onMount(() => {
     const token = localStorage.getItem('token');
@@ -16,6 +25,9 @@
   });
 
   async function login() {
+    error = null;
+    unverified = false;
+    resendNote = null;
     try {
       const res = await fetch('/api/token', {
         method: 'POST',
@@ -29,11 +41,33 @@
         const redirectPath = localStorage.getItem('redirectPath') || '/boards';
         localStorage.removeItem('redirectPath');
         navigate(redirectPath);
+        return;
+      }
+      // The body distinguishes "wrong password" from "correct password, but
+      // you never clicked the verification link" -- the second is recoverable
+      // and deserves a resend button rather than a dead end.
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 403 && body.detail === UNVERIFIED_DETAIL) {
+        unverified = true;
+        error = 'Verify your email address before logging in.';
       } else {
-        alert('Login failed');
+        error = body.detail || 'Login failed';
       }
     } catch (e) {
-      alert('Login failed: ' + e.message);
+      error = 'Login failed: ' + e.message;
+    }
+  }
+
+  async function resend() {
+    resending = true;
+    resendNote = null;
+    try {
+      const result = await api.auth.resendVerification(resendEmail);
+      resendNote = result.message;
+    } catch (e) {
+      resendNote = e.message;
+    } finally {
+      resending = false;
     }
   }
 </script>
@@ -42,10 +76,30 @@
   <div class="login">
     <h1>Kanban Board</h1>
     <form onsubmit={(e) => { e.preventDefault(); login(); }}>
-      <input bind:value={username} placeholder="Username" required />
-      <input type="password" bind:value={password} placeholder="Password" required />
+      <input bind:value={username} placeholder="Username" required autocomplete="username" />
+      <input type="password" bind:value={password} placeholder="Password" required autocomplete="current-password" />
+      {#if error}
+        <p class="error">{error}</p>
+      {/if}
       <button type="submit">Login</button>
     </form>
+
+    {#if unverified}
+      <!-- Asks for the address rather than showing it: the server will not
+           tell an unauthenticated caller which email an account uses. -->
+      <div class="resend">
+        <p class="hint">Enter your email and we'll send a new verification link.</p>
+        <input type="email" bind:value={resendEmail} placeholder="Email" autocomplete="email" />
+        <button class="secondary" onclick={resend} disabled={resending || !resendEmail}>
+          {resending ? 'Sending...' : 'Resend verification email'}
+        </button>
+        {#if resendNote}
+          <p class="hint">{resendNote}</p>
+        {/if}
+      </div>
+    {/if}
+
+    <p class="alt">Need an account? <a href="/signup">Sign up</a></p>
 
     <BetaSection
       marginTop="2rem"
@@ -133,5 +187,56 @@
 
   .login button[type="submit"]:hover {
     opacity: 0.9;
+  }
+
+  .error {
+    color: var(--color-destructive);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .resend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+  }
+
+  .resend button.secondary {
+    background: transparent;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+  }
+
+  .resend button.secondary:hover:not(:disabled) {
+    background: var(--color-accent);
+  }
+
+  .resend button.secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .hint {
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    margin: 0;
+  }
+
+  .alt {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .alt a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .alt a:hover {
+    text-decoration: underline;
   }
 </style>

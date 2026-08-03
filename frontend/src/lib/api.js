@@ -256,4 +256,20 @@ export const api = {
     get: (token) => apiFetch(`/api/invites/${token}`),
     accept: (token) => apiFetch(`/api/invites/${token}/accept`, { method: 'POST' }),
   },
+  auth: {
+    // All unauthenticated. apiFetch only force-logs-out on a 401 when a token
+    // was actually sent, so these surface their errors normally.
+    signup: (username, email, password) => apiFetch('/api/signup', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password }),
+    }),
+    verifyEmail: (token) => apiFetch('/api/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
+    resendVerification: (email) => apiFetch('/api/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  },
 };
