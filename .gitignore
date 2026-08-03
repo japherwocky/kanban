@@ -16,3 +16,4 @@ env/
 .DS_Store
 node_modules/
 backend/static/
+.claude/

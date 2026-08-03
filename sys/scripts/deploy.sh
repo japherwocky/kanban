@@ -86,7 +86,27 @@ run_migrations() {
     # traffic at this point and does not know about the new columns, so
     # migrating first means the new code never starts against an old schema.
     cd $DEPLOY_DIR
-    $DEPLOY_DIR/venv/bin/python manage.py migrate
+
+    # Migrate the database the SERVICE uses, which is not necessarily the one
+    # manage.py would pick on its own. systemd sets DATABASE_PATH from
+    # /opt/kanban/.env (EnvironmentFile) falling back to the Environment= line
+    # in kanban.service; this shell has neither, so without the lookup below
+    # manage.py defaults to ./kanban.db and would happily migrate the wrong
+    # file -- leaving the live database untouched and unmigrated.
+    #
+    # Read rather than sourced: .env is systemd-format, where values are
+    # literal to end of line, so `RESEND_FROM=Kanban <noreply@...>` is valid
+    # there but would be a redirect to bash.
+    DB_PATH=""
+    if [ -f "$DEPLOY_DIR/.env" ]; then
+        DB_PATH=$(grep -E '^[[:space:]]*DATABASE_PATH=' "$DEPLOY_DIR/.env" \
+            | tail -1 | cut -d= -f2- | tr -d '"'"'"'' | xargs)
+    fi
+    # Matches Environment=DATABASE_PATH in sys/systemd/kanban.service.
+    DB_PATH="${DB_PATH:-$DEPLOY_DIR/kanban.db}"
+
+    echo "Target database: $DB_PATH"
+    DATABASE_PATH="$DB_PATH" $DEPLOY_DIR/venv/bin/python manage.py migrate
 
     echo "Migrations complete"
 }

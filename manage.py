@@ -135,6 +135,11 @@ def cmd_migrate(args):
             print(f"  {name}" if todo else name)
         return
 
+    # Always name the database. There is more than one plausible path on a
+    # deployed box, and "which file did that actually touch" is the first
+    # question when a migration appears to have done nothing.
+    print(f"Database: {db.database}")
+
     pending = [name for name in router.todo if name not in router.done]
     if not pending:
         print("No pending migrations.")
