@@ -2,7 +2,21 @@ import os
 import yaml
 from pathlib import Path
 
-CONFIG_FILE = Path(os.environ.get("KANBAN_CONFIG_PATH", Path.home() / ".kanban.yaml"))
+DEFAULT_CONFIG_FILE = Path.home() / ".kanban.yaml"
+
+
+def config_file():
+    """Where the config lives, resolved per call rather than at import.
+
+    This used to be a module-level constant, which made KANBAN_CONFIG_PATH
+    effective only if it was set before kanban.config was first imported.
+    Anything importing the CLI earlier than that -- a test module doing so at
+    collection time, before its fixture sets the variable -- silently bound
+    the real ~/.kanban.yaml instead, and every later write landed on the
+    developer's own credentials.
+    """
+    return Path(os.environ.get("KANBAN_CONFIG_PATH", DEFAULT_CONFIG_FILE))
+
 
 # Most installs talk to the hosted service, so default there rather than to a
 # localhost nobody is running -- a fresh `pip install` should reach a real
@@ -12,14 +26,15 @@ DEFAULT_SERVER_URL = "https://kanban.pearachute.com"
 
 
 def ensure_config_dir():
-    CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    config_file().parent.mkdir(parents=True, exist_ok=True)
 
 
 def load_config():
     ensure_config_dir()
-    if not CONFIG_FILE.exists():
+    path = config_file()
+    if not path.exists():
         return {"server": {"url": DEFAULT_SERVER_URL}, "auth": {}}
-    with open(CONFIG_FILE) as f:
+    with open(path) as f:
         return yaml.safe_load(f) or {
             "server": {"url": DEFAULT_SERVER_URL},
             "auth": {},
@@ -28,7 +43,7 @@ def load_config():
 
 def save_config(config):
     ensure_config_dir()
-    with open(CONFIG_FILE, "w") as f:
+    with open(config_file(), "w") as f:
         yaml.dump(config, f)
 
 
