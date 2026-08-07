@@ -512,3 +512,38 @@ def test_create_column_with_explicit_position_is_unchanged(
         headers=auth_headers,
     )
     assert response.json()["position"] == 2
+
+
+def test_unknown_api_path_returns_json_404_not_the_spa(client):
+    """The SPA catch-all used to answer 200 text/html for any unmatched path,
+    including /api/ ones -- so a missing endpoint looked like a working one,
+    and response.json() raised a decode error instead of surfacing a 404."""
+    response = client.get("/api/definitely-not-a-route")
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["detail"] == "Not found"
+
+
+def test_bare_api_prefix_returns_404(client):
+    response = client.get("/api")
+    assert response.status_code == 404
+
+
+def test_unknown_api_path_404s_without_credentials_too(client):
+    """A missing endpoint must not be mistakable for an auth failure -- that
+    confusion is what produced the bogus 'boards rejects Bearer, cards accepts
+    it' report, where both 200s were really the catch-all."""
+    response = client.get("/api/cards/14/not-a-thing")
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/json")
+
+
+def test_real_api_route_still_routes(client, auth_headers, test_user):
+    """The 404 guard must not swallow endpoints that do exist."""
+    assert client.get("/api/boards", headers=auth_headers).status_code == 200
+
+
+def test_non_api_path_still_falls_back_to_the_spa(client):
+    """Front-end routes must keep working: the guard is scoped to /api/."""
+    response = client.get("/some/client/side/route")
+    assert response.status_code == 200

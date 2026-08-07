@@ -53,10 +53,12 @@ appends when you omit the position, and `card move <id> --column <n>` moves a
 card without retyping its title (on `card update`, anything you don't pass is
 left unchanged).
 
-Note that an unmatched `/api/...` path returns **200 with the SPA's HTML**, not
-a 404 — the catch-all in `backend/main.py` serves index.html for anything it
-does not recognise. A request to an endpoint that does not exist therefore
-looks like a success, which is worth remembering when probing the API by hand.
+An unmatched `/api/...` path returns a JSON 404. The SPA catch-all in
+`backend/main.py` is scoped to non-API paths for exactly this reason: it used
+to answer 200 with index.html for anything it did not recognise, so a missing
+endpoint was indistinguishable from a working one and `response.json()` failed
+with a decode error rather than surfacing the 404. Keep that guard in place
+when touching the fallback.
 
 ## Build, Lint, and Test Commands
 
