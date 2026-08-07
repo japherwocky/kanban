@@ -776,35 +776,34 @@ def cmd_apikey_activate(
 
 @apikey_app.command("use")
 def cmd_apikey_use(
-    key: str = typer.Argument(..., help="API key to use"),
-    command: list[str] = typer.Argument(None, help="Command to run with this API key"),
+    key: str = typer.Argument(..., help="API key to check"),
 ):
-    """Run a command using an API key instead of login credentials."""
-    from kanban.config import clear_token, set_api_key
+    """Check that an API key works, without saving it anywhere.
 
-    # Temporarily use this API key
-    clear_token()  # Clear JWT token
-    set_api_key(key)  # Set API key
+    Use 'kanban --api-key <key> <command>' to run a single command with it,
+    or 'kanban apikey save <key>' to store it.
+    """
+    # Nothing here touches the config file. This used to call clear_token()
+    # and set_api_key(), so merely testing a key logged the user out and
+    # overwrote their stored credentials -- the same bug that was fixed for
+    # --api-key, which authenticates through the runtime key instead.
+    client = KanbanClient(api_key=key)
 
     try:
-        # Create a new client with the API key
-        from kanban.client import KanbanClient
-
-        client = KanbanClient(api_key=key)
-
-        # Verify the key works by listing boards
         boards = client.boards()
-
-        def render():
-            rprint(f"[green]API key verified[/green] - found {len(boards)} board(s)")
-            rprint(
-                f"Run your command directly with: [cyan]kanban --api-key {key} <command>[/cyan]"
-            )
-
-        emit({"ok": True, "board_count": len(boards)}, render)
     except Exception as e:
         emit_error(f"API key verification failed: {e}")
         raise typer.Exit(1)
+
+    def render():
+        rprint(f"[green]API key verified[/green] - found {len(boards)} board(s)")
+        rprint(
+            "Run a single command with it: "
+            "[cyan]kanban --api-key <key> <command>[/cyan]"
+        )
+        rprint("Or save it for future use: [cyan]kanban apikey save <key>[/cyan]")
+
+    emit({"ok": True, "board_count": len(boards)}, render)
 
 
 @apikey_app.command("save")
