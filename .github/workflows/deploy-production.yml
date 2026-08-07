@@ -163,16 +163,18 @@ jobs:
           # Wait for service to be fully ready
           sleep 10
 
-          # This step used to accept "200|404" against /api/health, an
-          # endpoint that did not exist. Undefined /api/... paths fall through
-          # to the SPA catch-all and return 200 with index.html, so the check
-          # passed unconditionally -- a broken database, a 500ing API and an
-          # unmigrated schema all reported success.
+          # This step used to accept "200|404" against /api/health, an endpoint
+          # that did not exist -- so it passed unconditionally and a broken
+          # database, a 500ing API and an unmigrated schema all reported
+          # success. Accepting 404 was enough on its own to make it
+          # unfalsifiable; before main.py started 404ing unmatched /api/ paths,
+          # the SPA catch-all answered them 200 with index.html, which made it
+          # doubly so.
           #
           # /api/health now exists and queries the database, so a schema or
-          # connection problem surfaces as 503. Match on the JSON body rather
-          # than the status code alone, so the SPA fallback cannot satisfy it
-          # again if the route is ever removed.
+          # connection problem surfaces as 503. Match on the JSON body, not the
+          # status code, so removing the route fails the deploy rather than
+          # quietly satisfying it again.
           BODY=$(curl -s --max-time 15 https://kanban.pearachute.com/api/health || true)
           echo "Health response: $BODY"
 

@@ -589,9 +589,12 @@ async def health():
     An empty table is fine -- the SELECT still names every column, so this
     works on a brand new install with no users.
 
-    Note the endpoint has to exist for the check to mean anything: an
-    undefined /api/... path falls through to the SPA catch-all in main.py and
-    returns 200 with index.html, so a missing endpoint looks healthy.
+    The endpoint has to actually exist for the check to mean anything. It did
+    not when the deploy started curling it, and back then an undefined
+    /api/... path fell through to the SPA catch-all and answered 200 with
+    index.html. main.py now 404s unmatched /api/ paths instead, but the deploy
+    check accepted "200|404" -- so a missing endpoint still read as healthy,
+    just via a different route. Hence matching on the response body.
     """
     try:
         User.select().limit(1).first()

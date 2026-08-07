@@ -90,17 +90,20 @@ def test_health_endpoint_is_public(client, db_session):
     assert response.status_code == 200
 
 
-def test_health_is_a_real_route_not_the_spa_fallback(client, db_session):
+def test_health_is_a_real_route(client, db_session):
     """Regression guard for the check that could never fail.
 
-    An undefined /api/... path falls through to the SPA catch-all in main.py
-    and returns 200 with index.html. The deploy used to curl /api/health --
-    which did not exist -- and accept that as healthy. If this route is ever
-    removed, this test fails instead of the deploy silently going green.
+    The deploy curled /api/health for a long time before the route existed.
+    Unmatched /api/ paths answered 200 with the SPA's index.html back then, so
+    the check passed on nothing at all; main.py 404s them now, but the deploy
+    also accepted 404, so it still passed on nothing. Either way a missing
+    route read as healthy. If this one is ever removed, fail here rather than
+    let a deploy go green over it.
     """
     response = client.get("/api/health")
-    assert "text/html" not in response.headers["content-type"]
+    assert response.status_code == 200
     assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {"status": "ok"}
 
 
 def test_health_reports_503_when_the_database_is_broken(client, db_session, monkeypatch):

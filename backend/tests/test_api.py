@@ -460,20 +460,28 @@ def test_create_column_without_position_appends(client, auth_headers, test_user)
         "/api/boards", json={"name": "Append Board"}, headers=auth_headers
     ).json()["id"]
 
+    # A new board is not empty -- it comes with the default columns. Derived
+    # rather than hardcoded so changing that default list does not break this
+    # test, which is about appending, not about what the defaults are.
+    existing = client.get(f"/api/boards/{board_id}", headers=auth_headers).json()[
+        "columns"
+    ]
+    end = max(c["position"] for c in existing) + 1
+
     first = client.post(
         "/api/columns",
         json={"board_id": board_id, "name": "First"},
         headers=auth_headers,
     )
     assert first.status_code == 200
-    assert first.json()["position"] == 0
+    assert first.json()["position"] == end
 
     second = client.post(
         "/api/columns",
         json={"board_id": board_id, "name": "Second"},
         headers=auth_headers,
     )
-    assert second.json()["position"] == 1
+    assert second.json()["position"] == end + 1
 
 
 def test_create_column_appends_after_the_highest_position(
