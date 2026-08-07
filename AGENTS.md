@@ -25,6 +25,41 @@ kanban board get 1                    # Show Dev board details
 kanban board get <id>                 # Show board with columns & cards
 ```
 
+### Scripting the CLI
+
+Pass `--json` (or set `KANBAN_OUTPUT=json`) and every command prints the raw
+API response instead of formatted text. Use it rather than parsing the human
+output — the prose is not an interface, and a reworded string silently breaks
+anything that regexes it.
+
+```bash
+kanban column create 1 Todo 0 --json | jq -r .id
+kanban board get 1 --json | jq '.columns[].cards[] | {id, title, description}'
+```
+
+The flag works before or after the subcommand. In JSON mode stdout holds only
+the response; errors go to stderr as `{"error": ..., "status": ...}` alongside
+a non-zero exit code, so stdout is always safe to pipe into a parser.
+
+`kanban card get <id>` reads one card, including its description, the comments
+and which board/column it sits on:
+
+```bash
+kanban card get 92 --json | jq -r .description
+```
+
+Two things that used to make seeding a board fiddly are gone: `column create`
+appends when you omit the position, and `card move <id> --column <n>` moves a
+card without retyping its title (on `card update`, anything you don't pass is
+left unchanged).
+
+An unmatched `/api/...` path returns a JSON 404. The SPA catch-all in
+`backend/main.py` is scoped to non-API paths for exactly this reason: it used
+to answer 200 with index.html for anything it did not recognise, so a missing
+endpoint was indistinguishable from a working one and `response.json()` failed
+with a decode error rather than surfacing the 404. Keep that guard in place
+when touching the fallback.
+
 ## Build, Lint, and Test Commands
 
 ### Setup

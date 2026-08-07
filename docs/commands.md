@@ -24,7 +24,7 @@ API key management commands
 - `kanban apikey list` — List all API keys.
 - `kanban apikey revoke` — Revoke (deactivate) an API key.
 - `kanban apikey save` — Save API key to config file for future use.
-- `kanban apikey use` — Run a command using an API key instead of login credentials.
+- `kanban apikey use` — Check that an API key works, without saving it anywhere.
 
 ### [`kanban config`](/docs/commands/config)
 
@@ -71,7 +71,9 @@ Card management commands
 
 - `kanban card create` — Create a new card.
 - `kanban card delete` — Delete a card.
-- `kanban card update` — Update a card.
+- `kanban card get` — Show a card's full contents, including its description.
+- `kanban card move` — Move a card to another column or position, leaving its text alone.
+- `kanban card update` — Update a card. Anything you don't pass is left unchanged.
 
 ## Organization Management
 

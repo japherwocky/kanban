@@ -77,15 +77,14 @@ class KanbanClient:
         return self._request("POST", f"/api/boards/{board_id}", json={"name": name})
 
     def board_delete(self, board_id):
-        self._request("DELETE", f"/api/boards/{board_id}")
-        return True
+        return self._request("DELETE", f"/api/boards/{board_id}")
 
-    def column_create(self, board_id, name, position):
-        return self._request(
-            "POST",
-            "/api/columns",
-            json={"board_id": board_id, "name": name, "position": position},
-        )
+    def column_create(self, board_id, name, position=None):
+        # position is left out entirely when omitted, so the server appends.
+        data = {"board_id": board_id, "name": name}
+        if position is not None:
+            data["position"] = position
+        return self._request("POST", "/api/columns", json=data)
 
     def column_update(self, column_id, name, position):
         return self._request(
@@ -95,8 +94,10 @@ class KanbanClient:
         )
 
     def column_delete(self, column_id):
-        self._request("DELETE", f"/api/columns/{column_id}")
-        return True
+        return self._request("DELETE", f"/api/columns/{column_id}")
+
+    def card_get(self, card_id):
+        return self._request("GET", f"/api/cards/{card_id}")
 
     def card_create(self, column_id, title, description=None, position=0):
         return self._request(
@@ -110,17 +111,24 @@ class KanbanClient:
             },
         )
 
-    def card_update(self, card_id, title, description=None, position=0, column_id=None):
-        data = {"title": title, "position": position}
+    def card_update(
+        self, card_id, title=None, description=None, position=None, column_id=None
+    ):
+        # Every field is omitted unless given: the endpoint leaves out what it
+        # is not sent, so a move must not carry a title along with it.
+        data = {}
+        if title is not None:
+            data["title"] = title
         if description is not None:
             data["description"] = description
+        if position is not None:
+            data["position"] = position
         if column_id is not None:
             data["column_id"] = column_id
         return self._request("PUT", f"/api/cards/{card_id}", json=data)
 
     def card_delete(self, card_id):
-        self._request("DELETE", f"/api/cards/{card_id}")
-        return True
+        return self._request("DELETE", f"/api/cards/{card_id}")
 
     # Organization methods
     def organizations(self):
@@ -149,8 +157,9 @@ class KanbanClient:
         )
 
     def organization_member_remove(self, org_id, user_id):
-        self._request("DELETE", f"/api/organizations/{org_id}/members/{user_id}")
-        return True
+        return self._request(
+            "DELETE", f"/api/organizations/{org_id}/members/{user_id}"
+        )
 
     # Invite methods
     def organization_invite_create(self, org_id, email=None):
@@ -166,8 +175,9 @@ class KanbanClient:
 
     def organization_invite_revoke(self, org_id, invite_id):
         """Revoke an invite."""
-        self._request("DELETE", f"/api/organizations/{org_id}/invites/{invite_id}")
-        return True
+        return self._request(
+            "DELETE", f"/api/organizations/{org_id}/invites/{invite_id}"
+        )
 
     def invite_get(self, token):
         """Get invite details."""
@@ -193,8 +203,7 @@ class KanbanClient:
         return self._request("PUT", f"/api/teams/{team_id}", json={"name": name})
 
     def team_delete(self, team_id):
-        self._request("DELETE", f"/api/teams/{team_id}")
-        return True
+        return self._request("DELETE", f"/api/teams/{team_id}")
 
     def team_members(self, team_id):
         return self._request("GET", f"/api/teams/{team_id}/members")
@@ -205,8 +214,7 @@ class KanbanClient:
         )
 
     def team_member_remove(self, team_id, user_id):
-        self._request("DELETE", f"/api/teams/{team_id}/members/{user_id}")
-        return True
+        return self._request("DELETE", f"/api/teams/{team_id}/members/{user_id}")
 
     # Board sharing
     def board_share(self, board_id, team_id=None):

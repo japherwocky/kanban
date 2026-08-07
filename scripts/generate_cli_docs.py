@@ -76,6 +76,36 @@ def split_params(command):
     return arguments, options
 
 
+# click's ParamType.name is not stable across versions: typer 0.15 reports
+# "text"/"integer"/"boolean" where 0.27 reports "str"/"int"/"bool". Reading it
+# raw meant a contributor on a different typer regenerated all 11 pages with
+# spurious type churn, then failed the `--check` step in CI having changed
+# nothing real. Normalising here makes the output depend on the CLI, not on
+# whichever library version happens to be installed.
+TYPE_NAMES = {
+    "text": "str",
+    "string": "str",
+    "str": "str",
+    "integer": "int",
+    "int": "int",
+    "boolean": "bool",
+    "bool": "bool",
+    "float": "float",
+    "number": "float",
+}
+
+
+def type_name(param) -> str:
+    """Stable label for a parameter's type."""
+    raw = (getattr(param.type, "name", "") or "").lower()
+    return TYPE_NAMES.get(raw, raw)
+
+
+def is_bool(param) -> bool:
+    """True for flag-style parameters, which take no value in usage."""
+    return type_name(param) == "bool"
+
+
 def usage_line(path: str, command) -> str:
     """Build the `kanban ...` usage string for a command."""
     arguments, options = split_params(command)
@@ -86,7 +116,7 @@ def usage_line(path: str, command) -> str:
 
     for param in options:
         flag = param.opts[0]
-        if param.type.name == "boolean":
+        if is_bool(param):
             parts.append(flag if param.required else f"[{flag}]")
         else:
             value = param.name.upper()
@@ -105,7 +135,7 @@ def param_lines(command) -> list:
         for param in arguments:
             suffix = "" if param.required else " _(optional)_"
             help_text = f" — {param.help}" if param.help else ""
-            lines.append(f"- `{param.name}` ({param.type.name}){suffix}{help_text}")
+            lines.append(f"- `{param.name}` ({type_name(param)}){suffix}{help_text}")
         lines.append("")
 
     if options:
@@ -115,11 +145,11 @@ def param_lines(command) -> list:
             notes = []
             if param.required:
                 notes.append("required")
-            elif param.default is not None and param.type.name != "boolean":
+            elif param.default is not None and not is_bool(param):
                 notes.append(f"default: `{param.default}`")
             note_text = f" _({', '.join(notes)})_" if notes else ""
             help_text = f" — {param.help}" if param.help else ""
-            lines.append(f"- {flags} ({param.type.name}){note_text}{help_text}")
+            lines.append(f"- {flags} ({type_name(param)}){note_text}{help_text}")
         lines.append("")
 
     return lines

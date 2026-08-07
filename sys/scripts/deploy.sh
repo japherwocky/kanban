@@ -11,6 +11,23 @@ NC='\033[0m' # No Color
 # Configuration
 DEPLOY_DIR="/opt/kanban"
 
+# The commit the server was on before this deploy pulled. Change detection has
+# to compare against it rather than HEAD~1: a push of several commits moves
+# HEAD by more than one, so HEAD~1 sees only the final commit of the push. A
+# requirements.txt change in any earlier commit was invisible, and the service
+# restarted without its new dependencies.
+PREVIOUS_SHA=""
+
+# Did anything matching $1 change between the pre-deploy commit and now?
+changed_since_previous() {
+    if [ -z "$PREVIOUS_SHA" ]; then
+        # No baseline to compare against, so do the work rather than silently
+        # skip it -- a needless pip install is cheap, a missing one is not.
+        return 0
+    fi
+    git diff --name-only "$PREVIOUS_SHA" HEAD | grep -q "$1"
+}
+
 echo -e "${GREEN}🚀 Deploying Kanban Board updates${NC}"
 echo "Deploy Directory: $DEPLOY_DIR"
 echo ""
@@ -32,30 +49,32 @@ git_pull() {
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     echo "Current branch: $CURRENT_BRANCH"
 
+    # Captured before the reset, so change detection can see the whole push.
+    PREVIOUS_SHA=$(git rev-parse HEAD)
+
     git fetch origin
     git reset --hard origin/$CURRENT_BRANCH
 
-    echo "Code updated"
+    echo "Code updated ($PREVIOUS_SHA -> $(git rev-parse HEAD))"
 }
 
 # Function to update dependencies
 update_dependencies() {
     echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
 
-    # Unconditional, for the same reason as run_migrations below. The old
-    # `git diff HEAD~1 HEAD` guard only inspected the final commit of a push,
-    # so a multi-commit push that touched requirements.txt in an earlier
-    # commit skipped this entirely and left production missing a package.
+    # Keep this ahead of run_migrations: the migration runner imports
+    # peewee-migrate, so the deploy that introduces a dependency has to install
+    # it before the step that needs it.
     #
-    # It also has to run before run_migrations: the migration runner imports
-    # peewee-migrate, so gating this step would mean the very deploy that
-    # introduces a dependency is the one that cannot use it.
-    #
-    # pip is a no-op when everything is already satisfied, so the cost of
-    # running it every time is a few seconds.
-    $DEPLOY_DIR/venv/bin/pip install -q -r $DEPLOY_DIR/backend/requirements.txt
-
-    echo "Dependencies up to date"
+    # Gating here is sound now that changed_since_previous() compares against
+    # the pre-pull SHA. It was not when the comparison was `HEAD~1 HEAD`, which
+    # saw only the final commit of a push.
+    if changed_since_previous "backend/requirements.txt"; then
+        echo "Requirements changed, updating..."
+        $DEPLOY_DIR/venv/bin/pip install -r $DEPLOY_DIR/backend/requirements.txt
+    else
+        echo "Requirements unchanged, skipping"
+    fi
 }
 
 # Function to build frontend
@@ -75,12 +94,14 @@ build_frontend() {
 run_migrations() {
     echo -e "${YELLOW}🗄️ Running database migrations...${NC}"
 
-    # Run unconditionally rather than gating on `git diff HEAD~1 HEAD`.
-    # peewee-migrate records what it has applied and skips the rest, so an
-    # up-to-date database costs one query. Gating on the diff was how this
-    # step silently did nothing: it only ever inspected the final commit of a
-    # push, and the body was a stub that printed success without running
-    # anything.
+    # Deliberately NOT gated on changed_since_previous, unlike the pip step
+    # above. That helper answers "did migration files change in this push",
+    # but the question that matters is "does this database have unapplied
+    # migrations" -- and only the migratehistory table knows. A deploy that
+    # failed partway, a rollback and re-deploy, or a database restored from an
+    # older backup all leave migrations pending with no diff to detect them.
+    # peewee-migrate skips what it has already applied, so always asking costs
+    # one query.
     #
     # This must happen before restart_service. The old code is still serving
     # traffic at this point and does not know about the new columns, so

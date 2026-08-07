@@ -1,6 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -70,6 +70,14 @@ async def root():
 @app.get("/{path:path}")
 async def catch_all(path: str):
     """Serve index.html for all non-API, non-docs routes (SPA fallback)"""
+    # Anything under /api/ reaching the fallback is an endpoint that does not
+    # exist, and the SPA is the wrong answer for it: a 200 of HTML makes a
+    # client's response.json() fail with a decode error rather than see a 404,
+    # and makes a typo'd URL look like a working endpoint when probed by hand.
+    # This is what produced the bad evidence in the auth-inconsistency report.
+    if path == "api" or path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found")
+
     index_path = os.path.join(STATIC_PATH, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)

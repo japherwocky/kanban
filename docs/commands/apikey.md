@@ -9,7 +9,7 @@ API key management commands
 - [`kanban apikey list`](#kanban-apikey-list) — List all API keys.
 - [`kanban apikey revoke`](#kanban-apikey-revoke) — Revoke (deactivate) an API key.
 - [`kanban apikey save`](#kanban-apikey-save) — Save API key to config file for future use.
-- [`kanban apikey use`](#kanban-apikey-use) — Run a command using an API key instead of login credentials.
+- [`kanban apikey use`](#kanban-apikey-use) — Check that an API key works, without saving it anywhere.
 
 ---
 
@@ -71,16 +71,15 @@ kanban apikey save <key>
 
 ## `kanban apikey use`
 
-Run a command using an API key instead of login credentials.
+Check that an API key works, without saving it anywhere.
 
 ```bash
-kanban apikey use <key> [command]
+kanban apikey use <key>
 ```
 
 **Arguments**
 
-- `key` (str) — API key to use
-- `command` (str) _(optional)_ — Command to run with this API key
+- `key` (str) — API key to check
 
 ## See Also
 

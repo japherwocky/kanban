@@ -63,6 +63,30 @@ kanban --api-key kanban_abc123... board list
 
 API keys can be revoked and reactivated at any time. They're stored securely (bcrypt-hashed) and track their last usage.
 
+## Scripting: JSON output
+
+`--json` makes any command print the raw API response instead of formatted
+text, so scripts never have to scrape prose for values like IDs:
+
+```bash
+kanban board create "Roadmap" --json
+kanban board get 1 --json | jq '.columns[] | {id, name}'
+```
+
+`KANBAN_OUTPUT=json` does the same for a whole run:
+
+```bash
+export KANBAN_OUTPUT=json
+```
+
+The flag works in either position (`kanban --json board list` and
+`kanban board list --json` are equivalent). In JSON mode stdout carries only
+the response, and errors go to stderr as `{"error": ..., "status": ...}` with a
+non-zero exit code — so stdout is always safe to pipe into a parser.
+
+`kanban login --json` deliberately omits the access token: it is already saved
+to `~/.kanban.yaml`, and stdout is what CI logs capture.
+
 ## Command Reference
 
 | Command | Description |
@@ -71,6 +95,7 @@ API keys can be revoked and reactivated at any time. They're stored securely (bc
 | `kanban login <user> --password <pass>` | Login to the server |
 | `kanban logout` | Logout and clear credentials |
 | `kanban --api-key <key>` | Use API key for authentication |
+| `kanban --json <command>` | Print the raw API response as JSON |
 | `kanban apikey create <name>` | Generate a new API key |
 | `kanban apikey list` | List your API keys |
 | `kanban apikey revoke <id>` | Revoke an API key |
@@ -81,10 +106,12 @@ API keys can be revoked and reactivated at any time. They're stored securely (bc
 | `kanban board delete <id>` | Delete a board |
 | `kanban board update <id> <name>` | Update board name |
 | `kanban share <board_id> <team_id\|private>` | Share board or make private |
-| `kanban column create <board_id> <name> <position>` | Create a column |
+| `kanban column create <board_id> <name> [position]` | Create a column (appends by default) |
 | `kanban column delete <id>` | Delete a column |
+| `kanban card get <id>` | Show a card's description and comments |
 | `kanban card create <column_id> <title> [options]` | Create a card |
-| `kanban card update <id> <title> [options]` | Update a card |
+| `kanban card update <id> [title] [options]` | Update a card; omitted fields are unchanged |
+| `kanban card move <id> --column <n> [-p <pos>]` | Move a card without touching its text |
 | `kanban card delete <id>` | Delete a card |
 | `kanban org list` | List all organizations |
 | `kanban org create <name>` | Create an organization |
@@ -183,6 +210,7 @@ The backend exposes a REST API at `/api/`:
 - `DELETE /api/columns/{id}` - Delete column
 
 **Cards**
+- `GET /api/cards/{id}` - Get one card with its description and comments
 - `POST /api/cards` - Create card
 - `PUT /api/cards/{id}` - Update card
 - `DELETE /api/cards/{id}` - Delete card
