@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
+from peewee import fn
 from pydantic import BaseModel, ConfigDict
 import os
 
@@ -129,7 +130,9 @@ class BoardResponse(BaseModel):
 class ColumnCreate(BaseModel):
     board_id: int
     name: str
-    position: int
+    # Omitted means "append after the last column". Callers were otherwise
+    # made to track an incrementing counter just to add a column at the end.
+    position: Optional[int] = None
 
 
 class ColumnUpdate(BaseModel):
@@ -186,6 +189,20 @@ class CardResponse(BaseModel):
     description: Optional[str]
     position: int
     comments: Optional[list] = []
+
+
+class CardDetailResponse(CardResponse):
+    """A single card, with the column and board it sits on.
+
+    Fetching one card by id is otherwise context-free: the caller knows the id
+    and nothing else, and "which column is this on?" is the question that
+    usually comes right after "what does it say?".
+    """
+
+    column_id: int
+    column_name: str
+    board_id: int
+    board_name: str
 
 
 class CommentCreate(BaseModel):
@@ -1190,10 +1207,18 @@ async def create_column(
         raise HTTPException(status_code=404, detail="Board not found")
     if not can_modify_board(current_user, board):
         raise HTTPException(status_code=403, detail="Not authorized")
+    position = column_data.position
+    if position is None:
+        last = (
+            Column.select(fn.MAX(Column.position))
+            .where(Column.board == board)
+            .scalar()
+        )
+        position = 0 if last is None else last + 1
     column = Column.create(
         board=board,
         name=column_data.name,
-        position=column_data.position,
+        position=position,
     )
     return {
         "id": column.id,
@@ -1293,6 +1318,45 @@ async def create_card(
         "title": card.title,
         "description": card.description,
         "position": card.position,
+    }
+
+
+@api.get("/cards/{card_id}", response_model=CardDetailResponse)
+async def get_card(
+    card_id: int, current_user: User = Depends(get_current_user_or_api_key)
+):
+    """Read one card. Cards were previously only reachable nested inside a
+    board, so anything holding a card id had no way to see its body."""
+    card = Card.get_or_none(Card.id == card_id)
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    if not can_access_board(current_user, card.column.board):
+        raise HTTPException(
+            status_code=403, detail="Not authorized to access this card"
+        )
+
+    comments = Comment.select().where(Comment.card == card).order_by(Comment.created_at)
+    return {
+        "id": card.id,
+        "title": card.title,
+        "description": card.description,
+        "position": card.position,
+        "column_id": card.column.id,
+        "column_name": card.column.name,
+        "board_id": card.column.board.id,
+        "board_name": card.column.board.name,
+        "comments": [
+            {
+                "id": comment.id,
+                "card_id": comment.card.id,
+                "user_id": comment.user.id,
+                "username": comment.user.username,
+                "content": comment.content,
+                "created_at": comment.created_at,
+                "updated_at": comment.updated_at,
+            }
+            for comment in comments
+        ],
     }
 
 

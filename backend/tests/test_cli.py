@@ -581,3 +581,162 @@ def test_extract_json_flag_positions(argv, expected_found, expected_argv):
 
     assert _extract_json_flag(argv) is expected_found
     assert argv == expected_argv
+
+
+def test_cli_card_get_shows_the_description(capsys):
+    """`card` had create/update/delete but no way to read a card, so a
+    description was unreachable from the CLI."""
+    from kanban.cli import cmd_card_get
+
+    mock_client = MagicMock()
+    mock_client.card_get.return_value = {
+        "id": 92,
+        "title": "A card",
+        "description": "The body you could not read.",
+        "position": 0,
+        "column_id": 4,
+        "column_name": "Todo",
+        "board_id": 1,
+        "board_name": "Dev",
+        "comments": [],
+    }
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_get(card_id=92)
+
+    out = capsys.readouterr().out
+    mock_client.card_get.assert_called_once_with(92)
+    assert "The body you could not read." in out
+    assert "Todo" in out
+
+
+def test_cli_card_get_json_emits_raw_response(capsys, json_mode):
+    import json
+    from kanban.cli import cmd_card_get
+
+    payload = {
+        "id": 92,
+        "title": "A card",
+        "description": "body",
+        "position": 0,
+        "column_id": 4,
+        "column_name": "Todo",
+        "board_id": 1,
+        "board_name": "Dev",
+        "comments": [],
+    }
+    mock_client = MagicMock()
+    mock_client.card_get.return_value = payload
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_get(card_id=92)
+
+    assert json.loads(capsys.readouterr().out) == payload
+
+
+def test_cli_card_get_does_not_interpret_description_as_markup(capsys):
+    """Descriptions are user-written text. Rendered as rich markup, a stray
+    tag would silently eat characters -- or blow up on a malformed one."""
+    from kanban.cli import cmd_card_get
+
+    mock_client = MagicMock()
+    mock_client.card_get.return_value = {
+        "id": 1,
+        "title": "t",
+        "description": r"use re.search(r'id=(\d+)') on [bold] output",
+        "position": 0,
+        "column_id": 1,
+        "column_name": "c",
+        "board_id": 1,
+        "board_name": "b",
+        "comments": [],
+    }
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_get(card_id=1)
+
+    assert "[bold]" in capsys.readouterr().out
+
+
+def test_cli_card_move_does_not_send_a_title():
+    """The whole point of `card move`: moving used to require retyping the
+    exact title, and one wrong character silently renamed the card."""
+    from kanban.cli import cmd_card_move
+
+    mock_client = MagicMock()
+    mock_client.card_update.return_value = {"id": 7}
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_move(card_id=7, column=5, position=None)
+
+    mock_client.card_update.assert_called_once_with(7, None, None, None, 5)
+
+
+def test_cli_card_update_leaves_the_title_alone_when_omitted():
+    from kanban.cli import cmd_card_update
+
+    mock_client = MagicMock()
+    mock_client.card_update.return_value = {"id": 7}
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_update(
+            card_id=7, title=None, description=None, position=None, column=5
+        )
+
+    mock_client.card_update.assert_called_once_with(7, None, None, None, 5)
+
+
+def test_client_card_update_omits_unset_fields():
+    """A move must not carry a title, and the endpoint leaves out what it is
+    not sent."""
+    from kanban.client import KanbanClient
+
+    client = KanbanClient(server_url="http://example.test", api_key="k")
+    with patch.object(client, "_request", return_value={}) as request:
+        client.card_update(7, column_id=5)
+
+    assert request.call_args.kwargs["json"] == {"column_id": 5}
+
+
+@pytest.mark.parametrize(
+    "command,kwargs",
+    [
+        ("update", {"title": None, "description": None, "position": None, "column": None}),
+        ("move", {"column": None, "position": None}),
+    ],
+)
+def test_cli_card_change_with_nothing_to_do_errors(command, kwargs):
+    import typer
+    from kanban.cli import cmd_card_update, cmd_card_move
+
+    fn = cmd_card_update if command == "update" else cmd_card_move
+    mock_client = MagicMock()
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        with pytest.raises(typer.Exit):
+            fn(card_id=7, **kwargs)
+
+    mock_client.card_update.assert_not_called()
+
+
+def test_cli_column_create_omits_position_to_append():
+    """Omitted position means append; the server works out the number."""
+    from kanban.cli import cmd_column_create
+
+    mock_client = MagicMock()
+    mock_client.column_create.return_value = {"id": 3, "position": 2}
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_column_create(board_id=1, name="Done", position=None)
+
+    mock_client.column_create.assert_called_once_with(1, "Done", None)
+
+
+def test_client_column_create_omits_position_when_appending():
+    from kanban.client import KanbanClient
+
+    client = KanbanClient(server_url="http://example.test", api_key="k")
+    with patch.object(client, "_request", return_value={}) as request:
+        client.column_create(1, "Done")
+
+    assert request.call_args.kwargs["json"] == {"board_id": 1, "name": "Done"}
