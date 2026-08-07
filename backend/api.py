@@ -2,7 +2,7 @@ import re
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
 from peewee import fn
 from pydantic import BaseModel, ConfigDict
@@ -16,6 +16,7 @@ from backend.auth import (
     get_current_admin,
 )
 from backend.database import db
+from backend.mailer import send_invite_email, send_verification_email
 from backend.models import (
     User,
     Board,
@@ -29,9 +30,20 @@ from backend.models import (
     BetaSignup,
     ApiKey,
     OrganizationInvite,
+    EmailVerificationToken,
+    _as_datetime,
 )
 
 api = APIRouter()
+
+EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+# Detail string the frontend keys on to offer "resend verification" instead of
+# a generic login failure. Changing it means changing Login.svelte too.
+UNVERIFIED_EMAIL_DETAIL = "Email not verified"
+
+# Minimum gap between verification emails for one account.
+RESEND_COOLDOWN_SECONDS = 60
 
 
 def slugify(text):
@@ -96,6 +108,20 @@ def get_user_organizations(user):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class SignupRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: str
 
 
 class UsernameRequest(BaseModel):
@@ -410,8 +436,174 @@ async def login(request: LoginRequest):
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # Checked after the password, not before: answering this for anyone who
+    # types a username would leak which accounts exist.
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=UNVERIFIED_EMAIL_DETAIL,
+        )
     access_token = create_access_token(data={"sub": user.id, "username": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@api.post("/signup", status_code=status.HTTP_201_CREATED)
+async def signup(request: SignupRequest, background_tasks: BackgroundTasks):
+    """Create an account. Public -- this is the self-serve front door.
+
+    Takes no organization of any kind. A new account joins nothing; org
+    membership comes only from an owner adding you or from accepting an
+    invite token.
+    """
+    username = request.username.strip()
+    email = request.email.strip().lower()
+
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    if not re.match(EMAIL_PATTERN, email):
+        raise HTTPException(status_code=400, detail="Invalid email address")
+
+    if User.get_or_none(User.username == username):
+        raise HTTPException(status_code=400, detail="Username is already taken")
+    if User.get_or_none(User.email == email):
+        # Deliberately explicit. It does reveal that an address is registered,
+        # but the alternative -- silently succeeding and mailing the existing
+        # account -- strands people who forgot they signed up. The login page
+        # already discloses the same thing for usernames.
+        raise HTTPException(
+            status_code=400, detail="An account with that email already exists"
+        )
+
+    try:
+        with db.atomic():
+            user = User.create_user(
+                username=username,
+                password=request.password,
+                email=email,
+                email_verified=False,
+            )
+            _, token = EmailVerificationToken.create_for(user)
+    except ValueError as exc:
+        # Raised by create_user past PASSWORD_MAX_LENGTH.
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    background_tasks.add_task(send_verification_email, user, token)
+
+    return {
+        "message": "Account created. Check your email for a verification link.",
+        "email": user.email,
+    }
+
+
+@api.post("/verify-email", response_model=Token)
+async def verify_email(request: VerifyEmailRequest):
+    """Consume a verification token and log the user in.
+
+    POST rather than a GET link target on purpose: mail scanners and link
+    previewers follow GET URLs, which would silently burn the token before the
+    recipient ever clicked it.
+    """
+    record = EmailVerificationToken.get_or_none(
+        EmailVerificationToken.token == request.token
+    )
+    if record is None:
+        raise HTTPException(status_code=404, detail="Invalid verification link")
+    if record.is_used():
+        raise HTTPException(
+            status_code=400, detail="This verification link has already been used"
+        )
+    if record.is_expired():
+        raise HTTPException(
+            status_code=400,
+            detail="This verification link has expired. Request a new one.",
+        )
+
+    user = record.user
+    with db.atomic():
+        record.mark_used()
+        if not user.email_verified:
+            user.email_verified = True
+            user.save()
+
+    access_token = create_access_token(data={"sub": user.id, "username": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@api.post("/resend-verification")
+async def resend_verification(
+    request: ResendVerificationRequest, background_tasks: BackgroundTasks
+):
+    """Re-send a verification email.
+
+    Always reports the same thing regardless of whether the address is
+    registered or already verified, so this cannot be used to enumerate
+    accounts.
+    """
+    generic = {
+        "message": "If that address needs verifying, we've sent a new link."
+    }
+
+    email = request.email.strip().lower()
+    if not re.match(EMAIL_PATTERN, email):
+        raise HTTPException(status_code=400, detail="Invalid email address")
+
+    user = User.get_or_none(User.email == email)
+    if user is None or user.email_verified:
+        return generic
+
+    latest = (
+        EmailVerificationToken.select()
+        .where(EmailVerificationToken.user == user)
+        .order_by(EmailVerificationToken.created_at.desc())
+        .first()
+    )
+    if latest is not None:
+        age = datetime.now(timezone.utc) - _as_datetime(latest.created_at)
+        if age.total_seconds() < RESEND_COOLDOWN_SECONDS:
+            raise HTTPException(
+                status_code=429,
+                detail="A verification email was just sent. Try again in a minute.",
+            )
+
+    _, token = EmailVerificationToken.create_for(user)
+    background_tasks.add_task(send_verification_email, user, token)
+    return generic
+
+
+@api.get("/health")
+async def health():
+    """Liveness check for the deploy pipeline. Public, no auth.
+
+    Deliberately fetches a User row rather than returning a constant. A
+    constant would pass while the schema was unmigrated, which is exactly the
+    outage this is meant to catch.
+
+    It must be .first() and not .count(): peewee compiles .count() to
+    SELECT COUNT(1) FROM (SELECT 1 FROM user LIMIT 1), which names none of the
+    model's columns and therefore happily succeeds against a database missing
+    one. .first() emits the full column list, so a missing column fails here
+    the same way it fails for a real request. Verified against an unmigrated
+    copy of production, where .count() reported healthy while /api/token was
+    raising "no such column: t1.email_verified".
+
+    An empty table is fine -- the SELECT still names every column, so this
+    works on a brand new install with no users.
+
+    The endpoint has to actually exist for the check to mean anything. It did
+    not when the deploy started curling it, and back then an undefined
+    /api/... path fell through to the SPA catch-all and answered 200 with
+    index.html. main.py now 404s unmatched /api/ paths instead, but the deploy
+    check accepted "200|404" -- so a missing endpoint still read as healthy,
+    just via a different route. Hence matching on the response body.
+    """
+    try:
+        User.select().limit(1).first()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database unavailable: {exc}",
+        )
+    return {"status": "ok"}
 
 
 @api.get("/admin/status")
@@ -477,6 +669,15 @@ async def update_admin_user(
     )
     if existing:
         raise HTTPException(status_code=400, detail="Username already taken")
+
+    # Email is unique now that accounts are created by verifying one, so this
+    # would otherwise surface as an IntegrityError 500.
+    if user_data.email:
+        existing_email = User.get_or_none(
+            (User.email == user_data.email) & (User.id != user_id)
+        )
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already taken")
 
     user.username = user_data.username
     user.email = user_data.email
@@ -945,7 +1146,7 @@ async def create_admin_board(
         raise HTTPException(status_code=404, detail="Owner user not found")
 
     board = Board.create_with_columns(
-        owner=owner, name=board_data.name, column_names=[]
+        owner=owner, name=board_data.name
     )
 
     column_count = Column.select().where(Column.board == board).count()
@@ -1023,7 +1224,7 @@ async def create_board(
 ):
     with db.atomic():
         board = Board.create_with_columns(
-            owner=current_user, name=board_data.name, column_names=[]
+            owner=current_user, name=board_data.name
         )
     return {
         "id": board.id,
@@ -1758,6 +1959,7 @@ class InviteResponse(BaseModel):
 async def create_organization_invite(
     org_id: int,
     request: InviteCreateRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user_or_api_key),
 ):
     """Create an invite token for an organization. Owner only."""
@@ -1774,6 +1976,13 @@ async def create_organization_invite(
         created_by=current_user,
         email=request.email,
     )
+
+    # An anonymous invite has nowhere to go -- the owner passes the token along
+    # themselves, which is how this worked before there was a mailer.
+    if invite.email:
+        background_tasks.add_task(
+            send_invite_email, invite.email, token, org.name, current_user.username
+        )
 
     return {
         "id": invite.id,
@@ -2154,11 +2363,7 @@ async def docs_section_markdown(section: str):
 @api.post("/beta-signup")
 async def beta_signup(request: BetaSignupRequest):
     """Register interest for beta access"""
-    import re
-
-    # Basic email validation
-    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    if not re.match(email_pattern, request.email):
+    if not re.match(EMAIL_PATTERN, request.email):
         raise HTTPException(status_code=400, detail="Invalid email address")
 
     # Check if already signed up

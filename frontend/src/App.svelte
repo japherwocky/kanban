@@ -23,6 +23,8 @@
   import SettingsApiKeys from './routes/SettingsApiKeys.svelte';
   import ApiKeyCreated from './routes/ApiKeyCreated.svelte';
   import Invite from './routes/Invite.svelte';
+  import Signup from './routes/Signup.svelte';
+  import VerifyEmail from './routes/VerifyEmail.svelte';
 
   onMount(() => {
     theme.init();
@@ -59,6 +61,18 @@
   <Route path="/login" let:params>
     <PublicLayout>
       <Login {params} />
+    </PublicLayout>
+  </Route>
+
+  <Route path="/signup" let:params>
+    <PublicLayout>
+      <Signup {params} />
+    </PublicLayout>
+  </Route>
+
+  <Route path="/verify" let:params>
+    <PublicLayout>
+      <VerifyEmail {params} />
     </PublicLayout>
   </Route>
 

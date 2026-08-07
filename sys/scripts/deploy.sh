@@ -58,11 +58,17 @@ git_pull() {
     echo "Code updated ($PREVIOUS_SHA -> $(git rev-parse HEAD))"
 }
 
-# Function to update dependencies (if requirements changed)
+# Function to update dependencies
 update_dependencies() {
-    echo -e "${YELLOW}📦 Checking Python dependencies...${NC}"
+    echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
 
-    # Check if requirements.txt changed
+    # Keep this ahead of run_migrations: the migration runner imports
+    # peewee-migrate, so the deploy that introduces a dependency has to install
+    # it before the step that needs it.
+    #
+    # Gating here is sound now that changed_since_previous() compares against
+    # the pre-pull SHA. It was not when the comparison was `HEAD~1 HEAD`, which
+    # saw only the final commit of a push.
     if changed_since_previous "backend/requirements.txt"; then
         echo "Requirements changed, updating..."
         $DEPLOY_DIR/venv/bin/pip install -r $DEPLOY_DIR/backend/requirements.txt
@@ -86,16 +92,44 @@ build_frontend() {
 
 # Function to run database migrations
 run_migrations() {
-    echo -e "${YELLOW}🗄️ Checking for database migrations...${NC}"
+    echo -e "${YELLOW}🗄️ Running database migrations...${NC}"
 
-    # Check if migration files changed
-    if changed_since_previous "backend/migrations/"; then
-        echo "Migration files changed, checking database..."
-        # Add migration logic here if needed
-        echo "Migrations complete"
-    else
-        echo "No migrations needed"
+    # Deliberately NOT gated on changed_since_previous, unlike the pip step
+    # above. That helper answers "did migration files change in this push",
+    # but the question that matters is "does this database have unapplied
+    # migrations" -- and only the migratehistory table knows. A deploy that
+    # failed partway, a rollback and re-deploy, or a database restored from an
+    # older backup all leave migrations pending with no diff to detect them.
+    # peewee-migrate skips what it has already applied, so always asking costs
+    # one query.
+    #
+    # This must happen before restart_service. The old code is still serving
+    # traffic at this point and does not know about the new columns, so
+    # migrating first means the new code never starts against an old schema.
+    cd $DEPLOY_DIR
+
+    # Migrate the database the SERVICE uses, which is not necessarily the one
+    # manage.py would pick on its own. systemd sets DATABASE_PATH from
+    # /opt/kanban/.env (EnvironmentFile) falling back to the Environment= line
+    # in kanban.service; this shell has neither, so without the lookup below
+    # manage.py defaults to ./kanban.db and would happily migrate the wrong
+    # file -- leaving the live database untouched and unmigrated.
+    #
+    # Read rather than sourced: .env is systemd-format, where values are
+    # literal to end of line, so `RESEND_FROM=Kanban <noreply@...>` is valid
+    # there but would be a redirect to bash.
+    DB_PATH=""
+    if [ -f "$DEPLOY_DIR/.env" ]; then
+        DB_PATH=$(grep -E '^[[:space:]]*DATABASE_PATH=' "$DEPLOY_DIR/.env" \
+            | tail -1 | cut -d= -f2- | tr -d '"'"'"'' | xargs)
     fi
+    # Matches Environment=DATABASE_PATH in sys/systemd/kanban.service.
+    DB_PATH="${DB_PATH:-$DEPLOY_DIR/kanban.db}"
+
+    echo "Target database: $DB_PATH"
+    DATABASE_PATH="$DB_PATH" $DEPLOY_DIR/venv/bin/python manage.py migrate
+
+    echo "Migrations complete"
 }
 
 # Function to restart service

@@ -1,92 +1,85 @@
+"""Peewee migrations -- 001_unix_permissions.
+
+Update the schema for Unix-like permissions:
+
+1. Add owner_id to Organization, populated from the old
+   organization_member.role == 'owner' rows
+2. Add is_public_to_org to Board (default False)
+3. Leave the now-orphaned role columns alone; the app ignores them
+
+Originally a standalone script run by hand. Converted to run under
+peewee-migrate so deploys apply it automatically -- see manage.py migrate.
+
+Written to be safely re-runnable. Production applied this by hand long before
+there was a migration history table, so the first router run will try it
+again; every step below checks before it acts. A fresh install is also a
+no-op, because init_db() creates these tables from the models with the
+columns already present.
 """
-Migration to update database schema for Unix-like permissions.
 
-Changes:
-1. Add owner_id column to Organization table
-2. Add is_public_to_org column to Board table (default False)
-3. Role columns in OrganizationMember and TeamMember will be ignored
-
-This migration is for SQLite which has limited ALTER TABLE support.
-
-Run from the project root: python backend/migrations/001_unix_permissions.py
-"""
-
-import sqlite3
-import os
+import peewee as pw
+from peewee_migrate import Migrator
 
 
-def migrate():
-    db_path = os.path.join(os.getcwd(), "kanban.db")
+def _table_exists(database, table):
+    rows = database.execute_sql(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
+    ).fetchall()
+    return bool(rows)
 
-    if not os.path.exists(db_path):
-        print("No database file found at:", db_path)
+
+def _columns(database, table):
+    return [row[1] for row in database.execute_sql(f"PRAGMA table_info({table})")]
+
+
+def migrate(migrator: Migrator, database: pw.Database, *, fake=False):
+    if fake:
         return
 
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    for table in ("organization", "board"):
+        if not _table_exists(database, table):
+            print(f"  {table} table does not exist yet, nothing to migrate")
+            return
 
-    print("Starting migration...")
-
-    # Step 1: Check current schema
-    print("Step 1: Checking current schema...")
-    cursor.execute("PRAGMA table_info(organization)")
-    columns = [row[1] for row in cursor.fetchall()]
-    print(f"  Current organization columns: {columns}")
-
-    cursor.execute("PRAGMA table_info(board)")
-    columns = [row[1] for row in cursor.fetchall()]
-    print(f"  Current board columns: {columns}")
-
-    # Step 2: Back up existing organization owners (from organization_member.role = 'owner')
-    print("\nStep 2: Backing up organization ownership data...")
+    # Capture ownership from the old role column before adding owner_id. On a
+    # database that already migrated, the role column is gone and this yields
+    # nothing -- which is correct, owner_id is already populated.
+    org_owners = []
     try:
-        cursor.execute("""
+        org_owners = database.execute_sql("""
             SELECT om.organization_id, om.user_id, u.username, o.name
             FROM organization_member om
             JOIN user u ON om.user_id = u.id
             JOIN organization o ON om.organization_id = o.id
             WHERE om.role = 'owner'
-        """)
-        org_owners = cursor.fetchall()
+        """).fetchall()
         print(f"  Found {len(org_owners)} organization owners to migrate")
-        for org_id, user_id, username, org_name in org_owners:
-            print(f"    Org '{org_name}' (id={org_id}) -> owner: {username} (id={user_id})")
-    except sqlite3.OperationalError as e:
-        print(f"  Warning: Could not query organization members: {e}")
-        org_owners = []
+    except pw.OperationalError:
+        print("  No legacy role column to read ownership from, skipping")
 
-    # Step 3: Add owner_id column to organization table
-    print("\nStep 3: Adding owner_id column to organization table...")
-    try:
-        cursor.execute("ALTER TABLE organization ADD COLUMN owner_id INTEGER")
-        print("  Added owner_id column")
-    except sqlite3.OperationalError as e:
-        if "duplicate column name" in str(e):
-            print("  Column already exists, skipping...")
-        else:
-            print(f"  Error: {e}")
+    if "owner_id" in _columns(database, "organization"):
+        print("  organization.owner_id already exists")
+    else:
+        database.execute_sql("ALTER TABLE organization ADD COLUMN owner_id INTEGER")
+        print("  Added organization.owner_id")
 
-    # Step 4: Add is_public_to_org column to board table
-    print("\nStep 4: Adding is_public_to_org column to board table...")
-    try:
-        cursor.execute("ALTER TABLE board ADD COLUMN is_public_to_org INTEGER DEFAULT 0")
-        print("  Added is_public_to_org column")
-    except sqlite3.OperationalError as e:
-        if "duplicate column name" in str(e):
-            print("  Column already exists, skipping...")
-        else:
-            print(f"  Error: {e}")
+    if "is_public_to_org" in _columns(database, "board"):
+        print("  board.is_public_to_org already exists")
+    else:
+        database.execute_sql(
+            "ALTER TABLE board ADD COLUMN is_public_to_org INTEGER DEFAULT 0"
+        )
+        print("  Added board.is_public_to_org")
 
-    # Step 5: Update organization owner_id values
-    print("\nStep 5: Setting organization owners...")
     for org_id, user_id, username, org_name in org_owners:
-        cursor.execute("UPDATE organization SET owner_id = ? WHERE id = ?", (user_id, org_id))
-        print(f"  Set owner_id={user_id} for org id={org_id} ({org_name})")
+        database.execute_sql(
+            "UPDATE organization SET owner_id = ? WHERE id = ?", (user_id, org_id)
+        )
+        print(f"  Set owner_id={user_id} ({username}) on org {org_id} ({org_name})")
 
-    # Step 6: Handle organizations that might not have an owner set
-    print("\nStep 6: Setting fallback owners for any orgs without owner...")
+    # Any org still without an owner falls back to its lowest-id member.
     try:
-        cursor.execute("""
+        database.execute_sql("""
             UPDATE organization
             SET owner_id = (
                 SELECT MIN(user_id) FROM organization_member
@@ -95,23 +88,16 @@ def migrate():
             WHERE owner_id IS NULL
             AND id IN (SELECT DISTINCT organization_id FROM organization_member)
         """)
-        print(f"  Updated {cursor.rowcount} organizations with fallback owners")
-    except sqlite3.OperationalError:
-        print("  (organization_member table not found, skipping fallback owners)")
-
-    conn.commit()
-    conn.close()
-
-    print("\n" + "="*60)
-    print("Migration completed successfully!")
-    print("="*60)
-    print("\nNote: role columns in organization_member and team_member tables")
-    print("      are now orphaned and will be ignored by the application.")
-    print("\nThe new permission model:")
-    print("  - Organization has an explicit owner (like root)")
-    print("  - Board can be shared with one team or made public to org")
-    print("  - Any team member can add other org members to the team")
+        print("  Applied fallback owners where needed")
+    except pw.OperationalError:
+        print("  organization_member table not found, skipping fallback owners")
 
 
-if __name__ == "__main__":
-    migrate()
+def rollback(migrator: Migrator, database: pw.Database, *, fake=False):
+    """No rollback.
+
+    SQLite cannot drop a column without rebuilding the table, and the data
+    this migration recovered (ownership) has no home to go back to -- the
+    role column it came from is gone.
+    """
+    raise NotImplementedError("001_unix_permissions cannot be rolled back")

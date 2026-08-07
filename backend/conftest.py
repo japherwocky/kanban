@@ -33,37 +33,16 @@ TEST_MODELS = None
 
 
 def _models():
+    """Every model, imported lazily so DATABASE_PATH above is set first.
+
+    Reads backend.models.ALL_MODELS rather than repeating the list, so a new
+    model cannot be added to the app and silently missed by the test schema.
+    """
     global TEST_MODELS
     if TEST_MODELS is None:
-        from backend.models import (
-            User,
-            Board,
-            Column,
-            Card,
-            Comment,
-            Organization,
-            OrganizationMember,
-            Team,
-            TeamMember,
-            ApiKey,
-            BetaSignup,
-            OrganizationInvite,
-        )
+        from backend.models import ALL_MODELS
 
-        TEST_MODELS = [
-            User,
-            Board,
-            Column,
-            Card,
-            Comment,
-            Organization,
-            OrganizationMember,
-            Team,
-            TeamMember,
-            ApiKey,
-            BetaSignup,
-            OrganizationInvite,
-        ]
+        TEST_MODELS = ALL_MODELS
     return TEST_MODELS
 
 
@@ -86,39 +65,12 @@ def _setup_test_db():
 @pytest.fixture
 def db_session(_setup_test_db):
     """Per-test database fixture that clears all data between tests."""
-    from backend.models import (
-        User,
-        Board,
-        Column,
-        Card,
-        Comment,
-        Organization,
-        OrganizationMember,
-        Team,
-        TeamMember,
-        ApiKey,
-        BetaSignup,
-        OrganizationInvite,
-    )
-
-    # Clear all table data using peewee's delete method
-    for table in [
-        Card,
-        Comment,
-        Column,
-        Board,
-        TeamMember,
-        Team,
-        OrganizationMember,
-        Organization,
-        ApiKey,
-        BetaSignup,
-        OrganizationInvite,
-        User,
-    ]:
+    # Reversed, so children go before the parents they reference. ALL_MODELS is
+    # ordered parents-first for create_tables; deletion wants the opposite.
+    for table in reversed(_models()):
         try:
             table.delete().execute()
-        except:
+        except Exception:
             pass
     yield _db
 

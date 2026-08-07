@@ -15,35 +15,7 @@ def init_db():
         return
 
     db.connect()
-    from backend.models import (
-        User,
-        Board,
-        Column,
-        Card,
-        Comment,
-        Organization,
-        OrganizationMember,
-        Team,
-        TeamMember,
-        BetaSignup,
-        ApiKey,
-        OrganizationInvite,
-    )
+    from backend.models import ALL_MODELS
 
-    db.create_tables(
-        [
-            User,
-            Board,
-            Column,
-            Card,
-            Comment,
-            Organization,
-            OrganizationMember,
-            Team,
-            TeamMember,
-            BetaSignup,
-            ApiKey,
-            OrganizationInvite,
-        ]
-    )
+    db.create_tables(ALL_MODELS)
     db.close()

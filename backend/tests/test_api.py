@@ -116,13 +116,13 @@ def test_get_board_with_columns(client, auth_headers, test_user):
     assert response.status_code == 200
     board_id = response.json()["id"]
 
-    # Get board - columns need to be created separately since API doesn't create defaults
     response = client.get(f"/api/boards/{board_id}", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Board with Columns"
     assert "columns" in data
-    # Note: API no longer creates default columns
+    assert len(data["columns"]) == 3
+    assert data["columns"][0]["name"] == "To Do"
 
 
 def test_create_column(client, auth_headers, test_user):
@@ -270,7 +270,7 @@ def test_delete_board(client, auth_headers, test_user):
 
 def test_reorder_cards(client, auth_headers, test_user):
     """Test reordering cards within a column"""
-    # Create board and column
+    # Create board (gets default columns: To Do, In Progress, For Review)
     response = client.post(
         "/api/boards",
         json={"name": "Reorder Cards Board"},
@@ -278,12 +278,12 @@ def test_reorder_cards(client, auth_headers, test_user):
     )
     board_id = response.json()["id"]
 
-    response = client.post(
-        "/api/columns",
-        json={"board_id": board_id, "name": "To Do", "position": 0},
+    # Use the first default column
+    response = client.get(
+        f"/api/boards/{board_id}",
         headers=auth_headers,
     )
-    column_id = response.json()["id"]
+    column_id = response.json()["columns"][0]["id"]
 
     # Create multiple cards
     card_ids = []
@@ -320,7 +320,7 @@ def test_reorder_cards(client, auth_headers, test_user):
 
 def test_reorder_columns(client, auth_headers, test_user):
     """Test reordering columns on a board"""
-    # Create board
+    # Create board (gets default columns: To Do, In Progress, For Review)
     response = client.post(
         "/api/boards",
         json={"name": "Reorder Columns Board"},
@@ -328,15 +328,13 @@ def test_reorder_columns(client, auth_headers, test_user):
     )
     board_id = response.json()["id"]
 
-    # Create multiple columns
-    column_ids = []
-    for i in range(3):
-        response = client.post(
-            "/api/columns",
-            json={"board_id": board_id, "name": f"Column {i}", "position": i},
-            headers=auth_headers,
-        )
-        column_ids.append(response.json()["id"])
+    # Fetch the default columns
+    response = client.get(
+        f"/api/boards/{board_id}",
+        headers=auth_headers,
+    )
+    columns = response.json()["columns"]
+    column_ids = [c["id"] for c in columns]
 
     # Reorder columns: reverse their order
     reorder_request = [
@@ -357,7 +355,7 @@ def test_reorder_columns(client, auth_headers, test_user):
     response = client.get(f"/api/boards/{board_id}", headers=auth_headers)
     assert response.status_code == 200
     column_names = [c["name"] for c in response.json()["columns"]]
-    assert column_names == ["Column 2", "Column 1", "Column 0"]
+    assert column_names == ["For Review", "In Progress", "To Do"]
 
 
 def test_reorder_cards_requires_auth(client):
@@ -462,20 +460,28 @@ def test_create_column_without_position_appends(client, auth_headers, test_user)
         "/api/boards", json={"name": "Append Board"}, headers=auth_headers
     ).json()["id"]
 
+    # A new board is not empty -- it comes with the default columns. Derived
+    # rather than hardcoded so changing that default list does not break this
+    # test, which is about appending, not about what the defaults are.
+    existing = client.get(f"/api/boards/{board_id}", headers=auth_headers).json()[
+        "columns"
+    ]
+    end = max(c["position"] for c in existing) + 1
+
     first = client.post(
         "/api/columns",
         json={"board_id": board_id, "name": "First"},
         headers=auth_headers,
     )
     assert first.status_code == 200
-    assert first.json()["position"] == 0
+    assert first.json()["position"] == end
 
     second = client.post(
         "/api/columns",
         json={"board_id": board_id, "name": "Second"},
         headers=auth_headers,
     )
-    assert second.json()["position"] == 1
+    assert second.json()["position"] == end + 1
 
 
 def test_create_column_appends_after_the_highest_position(

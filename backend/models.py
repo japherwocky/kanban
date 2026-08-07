@@ -21,14 +21,38 @@ class BaseModel(Model):
 PASSWORD_MAX_LENGTH = 72
 
 
+def _as_datetime(value):
+    """Normalize a DateTimeField read back into an aware UTC datetime.
+
+    Peewee writes aware datetimes to SQLite as '...+00:00', which matches none
+    of the formats it tries when reading them back, so it hands us the raw
+    string instead. Naive values are assumed UTC -- everything in this file
+    writes UTC, and a naive value would otherwise blow up on comparison with
+    an aware one.
+    """
+    if isinstance(value, str):
+        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value
+
+
 class User(BaseModel):
     username = CharField(unique=True, max_length=100)
     password_hash = CharField(max_length=255)
-    email = CharField(max_length=255, null=True)
+    # Unique, but still nullable: accounts predating self-serve signup have no
+    # email, and SQLite lets a unique index hold any number of NULLs.
+    email = CharField(max_length=255, null=True, unique=True)
+    # Self-serve signups start False and are gated out of login until they
+    # click the emailed link. Accounts made by an admin or the CLI are created
+    # verified -- whoever ran that already vouched for the person.
+    email_verified = BooleanField(default=False)
     admin = BooleanField(default=False)
 
     @classmethod
-    def create_user(cls, username, password, email=None, admin=False):
+    def create_user(
+        cls, username, password, email=None, admin=False, email_verified=True
+    ):
         if len(password) > PASSWORD_MAX_LENGTH:
             raise ValueError(
                 f"Password must be {PASSWORD_MAX_LENGTH} characters or fewer"
@@ -37,7 +61,11 @@ class User(BaseModel):
             password.encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
         return cls.create(
-            username=username, password_hash=password_hash, email=email, admin=admin
+            username=username,
+            password_hash=password_hash,
+            email=email,
+            admin=admin,
+            email_verified=email_verified,
         )
 
     def verify_password(self, password):
@@ -255,10 +283,7 @@ class OrganizationInvite(BaseModel):
 
     def is_expired(self):
         """Check if invite has expired."""
-        expires_at = self.expires_at
-        if isinstance(expires_at, str):
-            expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-        return datetime.now(timezone.utc) > expires_at
+        return datetime.now(timezone.utc) > _as_datetime(self.expires_at)
 
     def revoke(self):
         """Revoke this invite."""
@@ -283,3 +308,63 @@ class OrganizationInvite(BaseModel):
             organization=self.organization,
             joined_at=datetime.now(timezone.utc),
         )
+
+
+VERIFICATION_TOKEN_EXPIRY_HOURS = 24
+
+
+class EmailVerificationToken(BaseModel):
+    """One-shot token proving a self-serve signup owns their email address."""
+
+    user = ForeignKeyField(User, backref="verification_tokens")
+    token = CharField(max_length=64, unique=True)
+    created_at = DateTimeField()
+    expires_at = DateTimeField()
+    used_at = DateTimeField(null=True)
+
+    @classmethod
+    def create_for(cls, user):
+        """Issue a fresh token for a user. Returns (record, token)."""
+        token = generate_invite_token()
+        now = datetime.now(timezone.utc)
+        return cls.create(
+            user=user,
+            token=token,
+            created_at=now,
+            expires_at=now + timedelta(hours=VERIFICATION_TOKEN_EXPIRY_HOURS),
+        ), token
+
+    def is_expired(self):
+        expires_at = _as_datetime(self.expires_at)
+        return datetime.now(timezone.utc) > expires_at
+
+    def is_used(self):
+        return self.used_at is not None
+
+    def mark_used(self):
+        self.used_at = datetime.now(timezone.utc)
+        self.save()
+
+
+# Every model, parents before children.
+#
+# Single source of truth: database.py, manage.py and the test fixtures all read
+# this instead of keeping their own copies. They used to keep four separate
+# lists, and manage.py's drifted three tables out of date -- `manage.py init`
+# quietly built an incomplete schema and `manage.py status` under-reported.
+# Adding a model here is now the only step required.
+ALL_MODELS = [
+    User,
+    Board,
+    Column,
+    Card,
+    Comment,
+    Organization,
+    OrganizationMember,
+    Team,
+    TeamMember,
+    BetaSignup,
+    ApiKey,
+    OrganizationInvite,
+    EmailVerificationToken,
+]
