@@ -427,3 +427,157 @@ def test_describe_http_error_prefers_server_detail():
 
     message = describe_http_error(requests.exceptions.HTTPError(response=response))
     assert message == "Board not found"
+
+
+# === Machine-readable output (--json / KANBAN_OUTPUT=json) ===
+
+
+@pytest.fixture
+def json_mode():
+    """Turn on JSON output for one test and put it back afterwards."""
+    from kanban.output import set_json_output
+
+    set_json_output(True)
+    yield
+    set_json_output(None)
+
+
+@pytest.fixture(autouse=True)
+def _reset_output_mode():
+    from kanban.output import set_json_output
+
+    set_json_output(None)
+    yield
+    set_json_output(None)
+
+
+def test_json_output_emits_raw_api_response(capsys, json_mode):
+    """--json prints the API payload verbatim, so a script can index into it
+    instead of regexing prose out of the human rendering."""
+    import json
+    from kanban.cli import cmd_boards
+
+    payload = [
+        {"id": 1, "name": "Dev", "shared_team_id": 1},
+        {"id": 3, "name": "Other", "shared_team_id": None},
+    ]
+    mock_client = MagicMock()
+    mock_client.boards.return_value = payload
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_boards()
+
+    assert json.loads(capsys.readouterr().out) == payload
+
+
+def test_json_output_gives_ids_without_parsing_prose(capsys, json_mode):
+    """The case from the ticket: 'Column created with id=17' needed a regex.
+    The id now comes off a parsed object."""
+    import json
+    from kanban.cli import cmd_column_create
+
+    mock_client = MagicMock()
+    mock_client.column_create.return_value = {"id": 17, "name": "Todo", "position": 0}
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_column_create(board_id=1, name="Todo", position=0)
+
+    assert json.loads(capsys.readouterr().out)["id"] == 17
+
+
+def test_human_output_is_unchanged_by_default(capsys):
+    from kanban.cli import cmd_column_create
+
+    mock_client = MagicMock()
+    mock_client.column_create.return_value = {"id": 17}
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_column_create(board_id=1, name="Todo", position=0)
+
+    out = capsys.readouterr().out
+    assert "Column created with id=17" in out
+    assert "{" not in out
+
+
+def test_kanban_output_env_var_selects_json(capsys, monkeypatch):
+    import json
+    from kanban.cli import cmd_boards
+
+    monkeypatch.setenv("KANBAN_OUTPUT", "json")
+
+    mock_client = MagicMock()
+    mock_client.boards.return_value = [{"id": 1, "name": "Dev"}]
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_boards()
+
+    assert json.loads(capsys.readouterr().out) == [{"id": 1, "name": "Dev"}]
+
+
+def test_json_errors_go_to_stderr_leaving_stdout_parseable(capsys, json_mode):
+    """A script must be able to parse stdout without first checking whether it
+    holds a result or an error message."""
+    import json
+    import requests
+    import typer
+    from kanban.cli import cmd_card_delete
+
+    response = MagicMock()
+    response.status_code = 404
+    mock_client = MagicMock()
+    mock_client.card_delete.side_effect = requests.exceptions.HTTPError(
+        response=response
+    )
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        with pytest.raises(typer.Exit):
+            cmd_card_delete(card_id=42)
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    error = json.loads(captured.err)
+    assert error["status"] == 404
+    assert "42" in error["error"]
+
+
+def test_json_login_does_not_print_the_access_token(capsys, json_mode):
+    """The token is already saved to config, and stdout is what CI logs."""
+    import json
+    from kanban.cli import cmd_login
+
+    mock_client = MagicMock()
+    mock_client.login.return_value = "secret-token-value"
+
+    with patch("kanban.cli.KanbanClient", return_value=mock_client):
+        cmd_login(username="alice", password="pw", server=None)
+
+    captured = capsys.readouterr()
+    assert "secret-token-value" not in captured.out
+    assert json.loads(captured.out)["username"] == "alice"
+
+
+@pytest.mark.parametrize(
+    "argv,expected_found,expected_argv",
+    [
+        # Typed after the subcommand -- click would reject it, so main() strips it.
+        (
+            ["kanban", "board", "list", "--json"],
+            True,
+            ["kanban", "board", "list"],
+        ),
+        # Typed as a root option, which click would accept anyway.
+        (["kanban", "--json", "board", "list"], True, ["kanban", "board", "list"]),
+        (["kanban", "board", "list"], False, ["kanban", "board", "list"]),
+        # Following an option, "--json" is that option's value, not our flag.
+        (
+            ["kanban", "card", "create", "1", "t", "--description", "--json"],
+            False,
+            ["kanban", "card", "create", "1", "t", "--description", "--json"],
+        ),
+    ],
+)
+def test_extract_json_flag_positions(argv, expected_found, expected_argv):
+    from kanban.cli import _extract_json_flag
+
+    assert _extract_json_flag(argv) is expected_found
+    assert argv == expected_argv

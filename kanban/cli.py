@@ -17,6 +17,7 @@ from kanban.config import (
     get_runtime_api_key,
     set_runtime_api_key,
 )
+from kanban.output import emit, emit_error, set_json_output
 
 app = typer.Typer(
     help="Kanban board CLI", no_args_is_help=True, invoke_without_command=True
@@ -27,7 +28,7 @@ def _version_callback(value: bool):
     if value:
         from kanban import __version__
 
-        rprint(f"kanban {__version__}")
+        emit({"version": __version__}, lambda: rprint(f"kanban {__version__}"))
         raise typer.Exit()
 
 
@@ -41,8 +42,19 @@ def _root(
         callback=_version_callback,
         is_eager=True,
     ),
+    json_out: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the raw API response as JSON instead of formatted text. "
+        "Can also be set with KANBAN_OUTPUT=json.",
+    ),
 ):
     """Kanban board CLI"""
+    # main() usually strips --json before typer sees it, so this only fires
+    # when app() is invoked directly. Declaring it here is what puts it in
+    # `kanban --help`.
+    if json_out:
+        set_json_output(True)
 
 
 def describe_http_error(e):
@@ -87,9 +99,7 @@ def make_client():
     token = get_token()
     api_key = get_api_key()
     if not token and not api_key:
-        rprint(
-            "[red]Not authenticated. Run 'kanban login' first or use --api-key.[/red]"
-        )
+        emit_error("Not authenticated. Run 'kanban login' first or use --api-key.")
         raise typer.Exit(1)
     return KanbanClient(token=token, api_key=api_key)
 
@@ -104,9 +114,16 @@ def cmd_config(
     """Configure the CLI or show current settings."""
     if url:
         set_server_url(url)
-        rprint(f"Server URL set to: [green]{url}[/green]")
+        emit(
+            {"server_url": url},
+            lambda: rprint(f"Server URL set to: [green]{url}[/green]"),
+        )
     else:
-        rprint(f"Server URL: [cyan]{get_server_url()}[/cyan]")
+        current = get_server_url()
+        emit(
+            {"server_url": current},
+            lambda: rprint(f"Server URL: [cyan]{current}[/cyan]"),
+        )
 
 
 @app.command("login")
@@ -137,7 +154,7 @@ def cmd_login(
     try:
         token = client.login(username, password)
     except Exception as e:
-        rprint(f"[red]Login failed: {e}[/red]")
+        emit_error(f"Login failed: {e}")
         raise typer.Exit(1)
     # Only after a successful login: the token was issued by server_url, so
     # every later command has to talk to that same server. Persist an explicit
@@ -145,14 +162,19 @@ def cmd_login(
     set_token(token)
     if server is not None:
         set_server_url(server_url)
-    rprint(f"Logged in as [green]{username}[/green]")
+    # The access token is deliberately left out of the JSON: it is already
+    # saved to the config file, and stdout is exactly what CI logs capture.
+    emit(
+        {"ok": True, "username": username, "server_url": server_url},
+        lambda: rprint(f"Logged in as [green]{username}[/green]"),
+    )
 
 
 @app.command("logout")
 def cmd_logout():
     """Logout and clear credentials."""
     clear_token()
-    rprint("Logged out")
+    emit({"ok": True}, lambda: rprint("Logged out"))
 
 
 # === Board Commands ===
@@ -166,16 +188,20 @@ def cmd_boards():
     """List all boards."""
     client = make_client()
     boards = client.boards()
-    if not boards:
-        rprint("No boards found")
-        return
-    for b in boards:
-        shared_info = ""
-        if b.get("shared_team_id"):
-            shared_info = f" (shared with team {b['shared_team_id']})"
-        elif b.get("is_public_to_org"):
-            shared_info = " (public to organization)"
-        rprint(f"{b['id']:4}  [bold]{b['name']}[/bold]{shared_info}")
+
+    def render():
+        if not boards:
+            rprint("No boards found")
+            return
+        for b in boards:
+            shared_info = ""
+            if b.get("shared_team_id"):
+                shared_info = f" (shared with team {b['shared_team_id']})"
+            elif b.get("is_public_to_org"):
+                shared_info = " (public to organization)"
+            rprint(f"{b['id']:4}  [bold]{b['name']}[/bold]{shared_info}")
+
+    emit(boards, render)
 
 
 @board_app.command("create")
@@ -183,7 +209,7 @@ def cmd_board_create(name: str = typer.Argument(..., help="Board name")):
     """Create a new board."""
     client = make_client()
     result = client.board_create(name)
-    rprint(f"Board created with [green]id={result['id']}[/green]")
+    emit(result, lambda: rprint(f"Board created with [green]id={result['id']}[/green]"))
 
 
 @board_app.command("get")
@@ -194,27 +220,31 @@ def cmd_board_get(board_id: int = typer.Argument(..., help="Board ID")):
 
     client = make_client()
     board = client.board_get(board_id)
-    console = Console()
-    console.print(f"Board: [bold]{board['name']}[/bold]")
-    for col in board.get("columns", []):
-        line = Text("  ")
-        line.append(f"#{col['id']}", style="yellow")
-        line.append(f" {col['name']}")
-        line.append(f" ({len(col['cards'])} cards)")
-        console.print(line)
-        for card in col.get("cards", []):
-            card_line = Text("    - ")
-            card_line.append(f"#{card['id']}", style="yellow")
-            card_line.append(f" {card['title']}")
-            console.print(card_line)
+
+    def render():
+        console = Console()
+        console.print(f"Board: [bold]{board['name']}[/bold]")
+        for col in board.get("columns", []):
+            line = Text("  ")
+            line.append(f"#{col['id']}", style="yellow")
+            line.append(f" {col['name']}")
+            line.append(f" ({len(col['cards'])} cards)")
+            console.print(line)
+            for card in col.get("cards", []):
+                card_line = Text("    - ")
+                card_line.append(f"#{card['id']}", style="yellow")
+                card_line.append(f" {card['title']}")
+                console.print(card_line)
+
+    emit(board, render)
 
 
 @board_app.command("delete")
 def cmd_board_delete(board_id: int = typer.Argument(..., help="Board ID")):
     """Delete a board."""
     client = make_client()
-    client.board_delete(board_id)
-    rprint("[green]Board deleted[/green]")
+    result = client.board_delete(board_id)
+    emit(result, lambda: rprint("[green]Board deleted[/green]"))
 
 
 @board_app.command("update")
@@ -224,8 +254,8 @@ def cmd_board_update(
 ):
     """Update board name."""
     client = make_client()
-    client.board_update(board_id, name)
-    rprint("[green]Board updated[/green]")
+    result = client.board_update(board_id, name)
+    emit(result, lambda: rprint("[green]Board updated[/green]"))
 
 
 # === Column Commands ===
@@ -243,15 +273,17 @@ def cmd_column_create(
     """Create a new column."""
     client = make_client()
     result = client.column_create(board_id, name, position)
-    rprint(f"Column created with [green]id={result['id']}[/green]")
+    emit(
+        result, lambda: rprint(f"Column created with [green]id={result['id']}[/green]")
+    )
 
 
 @column_app.command("delete")
 def cmd_column_delete(column_id: int = typer.Argument(..., help="Column ID")):
     """Delete a column."""
     client = make_client()
-    client.column_delete(column_id)
-    rprint("[green]Column deleted[/green]")
+    result = client.column_delete(column_id)
+    emit(result, lambda: rprint("[green]Column deleted[/green]"))
 
 
 # === Card Commands ===
@@ -272,7 +304,7 @@ def cmd_card_create(
     """Create a new card."""
     client = make_client()
     result = client.card_create(column_id, title, description, position)
-    rprint(f"Card created with [green]id={result['id']}[/green]")
+    emit(result, lambda: rprint(f"Card created with [green]id={result['id']}[/green]"))
 
 
 @card_app.command("update")
@@ -288,19 +320,19 @@ def cmd_card_update(
     """Update a card."""
     client = make_client()
     try:
-        client.card_update(card_id, title, description, position, column)
-        rprint("[green]Card updated[/green]")
+        result = client.card_update(card_id, title, description, position, column)
+        emit(result, lambda: rprint("[green]Card updated[/green]"))
     except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
-            rprint(f"[red]Card {card_id} not found. It may have been deleted.[/red]")
-        elif e.response.status_code == 403:
-            rprint("[red]You don't have permission to update this card.[/red]")
-        elif e.response.status_code == 422:
-            rprint(
-                "[red]Invalid data. Check that the card ID and column ID are correct.[/red]"
-            )
+        status = e.response.status_code
+        if status == 404:
+            message = f"Card {card_id} not found. It may have been deleted."
+        elif status == 403:
+            message = "You don't have permission to update this card."
+        elif status == 422:
+            message = "Invalid data. Check that the card ID and column ID are correct."
         else:
-            rprint(f"[red]Error: {e.response.text}[/red]")
+            message = f"Error: {e.response.text}"
+        emit_error(message, status=status)
         raise typer.Exit(1)
 
 
@@ -309,17 +341,17 @@ def cmd_card_delete(card_id: int = typer.Argument(..., help="Card ID")):
     """Delete a card."""
     client = make_client()
     try:
-        client.card_delete(card_id)
-        rprint("[green]Card deleted[/green]")
+        result = client.card_delete(card_id)
+        emit(result, lambda: rprint("[green]Card deleted[/green]"))
     except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
-            rprint(
-                f"[red]Card {card_id} not found. It may have already been deleted.[/red]"
-            )
-        elif e.response.status_code == 403:
-            rprint("[red]You don't have permission to delete this card.[/red]")
+        status = e.response.status_code
+        if status == 404:
+            message = f"Card {card_id} not found. It may have already been deleted."
+        elif status == 403:
+            message = "You don't have permission to delete this card."
         else:
-            rprint(f"[red]Error: {e.response.text}[/red]")
+            message = f"Error: {e.response.text}"
+        emit_error(message, status=status)
         raise typer.Exit(1)
 
 
@@ -334,13 +366,17 @@ def cmd_organizations():
     """List all organizations."""
     client = make_client()
     orgs = client.organizations()
-    if not orgs:
-        rprint("No organizations found")
-        return
-    for org in orgs:
-        rprint(
-            f"{org['id']:4}  [bold]{org['name']}[/bold] (owner: {org.get('owner_username', 'Unknown')})"
-        )
+
+    def render():
+        if not orgs:
+            rprint("No organizations found")
+            return
+        for org in orgs:
+            rprint(
+                f"{org['id']:4}  [bold]{org['name']}[/bold] (owner: {org.get('owner_username', 'Unknown')})"
+            )
+
+    emit(orgs, render)
 
 
 @org_app.command("create")
@@ -348,7 +384,10 @@ def cmd_organization_create(name: str = typer.Argument(..., help="Organization n
     """Create a new organization."""
     client = make_client()
     result = client.organization_create(name)
-    rprint(f"Organization created with [green]id={result['id']}[/green]")
+    emit(
+        result,
+        lambda: rprint(f"Organization created with [green]id={result['id']}[/green]"),
+    )
 
 
 @org_app.command("get")
@@ -356,12 +395,17 @@ def cmd_organization_get(org_id: int = typer.Argument(..., help="Organization ID
     """Show organization details."""
     client = make_client()
     org = client.organization_get(org_id)
-    rprint(f"Organization: [bold]{org['name']}[/bold]")
-    rprint(f"Owner: {org.get('owner_username', 'Unknown')}")
-    rprint("Members:")
-    for member in org.get("members", []):
-        role_info = f" ({member.get('role', 'member')})" if member.get("role") else ""
-        rprint(f"  - {member['username']}{role_info}")
+
+    def render():
+        rprint(f"Organization: [bold]{org['name']}[/bold]")
+        rprint(f"Owner: {org.get('owner_username', 'Unknown')}")
+        rprint("Members:")
+        for member in org.get("members", []):
+            role = member.get("role")
+            role_info = f" ({role or 'member'})" if role else ""
+            rprint(f"  - {member['username']}{role_info}")
+
+    emit(org, render)
 
 
 @org_app.command("members")
@@ -369,9 +413,14 @@ def cmd_organization_members(org_id: int = typer.Argument(..., help="Organizatio
     """List organization members."""
     client = make_client()
     members = client.organization_members(org_id)
-    for member in members:
-        role_info = f" ({member.get('role', 'member')})" if member.get("role") else ""
-        rprint(f"{member['id']:4}  {member['username']}{role_info}")
+
+    def render():
+        for member in members:
+            role = member.get("role")
+            role_info = f" ({role or 'member'})" if role else ""
+            rprint(f"{member['id']:4}  {member['username']}{role_info}")
+
+    emit(members, render)
 
 
 @org_app.command("member-add")
@@ -381,8 +430,8 @@ def cmd_organization_member_add(
 ):
     """Add member to organization."""
     client = make_client()
-    client.organization_member_add(org_id, username)
-    rprint(f"Added [green]{username}[/green] to organization")
+    result = client.organization_member_add(org_id, username)
+    emit(result, lambda: rprint(f"Added [green]{username}[/green] to organization"))
 
 
 @org_app.command("member-remove")
@@ -392,8 +441,11 @@ def cmd_organization_member_remove(
 ):
     """Remove member from organization."""
     client = make_client()
-    client.organization_member_remove(org_id, user_id)
-    rprint(f"Removed user [green]{user_id}[/green] from organization")
+    result = client.organization_member_remove(org_id, user_id)
+    emit(
+        result,
+        lambda: rprint(f"Removed user [green]{user_id}[/green] from organization"),
+    )
 
 
 # === Organization Invite Commands ===
@@ -409,12 +461,18 @@ def cmd_organization_invite_create(
     result = client.organization_invite_create(org_id, email)
     server_url = get_server_url()
     invite_link = f"{server_url.rstrip('/')}/#!/invite/{result['token']}"
-    rprint(f"[bold]Invite created![/bold]")
-    rprint(f"  ID:       {result['id']}")
-    rprint(f"  Email:    {email or '(anonymous)'}")
-    rprint(f"  Link:    [cyan]{invite_link}[/cyan]")
-    rprint("")
-    rprint("Share this link with the person you want to invite.")
+
+    def render():
+        rprint("[bold]Invite created![/bold]")
+        rprint(f"  ID:       {result['id']}")
+        rprint(f"  Email:    {email or '(anonymous)'}")
+        rprint(f"  Link:    [cyan]{invite_link}[/cyan]")
+        rprint("")
+        rprint("Share this link with the person you want to invite.")
+
+    # The link is assembled here, not by the server, so a script would have to
+    # rebuild it from the token -- hand it over alongside the raw response.
+    emit({**result, "invite_url": invite_link}, render)
 
 
 @org_app.command("invite-list")
@@ -422,15 +480,20 @@ def cmd_organization_invites(org_id: int = typer.Argument(..., help="Organizatio
     """List pending invites for an organization."""
     client = make_client()
     invites = client.organization_invites(org_id)
-    if not invites:
-        rprint("No pending invites")
-        return
-    rprint("[bold]Pending Invites:[/bold]")
-    for invite in invites:
-        rprint(f"  {invite['id']:4}  {invite['email'] or '(anonymous)'}")
-        rprint(
-            f"       Link: {get_server_url().rstrip('/')}/#!/invite/{invite['token']}"
-        )
+    base = get_server_url().rstrip("/")
+
+    def render():
+        if not invites:
+            rprint("No pending invites")
+            return
+        rprint("[bold]Pending Invites:[/bold]")
+        for invite in invites:
+            rprint(f"  {invite['id']:4}  {invite['email'] or '(anonymous)'}")
+            rprint(f"       Link: {base}/#!/invite/{invite['token']}")
+
+    emit(
+        [{**i, "invite_url": f"{base}/#!/invite/{i['token']}"} for i in invites], render
+    )
 
 
 @org_app.command("invite-revoke")
@@ -440,8 +503,10 @@ def cmd_organization_invite_revoke(
 ):
     """Revoke a pending invite."""
     client = make_client()
-    client.organization_invite_revoke(org_id, invite_id)
-    rprint(f"Invite [green]{invite_id}[/green] has been revoked")
+    result = client.organization_invite_revoke(org_id, invite_id)
+    emit(
+        result, lambda: rprint(f"Invite [green]{invite_id}[/green] has been revoked")
+    )
 
 
 # === Team Commands ===
@@ -459,13 +524,17 @@ def cmd_teams(
     """List teams in an organization."""
     client = make_client()
     teams = client.organization_teams(org_id)
-    if not teams:
-        rprint("No teams found")
-        return
-    for team in teams:
-        rprint(
-            f"{team['id']:4}  [bold]{team['name']}[/bold] (org: {team.get('organization_name', 'Unknown')})"
-        )
+
+    def render():
+        if not teams:
+            rprint("No teams found")
+            return
+        for team in teams:
+            rprint(
+                f"{team['id']:4}  [bold]{team['name']}[/bold] (org: {team.get('organization_name', 'Unknown')})"
+            )
+
+    emit(teams, render)
 
 
 @team_app.command("create")
@@ -476,7 +545,7 @@ def cmd_team_create(
     """Create a new team."""
     client = make_client()
     result = client.team_create(org_id, name)
-    rprint(f"Team created with [green]id={result['id']}[/green]")
+    emit(result, lambda: rprint(f"Team created with [green]id={result['id']}[/green]"))
 
 
 @team_app.command("get")
@@ -484,11 +553,15 @@ def cmd_team_get(team_id: int = typer.Argument(..., help="Team ID")):
     """Show team details."""
     client = make_client()
     team = client.team_get(team_id)
-    rprint(f"Team: [bold]{team['name']}[/bold]")
-    rprint(f"Organization: {team.get('organization_name', 'Unknown')}")
-    rprint("Members:")
-    for member in team.get("members", []):
-        rprint(f"  - {member['username']}")
+
+    def render():
+        rprint(f"Team: [bold]{team['name']}[/bold]")
+        rprint(f"Organization: {team.get('organization_name', 'Unknown')}")
+        rprint("Members:")
+        for member in team.get("members", []):
+            rprint(f"  - {member['username']}")
+
+    emit(team, render)
 
 
 @team_app.command("members")
@@ -496,8 +569,12 @@ def cmd_team_members(team_id: int = typer.Argument(..., help="Team ID")):
     """List team members."""
     client = make_client()
     members = client.team_members(team_id)
-    for member in members:
-        rprint(f"{member['id']:4}  {member['username']}")
+
+    def render():
+        for member in members:
+            rprint(f"{member['id']:4}  {member['username']}")
+
+    emit(members, render)
 
 
 @team_app.command("member-add")
@@ -507,8 +584,8 @@ def cmd_team_member_add(
 ):
     """Add member to team."""
     client = make_client()
-    client.team_member_add(team_id, username)
-    rprint(f"Added [green]{username}[/green] to team")
+    result = client.team_member_add(team_id, username)
+    emit(result, lambda: rprint(f"Added [green]{username}[/green] to team"))
 
 
 @team_app.command("member-remove")
@@ -518,8 +595,8 @@ def cmd_team_member_remove(
 ):
     """Remove member from team."""
     client = make_client()
-    client.team_member_remove(team_id, user_id)
-    rprint(f"Removed user [green]{user_id}[/green] from team")
+    result = client.team_member_remove(team_id, user_id)
+    emit(result, lambda: rprint(f"Removed user [green]{user_id}[/green] from team"))
 
 
 # === Board Sharing ===
@@ -535,11 +612,15 @@ def cmd_board_share(
     """Share board with team or make private."""
     client = make_client()
     team_id_value = None if team_id == "private" else team_id
-    client.board_share(board_id, team_id_value)
-    if team_id_value:
-        rprint(f"Board [green]{board_id}[/green] shared with team {team_id_value}")
-    else:
-        rprint(f"Board [green]{board_id}[/green] made private")
+    result = client.board_share(board_id, team_id_value)
+
+    def render():
+        if team_id_value:
+            rprint(f"Board [green]{board_id}[/green] shared with team {team_id_value}")
+        else:
+            rprint(f"Board [green]{board_id}[/green] made private")
+
+    emit(result, render)
 
 
 # === API Key Commands ===
@@ -553,17 +634,23 @@ def cmd_apikey_list():
     """List all API keys."""
     client = make_client()
     keys = client.api_keys()
-    if not keys:
-        rprint("No API keys found")
-        return
-    rprint("[bold]Your API Keys:[/bold]")
-    for key in keys:
-        status = "[green]active[/green]" if key["is_active"] else "[red]inactive[/red]"
-        last_used = key["last_used_at"][:10] if key["last_used_at"] else "never"
-        expires = key["expires_at"][:10] if key["expires_at"] else "never"
-        rprint(
-            f"  {key['prefix']}....  {key['name']}  {status}  last used: {last_used}  expires: {expires}"
-        )
+
+    def render():
+        if not keys:
+            rprint("No API keys found")
+            return
+        rprint("[bold]Your API Keys:[/bold]")
+        for key in keys:
+            status = (
+                "[green]active[/green]" if key["is_active"] else "[red]inactive[/red]"
+            )
+            last_used = key["last_used_at"][:10] if key["last_used_at"] else "never"
+            expires = key["expires_at"][:10] if key["expires_at"] else "never"
+            rprint(
+                f"  {key['prefix']}....  {key['name']}  {status}  last used: {last_used}  expires: {expires}"
+            )
+
+    emit(keys, render)
 
 
 @apikey_app.command("create")
@@ -573,15 +660,19 @@ def cmd_apikey_create(
     """Create a new API key. The key is shown only once - save it securely!"""
     client = make_client()
     result = client.api_key_create(name)
-    rprint(f"[bold]API Key created![/bold]")
-    rprint("")
-    rprint(f"  Name:    {result['name']}")
-    rprint(f"  Key:     [yellow]{result['key']}[/yellow]")
-    rprint(f"  Prefix:  {result['prefix']}....")
-    rprint("")
-    rprint(
-        "[yellow]IMPORTANT: This key is shown only once! Copy it now and store it securely.[/yellow]"
-    )
+
+    def render():
+        rprint("[bold]API Key created![/bold]")
+        rprint("")
+        rprint(f"  Name:    {result['name']}")
+        rprint(f"  Key:     [yellow]{result['key']}[/yellow]")
+        rprint(f"  Prefix:  {result['prefix']}....")
+        rprint("")
+        rprint(
+            "[yellow]IMPORTANT: This key is shown only once! Copy it now and store it securely.[/yellow]"
+        )
+
+    emit(result, render)
 
 
 @apikey_app.command("revoke")
@@ -589,10 +680,12 @@ def cmd_apikey_revoke(key_id: int = typer.Argument(..., help="API key ID to revo
     """Revoke (deactivate) an API key."""
     client = make_client()
     try:
-        client.api_key_revoke(key_id)
-        rprint(f"API key [green]{key_id}[/green] has been revoked")
+        result = client.api_key_revoke(key_id)
+        emit(
+            result, lambda: rprint(f"API key [green]{key_id}[/green] has been revoked")
+        )
     except Exception as e:
-        rprint(f"[red]Failed to revoke key: {e}[/red]")
+        emit_error(f"Failed to revoke key: {e}")
         raise typer.Exit(1)
 
 
@@ -603,10 +696,12 @@ def cmd_apikey_activate(
     """Reactivate a deactivated API key."""
     client = make_client()
     try:
-        client.api_key_activate(key_id)
-        rprint(f"API key [green]{key_id}[/green] has been activated")
+        result = client.api_key_activate(key_id)
+        emit(
+            result, lambda: rprint(f"API key [green]{key_id}[/green] has been activated")
+        )
     except Exception as e:
-        rprint(f"[red]Failed to activate key: {e}[/red]")
+        emit_error(f"Failed to activate key: {e}")
         raise typer.Exit(1)
 
 
@@ -630,12 +725,16 @@ def cmd_apikey_use(
 
         # Verify the key works by listing boards
         boards = client.boards()
-        rprint(f"[green]API key verified[/green] - found {len(boards)} board(s)")
-        rprint(
-            f"Run your command directly with: [cyan]kanban --api-key {key} <command>[/cyan]"
-        )
+
+        def render():
+            rprint(f"[green]API key verified[/green] - found {len(boards)} board(s)")
+            rprint(
+                f"Run your command directly with: [cyan]kanban --api-key {key} <command>[/cyan]"
+            )
+
+        emit({"ok": True, "board_count": len(boards)}, render)
     except Exception as e:
-        rprint(f"[red]API key verification failed: {e}[/red]")
+        emit_error(f"API key verification failed: {e}")
         raise typer.Exit(1)
 
 
@@ -645,12 +744,38 @@ def cmd_apikey_save(key: str = typer.Argument(..., help="API key to save")):
     from kanban.config import set_api_key
 
     set_api_key(key)
-    rprint("[green]API key saved to ~/.kanban.yaml[/green]")
-    rprint("Run commands without --api-key from now on.")
+
+    def render():
+        rprint("[green]API key saved to ~/.kanban.yaml[/green]")
+        rprint("Run commands without --api-key from now on.")
+
+    emit({"ok": True}, render)
+
+
+def _extract_json_flag(argv):
+    """Pull `--json` off the command line wherever it appears.
+
+    Click only accepts an option on the command that declares it, so
+    `kanban --json board list` would work while `kanban board list --json`
+    failed -- and the second form is the one people type. Strip it here
+    instead, the same trick `--api-key` already uses.
+
+    A `--json` sitting right after another option is left alone: there it is
+    that option's value (`--description --json`), not a flag of ours.
+    """
+    found = False
+    for i in range(len(argv) - 1, 0, -1):
+        if argv[i] == "--json" and not argv[i - 1].startswith("-"):
+            argv.pop(i)
+            found = True
+    return found
 
 
 def main():
     """Main entry point for the CLI."""
+    if _extract_json_flag(sys.argv):
+        set_json_output(True)
+
     # Check for --api-key option
     if "--api-key" in sys.argv or "-k" in sys.argv:
         idx = None
@@ -671,10 +796,11 @@ def main():
     try:
         app()
     except KanbanError as e:
-        rprint(f"[red]{e}[/red]")
+        emit_error(str(e))
         raise SystemExit(1)
     except requests.exceptions.HTTPError as e:
-        rprint(f"[red]{describe_http_error(e)}[/red]")
+        extra = {} if e.response is None else {"status": e.response.status_code}
+        emit_error(describe_http_error(e), **extra)
         raise SystemExit(1)
 
 

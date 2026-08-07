@@ -77,8 +77,7 @@ class KanbanClient:
         return self._request("POST", f"/api/boards/{board_id}", json={"name": name})
 
     def board_delete(self, board_id):
-        self._request("DELETE", f"/api/boards/{board_id}")
-        return True
+        return self._request("DELETE", f"/api/boards/{board_id}")
 
     def column_create(self, board_id, name, position):
         return self._request(
@@ -95,8 +94,7 @@ class KanbanClient:
         )
 
     def column_delete(self, column_id):
-        self._request("DELETE", f"/api/columns/{column_id}")
-        return True
+        return self._request("DELETE", f"/api/columns/{column_id}")
 
     def card_create(self, column_id, title, description=None, position=0):
         return self._request(
@@ -119,8 +117,7 @@ class KanbanClient:
         return self._request("PUT", f"/api/cards/{card_id}", json=data)
 
     def card_delete(self, card_id):
-        self._request("DELETE", f"/api/cards/{card_id}")
-        return True
+        return self._request("DELETE", f"/api/cards/{card_id}")
 
     # Organization methods
     def organizations(self):
@@ -149,8 +146,9 @@ class KanbanClient:
         )
 
     def organization_member_remove(self, org_id, user_id):
-        self._request("DELETE", f"/api/organizations/{org_id}/members/{user_id}")
-        return True
+        return self._request(
+            "DELETE", f"/api/organizations/{org_id}/members/{user_id}"
+        )
 
     # Invite methods
     def organization_invite_create(self, org_id, email=None):
@@ -166,8 +164,9 @@ class KanbanClient:
 
     def organization_invite_revoke(self, org_id, invite_id):
         """Revoke an invite."""
-        self._request("DELETE", f"/api/organizations/{org_id}/invites/{invite_id}")
-        return True
+        return self._request(
+            "DELETE", f"/api/organizations/{org_id}/invites/{invite_id}"
+        )
 
     def invite_get(self, token):
         """Get invite details."""
@@ -193,8 +192,7 @@ class KanbanClient:
         return self._request("PUT", f"/api/teams/{team_id}", json={"name": name})
 
     def team_delete(self, team_id):
-        self._request("DELETE", f"/api/teams/{team_id}")
-        return True
+        return self._request("DELETE", f"/api/teams/{team_id}")
 
     def team_members(self, team_id):
         return self._request("GET", f"/api/teams/{team_id}/members")
@@ -205,8 +203,7 @@ class KanbanClient:
         )
 
     def team_member_remove(self, team_id, user_id):
-        self._request("DELETE", f"/api/teams/{team_id}/members/{user_id}")
-        return True
+        return self._request("DELETE", f"/api/teams/{team_id}/members/{user_id}")
 
     # Board sharing
     def board_share(self, board_id, team_id=None):
