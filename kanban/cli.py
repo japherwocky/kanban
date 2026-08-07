@@ -292,6 +292,36 @@ card_app = typer.Typer(help="Card management commands", no_args_is_help=True)
 app.add_typer(card_app, name="card")
 
 
+@card_app.command("get")
+def cmd_card_get(card_id: int = typer.Argument(..., help="Card ID")):
+    """Show a card's full contents, including its description."""
+    from rich.console import Console
+
+    client = make_client()
+    card = client.card_get(card_id)
+
+    def render():
+        console = Console()
+        console.print(f"[yellow]#{card['id']}[/yellow] [bold]{card['title']}[/bold]")
+        console.print(
+            f"  on {card['board_name']} / {card['column_name']} "
+            f"(column {card['column_id']})"
+        )
+        # The description is user-written text, so hand it to rich as plain
+        # data -- printing it as markup would let a stray [b] eat characters.
+        if card.get("description"):
+            console.print("")
+            console.print(card["description"], markup=False, highlight=False)
+        else:
+            console.print("  [dim](no description)[/dim]")
+        for comment in card.get("comments", []):
+            console.print("")
+            console.print(f"  [cyan]{comment['username']}[/cyan]:")
+            console.print(comment["content"], markup=False, highlight=False)
+
+    emit(card, render)
+
+
 @card_app.command("create")
 def cmd_card_create(
     column_id: int = typer.Argument(..., help="Column ID"),

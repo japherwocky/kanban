@@ -6,6 +6,7 @@ Card management commands
 
 - [`kanban card create`](#kanban-card-create) — Create a new card.
 - [`kanban card delete`](#kanban-card-delete) — Delete a card.
+- [`kanban card get`](#kanban-card-get) — Show a card's full contents, including its description.
 - [`kanban card update`](#kanban-card-update) — Update a card.
 
 ---
@@ -34,6 +35,18 @@ Delete a card.
 
 ```bash
 kanban card delete <card_id>
+```
+
+**Arguments**
+
+- `card_id` (int) — Card ID
+
+## `kanban card get`
+
+Show a card's full contents, including its description.
+
+```bash
+kanban card get <card_id>
 ```
 
 **Arguments**

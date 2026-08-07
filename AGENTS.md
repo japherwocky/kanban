@@ -41,8 +41,17 @@ The flag works before or after the subcommand. In JSON mode stdout holds only
 the response; errors go to stderr as `{"error": ..., "status": ...}` alongside
 a non-zero exit code, so stdout is always safe to pipe into a parser.
 
-Note there is still no `card get` — a single card's description is only
-reachable through `board get <id> --json`.
+`kanban card get <id>` reads one card, including its description, the comments
+and which board/column it sits on:
+
+```bash
+kanban card get 92 --json | jq -r .description
+```
+
+Note that an unmatched `/api/...` path returns **200 with the SPA's HTML**, not
+a 404 — the catch-all in `backend/main.py` serves index.html for anything it
+does not recognise. A request to an endpoint that does not exist therefore
+looks like a success, which is worth remembering when probing the API by hand.
 
 ## Build, Lint, and Test Commands
 

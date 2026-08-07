@@ -108,6 +108,7 @@ to `~/.kanban.yaml`, and stdout is what CI logs capture.
 | `kanban share <board_id> <team_id\|private>` | Share board or make private |
 | `kanban column create <board_id> <name> <position>` | Create a column |
 | `kanban column delete <id>` | Delete a column |
+| `kanban card get <id>` | Show a card's description and comments |
 | `kanban card create <column_id> <title> [options]` | Create a card |
 | `kanban card update <id> <title> [options]` | Update a card |
 | `kanban card delete <id>` | Delete a card |
@@ -208,6 +209,7 @@ The backend exposes a REST API at `/api/`:
 - `DELETE /api/columns/{id}` - Delete column
 
 **Cards**
+- `GET /api/cards/{id}` - Get one card with its description and comments
 - `POST /api/cards` - Create card
 - `PUT /api/cards/{id}` - Update card
 - `DELETE /api/cards/{id}` - Delete card

@@ -581,3 +581,78 @@ def test_extract_json_flag_positions(argv, expected_found, expected_argv):
 
     assert _extract_json_flag(argv) is expected_found
     assert argv == expected_argv
+
+
+def test_cli_card_get_shows_the_description(capsys):
+    """`card` had create/update/delete but no way to read a card, so a
+    description was unreachable from the CLI."""
+    from kanban.cli import cmd_card_get
+
+    mock_client = MagicMock()
+    mock_client.card_get.return_value = {
+        "id": 92,
+        "title": "A card",
+        "description": "The body you could not read.",
+        "position": 0,
+        "column_id": 4,
+        "column_name": "Todo",
+        "board_id": 1,
+        "board_name": "Dev",
+        "comments": [],
+    }
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_get(card_id=92)
+
+    out = capsys.readouterr().out
+    mock_client.card_get.assert_called_once_with(92)
+    assert "The body you could not read." in out
+    assert "Todo" in out
+
+
+def test_cli_card_get_json_emits_raw_response(capsys, json_mode):
+    import json
+    from kanban.cli import cmd_card_get
+
+    payload = {
+        "id": 92,
+        "title": "A card",
+        "description": "body",
+        "position": 0,
+        "column_id": 4,
+        "column_name": "Todo",
+        "board_id": 1,
+        "board_name": "Dev",
+        "comments": [],
+    }
+    mock_client = MagicMock()
+    mock_client.card_get.return_value = payload
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_get(card_id=92)
+
+    assert json.loads(capsys.readouterr().out) == payload
+
+
+def test_cli_card_get_does_not_interpret_description_as_markup(capsys):
+    """Descriptions are user-written text. Rendered as rich markup, a stray
+    tag would silently eat characters -- or blow up on a malformed one."""
+    from kanban.cli import cmd_card_get
+
+    mock_client = MagicMock()
+    mock_client.card_get.return_value = {
+        "id": 1,
+        "title": "t",
+        "description": r"use re.search(r'id=(\d+)') on [bold] output",
+        "position": 0,
+        "column_id": 1,
+        "column_name": "c",
+        "board_id": 1,
+        "board_name": "b",
+        "comments": [],
+    }
+
+    with patch("kanban.cli.make_client", return_value=mock_client):
+        cmd_card_get(card_id=1)
+
+    assert "[bold]" in capsys.readouterr().out

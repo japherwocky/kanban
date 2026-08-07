@@ -96,6 +96,9 @@ class KanbanClient:
     def column_delete(self, column_id):
         return self._request("DELETE", f"/api/columns/{column_id}")
 
+    def card_get(self, card_id):
+        return self._request("GET", f"/api/cards/{card_id}")
+
     def card_create(self, column_id, title, description=None, position=0):
         return self._request(
             "POST",
