@@ -568,12 +568,16 @@ def test_json_login_does_not_print_the_access_token(capsys, json_mode):
         # Typed as a root option, which click would accept anyway.
         (["kanban", "--json", "board", "list"], True, ["kanban", "board", "list"]),
         (["kanban", "board", "list"], False, ["kanban", "board", "list"]),
-        # Following an option, "--json" is that option's value, not our flag.
+        # Following a value-taking option, "--json" is that option's value.
         (
             ["kanban", "card", "create", "1", "t", "--description", "--json"],
             False,
             ["kanban", "card", "create", "1", "t", "--description", "--json"],
         ),
+        # ...but following a flag that takes no value, it is ours. --version is
+        # eager, so missing this printed the human format for --version --json.
+        (["kanban", "--version", "--json"], True, ["kanban", "--version"]),
+        (["kanban", "-V", "--json"], True, ["kanban", "-V"]),
     ],
 )
 def test_extract_json_flag_positions(argv, expected_found, expected_argv):

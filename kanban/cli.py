@@ -820,6 +820,20 @@ def cmd_apikey_save(key: str = typer.Argument(..., help="API key to save")):
     emit({"ok": True}, render)
 
 
+# Options that consume no value, so a `--json` following one belongs to us
+# rather than to them.
+VALUELESS_FLAGS = frozenset(
+    {
+        "--json",
+        "--version",
+        "-V",
+        "--help",
+        "--install-completion",
+        "--show-completion",
+    }
+)
+
+
 def _extract_json_flag(argv):
     """Pull `--json` off the command line wherever it appears.
 
@@ -828,14 +842,21 @@ def _extract_json_flag(argv):
     failed -- and the second form is the one people type. Strip it here
     instead, the same trick `--api-key` already uses.
 
-    A `--json` sitting right after another option is left alone: there it is
-    that option's value (`--description --json`), not a flag of ours.
+    A `--json` sitting right after a value-taking option is left alone: there
+    it is that option's value (`--description --json`), not a flag of ours.
+    Following a flag that takes no value it is ours, which is why
+    `kanban --version --json` needs VALUELESS_FLAGS below rather than a blanket
+    "preceded by a dash" test.
     """
     found = False
     for i in range(len(argv) - 1, 0, -1):
-        if argv[i] == "--json" and not argv[i - 1].startswith("-"):
-            argv.pop(i)
-            found = True
+        if argv[i] != "--json":
+            continue
+        previous = argv[i - 1]
+        if previous.startswith("-") and previous not in VALUELESS_FLAGS:
+            continue
+        argv.pop(i)
+        found = True
     return found
 
 
