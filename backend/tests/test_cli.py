@@ -740,3 +740,42 @@ def test_client_column_create_omits_position_when_appending():
         client.column_create(1, "Done")
 
     assert request.call_args.kwargs["json"] == {"board_id": 1, "name": "Done"}
+
+
+def test_apikey_use_does_not_touch_the_config():
+    """`apikey use` checks a key. It used to clear_token() + set_api_key(),
+    so merely testing a key logged you out and overwrote stored credentials --
+    the same bug #35 fixed for --api-key."""
+    from kanban.cli import cmd_apikey_use
+    from kanban.config import set_token, get_token, get_api_key, clear_api_key
+
+    set_token("my-existing-session")
+    clear_api_key()
+
+    mock_client = MagicMock()
+    mock_client.boards.return_value = [{"id": 1}]
+
+    with patch("kanban.cli.KanbanClient", return_value=mock_client):
+        cmd_apikey_use(key="kanban_probe_key")
+
+    assert get_token() == "my-existing-session"
+    assert get_api_key() is None
+
+
+def test_apikey_use_failure_also_leaves_the_config_alone():
+    import typer
+    from kanban.cli import cmd_apikey_use
+    from kanban.config import set_token, get_token, get_api_key, clear_api_key
+
+    set_token("my-existing-session")
+    clear_api_key()
+
+    mock_client = MagicMock()
+    mock_client.boards.side_effect = Exception("401 Unauthorized")
+
+    with patch("kanban.cli.KanbanClient", return_value=mock_client):
+        with pytest.raises(typer.Exit):
+            cmd_apikey_use(key="kanban_bad_key")
+
+    assert get_token() == "my-existing-session"
+    assert get_api_key() is None

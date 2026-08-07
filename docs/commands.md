@@ -24,7 +24,7 @@ API key management commands
 - `kanban apikey list` — List all API keys.
 - `kanban apikey revoke` — Revoke (deactivate) an API key.
 - `kanban apikey save` — Save API key to config file for future use.
-- `kanban apikey use` — Run a command using an API key instead of login credentials.
+- `kanban apikey use` — Check that an API key works, without saving it anywhere.
 
 ### [`kanban config`](/docs/commands/config)
 
