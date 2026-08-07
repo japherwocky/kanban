@@ -50,7 +50,15 @@ git_pull() {
     echo "Current branch: $CURRENT_BRANCH"
 
     # Captured before the reset, so change detection can see the whole push.
-    PREVIOUS_SHA=$(git rev-parse HEAD)
+    #
+    # DEPLOY_PREVIOUS_SHA wins when set. deploy-production.yml does its own
+    # `git reset --hard origin/main` before invoking this script -- so that a
+    # change to this file takes effect on the deploy that ships it, rather than
+    # the one after -- which means HEAD here is already the new commit and
+    # capturing it locally yields an empty diff every time. The workflow passes
+    # the real pre-deploy SHA instead. The fallback covers running this script
+    # by hand.
+    PREVIOUS_SHA="${DEPLOY_PREVIOUS_SHA:-$(git rev-parse HEAD)}"
 
     git fetch origin
     git reset --hard origin/$CURRENT_BRANCH
@@ -62,19 +70,20 @@ git_pull() {
 update_dependencies() {
     echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
 
-    # Keep this ahead of run_migrations: the migration runner imports
-    # peewee-migrate, so the deploy that introduces a dependency has to install
-    # it before the step that needs it.
+    # Unconditional, deliberately, even though changed_since_previous() is
+    # correct again. The costs are lopsided: a redundant pip install is a few
+    # seconds, a skipped one restarts the service against a missing module.
     #
-    # Gating here is sound now that changed_since_previous() compares against
-    # the pre-pull SHA. It was not when the comparison was `HEAD~1 HEAD`, which
-    # saw only the final commit of a push.
-    if changed_since_previous "backend/requirements.txt"; then
-        echo "Requirements changed, updating..."
-        $DEPLOY_DIR/venv/bin/pip install -r $DEPLOY_DIR/backend/requirements.txt
-    else
-        echo "Requirements unchanged, skipping"
-    fi
+    # This is not hypothetical. The deploy that introduced peewee-migrate
+    # skipped this step and died at run_migrations with ModuleNotFoundError,
+    # because the workflow's own `git reset --hard` had already moved HEAD
+    # before git_pull() captured a baseline, leaving every diff empty.
+    #
+    # It also has to stay ahead of run_migrations, which imports the package
+    # this installs.
+    $DEPLOY_DIR/venv/bin/pip install -q -r $DEPLOY_DIR/backend/requirements.txt
+
+    echo "Dependencies up to date"
 }
 
 # Function to build frontend

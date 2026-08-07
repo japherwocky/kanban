@@ -146,7 +146,17 @@ jobs:
             git config --global user.email "deploy@github.actions"
             git config --global user.name "GitHub Actions"
 
-            # Reset hard to ensure we have the latest code
+            # Captured before the reset below. deploy.sh needs the pre-deploy
+            # commit to tell what changed, and cannot work it out itself: this
+            # step has already moved HEAD by the time it runs, so its own
+            # `git rev-parse HEAD` would return the new commit and every diff
+            # would come back empty. That is what skipped the pip install on
+            # the deploy that added peewee-migrate.
+            PREVIOUS_SHA=$(git rev-parse HEAD)
+
+            # Reset hard to ensure we have the latest code. Done here rather
+            # than leaving it to deploy.sh so that changes to deploy.sh itself
+            # take effect on the deploy that ships them.
             git fetch origin
             git reset --hard origin/main
 
@@ -154,7 +164,7 @@ jobs:
             chmod +x sys/scripts/deploy.sh
 
             # Run the existing deploy script - it handles everything!
-            sys/scripts/deploy.sh
+            DEPLOY_PREVIOUS_SHA="$PREVIOUS_SHA" sys/scripts/deploy.sh
 
       - name: Verify deployment
         run: |
