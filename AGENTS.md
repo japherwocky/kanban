@@ -48,6 +48,11 @@ and which board/column it sits on:
 kanban card get 92 --json | jq -r .description
 ```
 
+Two things that used to make seeding a board fiddly are gone: `column create`
+appends when you omit the position, and `card move <id> --column <n>` moves a
+card without retyping its title (on `card update`, anything you don't pass is
+left unchanged).
+
 Note that an unmatched `/api/...` path returns **200 with the SPA's HTML**, not
 a 404 — the catch-all in `backend/main.py` serves index.html for anything it
 does not recognise. A request to an endpoint that does not exist therefore

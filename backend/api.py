@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
+from peewee import fn
 from pydantic import BaseModel, ConfigDict
 import os
 
@@ -129,7 +130,9 @@ class BoardResponse(BaseModel):
 class ColumnCreate(BaseModel):
     board_id: int
     name: str
-    position: int
+    # Omitted means "append after the last column". Callers were otherwise
+    # made to track an incrementing counter just to add a column at the end.
+    position: Optional[int] = None
 
 
 class ColumnUpdate(BaseModel):
@@ -1204,10 +1207,18 @@ async def create_column(
         raise HTTPException(status_code=404, detail="Board not found")
     if not can_modify_board(current_user, board):
         raise HTTPException(status_code=403, detail="Not authorized")
+    position = column_data.position
+    if position is None:
+        last = (
+            Column.select(fn.MAX(Column.position))
+            .where(Column.board == board)
+            .scalar()
+        )
+        position = 0 if last is None else last + 1
     column = Column.create(
         board=board,
         name=column_data.name,
-        position=column_data.position,
+        position=position,
     )
     return {
         "id": column.id,

@@ -106,11 +106,12 @@ to `~/.kanban.yaml`, and stdout is what CI logs capture.
 | `kanban board delete <id>` | Delete a board |
 | `kanban board update <id> <name>` | Update board name |
 | `kanban share <board_id> <team_id\|private>` | Share board or make private |
-| `kanban column create <board_id> <name> <position>` | Create a column |
+| `kanban column create <board_id> <name> [position]` | Create a column (appends by default) |
 | `kanban column delete <id>` | Delete a column |
 | `kanban card get <id>` | Show a card's description and comments |
 | `kanban card create <column_id> <title> [options]` | Create a card |
-| `kanban card update <id> <title> [options]` | Update a card |
+| `kanban card update <id> [title] [options]` | Update a card; omitted fields are unchanged |
+| `kanban card move <id> --column <n> [-p <pos>]` | Move a card without touching its text |
 | `kanban card delete <id>` | Delete a card |
 | `kanban org list` | List all organizations |
 | `kanban org create <name>` | Create an organization |

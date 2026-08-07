@@ -79,12 +79,12 @@ class KanbanClient:
     def board_delete(self, board_id):
         return self._request("DELETE", f"/api/boards/{board_id}")
 
-    def column_create(self, board_id, name, position):
-        return self._request(
-            "POST",
-            "/api/columns",
-            json={"board_id": board_id, "name": name, "position": position},
-        )
+    def column_create(self, board_id, name, position=None):
+        # position is left out entirely when omitted, so the server appends.
+        data = {"board_id": board_id, "name": name}
+        if position is not None:
+            data["position"] = position
+        return self._request("POST", "/api/columns", json=data)
 
     def column_update(self, column_id, name, position):
         return self._request(
@@ -111,10 +111,18 @@ class KanbanClient:
             },
         )
 
-    def card_update(self, card_id, title, description=None, position=0, column_id=None):
-        data = {"title": title, "position": position}
+    def card_update(
+        self, card_id, title=None, description=None, position=None, column_id=None
+    ):
+        # Every field is omitted unless given: the endpoint leaves out what it
+        # is not sent, so a move must not carry a title along with it.
+        data = {}
+        if title is not None:
+            data["title"] = title
         if description is not None:
             data["description"] = description
+        if position is not None:
+            data["position"] = position
         if column_id is not None:
             data["column_id"] = column_id
         return self._request("PUT", f"/api/cards/{card_id}", json=data)

@@ -72,7 +72,8 @@ Card management commands
 - `kanban card create` — Create a new card.
 - `kanban card delete` — Delete a card.
 - `kanban card get` — Show a card's full contents, including its description.
-- `kanban card update` — Update a card.
+- `kanban card move` — Move a card to another column or position, leaving its text alone.
+- `kanban card update` — Update a card. Anything you don't pass is left unchanged.
 
 ## Organization Management
 

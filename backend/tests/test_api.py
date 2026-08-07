@@ -453,3 +453,62 @@ def test_get_card_does_not_shadow_the_comments_route(client, auth_headers, test_
     response = client.get(f"/api/cards/{card_id}/comments", headers=auth_headers)
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_create_column_without_position_appends(client, auth_headers, test_user):
+    """position was required, so callers tracked a counter just to add a
+    column at the end."""
+    board_id = client.post(
+        "/api/boards", json={"name": "Append Board"}, headers=auth_headers
+    ).json()["id"]
+
+    first = client.post(
+        "/api/columns",
+        json={"board_id": board_id, "name": "First"},
+        headers=auth_headers,
+    )
+    assert first.status_code == 200
+    assert first.json()["position"] == 0
+
+    second = client.post(
+        "/api/columns",
+        json={"board_id": board_id, "name": "Second"},
+        headers=auth_headers,
+    )
+    assert second.json()["position"] == 1
+
+
+def test_create_column_appends_after_the_highest_position(
+    client, auth_headers, test_user
+):
+    """Append means one past the highest position, not one past the count --
+    positions need not be contiguous."""
+    board_id = client.post(
+        "/api/boards", json={"name": "Sparse Board"}, headers=auth_headers
+    ).json()["id"]
+    client.post(
+        "/api/columns",
+        json={"board_id": board_id, "name": "Far", "position": 9},
+        headers=auth_headers,
+    )
+
+    appended = client.post(
+        "/api/columns",
+        json={"board_id": board_id, "name": "After"},
+        headers=auth_headers,
+    )
+    assert appended.json()["position"] == 10
+
+
+def test_create_column_with_explicit_position_is_unchanged(
+    client, auth_headers, test_user
+):
+    board_id = client.post(
+        "/api/boards", json={"name": "Explicit Board"}, headers=auth_headers
+    ).json()["id"]
+    response = client.post(
+        "/api/columns",
+        json={"board_id": board_id, "name": "Third", "position": 2},
+        headers=auth_headers,
+    )
+    assert response.json()["position"] == 2

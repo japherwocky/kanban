@@ -14,14 +14,14 @@ Column management commands
 Create a new column.
 
 ```bash
-kanban column create <board_id> <name> <position>
+kanban column create <board_id> <name> [position]
 ```
 
 **Arguments**
 
 - `board_id` (int) — Board ID
 - `name` (str) — Column name
-- `position` (int) — Position
+- `position` (int) _(optional)_ — Position. Omit to append after the last column.
 
 ## `kanban column delete`
 

@@ -268,7 +268,11 @@ app.add_typer(column_app, name="column")
 def cmd_column_create(
     board_id: int = typer.Argument(..., help="Board ID"),
     name: str = typer.Argument(..., help="Column name"),
-    position: int = typer.Argument(..., help="Position"),
+    # Optional rather than an -p option, so the old positional form still
+    # works for anything already calling `column create <board> <name> <pos>`.
+    position: Optional[int] = typer.Argument(
+        None, help="Position. Omit to append after the last column."
+    ),
 ):
     """Create a new column."""
     client = make_client()
@@ -337,21 +341,19 @@ def cmd_card_create(
     emit(result, lambda: rprint(f"Card created with [green]id={result['id']}[/green]"))
 
 
-@card_app.command("update")
-def cmd_card_update(
-    card_id: int = typer.Argument(..., help="Card ID"),
-    title: str = typer.Argument(..., help="Card title"),
-    description: Optional[str] = typer.Option(
-        None, "--description", "-d", help="Card description"
-    ),
-    position: Optional[int] = typer.Option(None, "--position", "-p", help="Position"),
-    column: Optional[int] = typer.Option(None, "--column", "-c", help="New column ID"),
-):
-    """Update a card."""
+def _apply_card_update(card_id, title, description, position, column):
+    """Send a partial card update and report the outcome.
+
+    Shared by `card update` and `card move`, which differ only in which
+    fields they let you name.
+    """
+    if title is None and description is None and position is None and column is None:
+        emit_error("Nothing to change. Pass a title, --description, --position or --column.")
+        raise typer.Exit(1)
+
     client = make_client()
     try:
         result = client.card_update(card_id, title, description, position, column)
-        emit(result, lambda: rprint("[green]Card updated[/green]"))
     except requests.exceptions.HTTPError as e:
         status = e.response.status_code
         if status == 404:
@@ -364,6 +366,43 @@ def cmd_card_update(
             message = f"Error: {e.response.text}"
         emit_error(message, status=status)
         raise typer.Exit(1)
+    emit(result, lambda: rprint("[green]Card updated[/green]"))
+
+
+@card_app.command("update")
+def cmd_card_update(
+    card_id: int = typer.Argument(..., help="Card ID"),
+    # Optional: it used to be required, so moving a card meant retyping its
+    # exact title and one wrong character silently renamed it. Omitted fields
+    # are left alone, which is how --description already behaved.
+    title: Optional[str] = typer.Argument(
+        None, help="New card title. Omit to leave the title alone."
+    ),
+    description: Optional[str] = typer.Option(
+        None, "--description", "-d", help="Card description"
+    ),
+    position: Optional[int] = typer.Option(None, "--position", "-p", help="Position"),
+    column: Optional[int] = typer.Option(None, "--column", "-c", help="New column ID"),
+):
+    """Update a card. Anything you don't pass is left unchanged."""
+    _apply_card_update(card_id, title, description, position, column)
+
+
+@card_app.command("move")
+def cmd_card_move(
+    card_id: int = typer.Argument(..., help="Card ID"),
+    column: Optional[int] = typer.Option(
+        None, "--column", "-c", help="Destination column ID"
+    ),
+    position: Optional[int] = typer.Option(
+        None, "--position", "-p", help="Position within the column"
+    ),
+):
+    """Move a card to another column or position, leaving its text alone."""
+    if column is None and position is None:
+        emit_error("Nothing to move. Pass --column and/or --position.")
+        raise typer.Exit(1)
+    _apply_card_update(card_id, None, None, position, column)
 
 
 @card_app.command("delete")

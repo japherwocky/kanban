@@ -7,7 +7,8 @@ Card management commands
 - [`kanban card create`](#kanban-card-create) — Create a new card.
 - [`kanban card delete`](#kanban-card-delete) — Delete a card.
 - [`kanban card get`](#kanban-card-get) — Show a card's full contents, including its description.
-- [`kanban card update`](#kanban-card-update) — Update a card.
+- [`kanban card move`](#kanban-card-move) — Move a card to another column or position, leaving its text alone.
+- [`kanban card update`](#kanban-card-update) — Update a card. Anything you don't pass is left unchanged.
 
 ---
 
@@ -53,18 +54,35 @@ kanban card get <card_id>
 
 - `card_id` (int) — Card ID
 
-## `kanban card update`
+## `kanban card move`
 
-Update a card.
+Move a card to another column or position, leaving its text alone.
 
 ```bash
-kanban card update <card_id> <title> [--description DESCRIPTION] [--position POSITION] [--column COLUMN]
+kanban card move <card_id> [--column COLUMN] [--position POSITION]
 ```
 
 **Arguments**
 
 - `card_id` (int) — Card ID
-- `title` (str) — Card title
+
+**Options**
+
+- `--column`, `-c` (int) — Destination column ID
+- `--position`, `-p` (int) — Position within the column
+
+## `kanban card update`
+
+Update a card. Anything you don't pass is left unchanged.
+
+```bash
+kanban card update <card_id> [title] [--description DESCRIPTION] [--position POSITION] [--column COLUMN]
+```
+
+**Arguments**
+
+- `card_id` (int) — Card ID
+- `title` (str) _(optional)_ — New card title. Omit to leave the title alone.
 
 **Options**
 
