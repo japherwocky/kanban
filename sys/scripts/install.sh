@@ -191,11 +191,37 @@ setup_nginx() {
 setup_sudoers() {
     echo -e "${YELLOW}🔐 Setting up sudoers permissions...${NC}"
 
-    # Allow kanban user to restart the service without password
-    echo "kanban ALL=(ALL) NOPASSWD: /bin/systemctl restart kanban" > /etc/sudoers.d/kanban-restart
+    # Three narrowly scoped rules, no blanket NOPASSWD:
+    #   restart          - what deploy.sh has always needed
+    #   daemon-reload    - and the cp below, so deploy.sh can install a changed
+    #   cp <exact args>    unit itself. Without these a unit edit reaches the
+    #                      repo and the box but never the running service, and
+    #                      says nothing about it -- which is how EnvironmentFile
+    #                      went unapplied long enough for /opt/kanban/.env to be
+    #                      silently ignored.
+    #
+    # The cp rule pins both paths, so it grants exactly "install this project's
+    # unit file" and not "copy anything anywhere". Note it does let anyone who
+    # can write $DEPLOY_DIR/sys/systemd/kanban.service choose what the unit
+    # says, including User=root -- acceptable here only because pushing to main
+    # already runs arbitrary code as this user. Do not widen it further.
+    cat > /etc/sudoers.d/kanban-restart <<EOF
+kanban ALL=(ALL) NOPASSWD: /bin/systemctl restart kanban
+kanban ALL=(ALL) NOPASSWD: /bin/systemctl daemon-reload
+kanban ALL=(ALL) NOPASSWD: /bin/cp $DEPLOY_DIR/sys/systemd/kanban.service /etc/systemd/system/kanban.service
+EOF
     chmod 440 /etc/sudoers.d/kanban-restart
 
-    echo "Sudoers configured - kanban can restart service without password"
+    # A malformed sudoers file locks out every rule in it, including the
+    # restart that deploys depend on. Fail the install rather than discover
+    # that on the next deploy.
+    if ! visudo -c -f /etc/sudoers.d/kanban-restart; then
+        echo -e "${RED}Sudoers file is invalid, removing it${NC}"
+        rm -f /etc/sudoers.d/kanban-restart
+        exit 1
+    fi
+
+    echo "Sudoers configured - kanban can restart, daemon-reload, and install the unit"
 }
 
 # Function to setup SSL with Let's Encrypt
