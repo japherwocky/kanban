@@ -2,12 +2,17 @@
   import { onMount, onDestroy } from 'svelte';
   import { executeCommand, getDemoState } from '$lib/demoApi';
 
-  // Demo command sequence - uses actual CLI syntax
+  // Demo command sequence - uses actual CLI syntax.
+  //
+  // The card id has to match what `card create` actually returns against
+  // demoApi's initial state, which seeds cards 1-3 and so hands out 4. These
+  // referenced card 12, which never existed: both update commands failed with
+  // "Card 12 not found" on every run.
   const DEMO_COMMANDS = [
     'kanban board get 1',
     'kanban card create 1 "Fix API latency"',
-    'kanban card update 12 "Fix API latency" --column 2',
-    'kanban card update 12 "Fix API latency" --description "Optimize DB queries"'
+    'kanban card update 4 "Fix API latency" --column 2',
+    'kanban card update 4 "Fix API latency" --description "Optimize DB queries"'
   ];
 
 let displayedText = '';
@@ -44,10 +49,14 @@ const RESET_PAUSE = 2000; // Longer pause during reset to make it more noticeabl
       // Command complete - execute it
       showOutput = true;
       const result = executeCommand(currentCommand);
-      outputLines = result.stdout.split('\n');
+      // demoApi returns stderr instead of stdout on a failed command, so
+      // reading .stdout unconditionally threw a TypeError and killed the
+      // animation. Show whichever the command produced.
+      const output = result.stdout ?? result.stderr ?? '';
+      outputLines = output.split('\n');
       commandHistory = [...commandHistory, {
         command: currentCommand,
-        output: result.stdout,
+        output,
         exitCode: result.exitCode
       }];
 
