@@ -25,6 +25,25 @@ kanban board get 1                    # Show Dev board details
 kanban board get <id>                 # Show board with columns & cards
 ```
 
+### Scripting the CLI
+
+Pass `--json` (or set `KANBAN_OUTPUT=json`) and every command prints the raw
+API response instead of formatted text. Use it rather than parsing the human
+output — the prose is not an interface, and a reworded string silently breaks
+anything that regexes it.
+
+```bash
+kanban column create 1 Todo 0 --json | jq -r .id
+kanban board get 1 --json | jq '.columns[].cards[] | {id, title, description}'
+```
+
+The flag works before or after the subcommand. In JSON mode stdout holds only
+the response; errors go to stderr as `{"error": ..., "status": ...}` alongside
+a non-zero exit code, so stdout is always safe to pipe into a parser.
+
+Note there is still no `card get` — a single card's description is only
+reachable through `board get <id> --json`.
+
 ## Build, Lint, and Test Commands
 
 ### Setup
