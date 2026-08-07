@@ -11,6 +11,23 @@ NC='\033[0m' # No Color
 # Configuration
 DEPLOY_DIR="/opt/kanban"
 
+# The commit the server was on before this deploy pulled. Change detection has
+# to compare against it rather than HEAD~1: a push of several commits moves
+# HEAD by more than one, so HEAD~1 sees only the final commit of the push. A
+# requirements.txt change in any earlier commit was invisible, and the service
+# restarted without its new dependencies.
+PREVIOUS_SHA=""
+
+# Did anything matching $1 change between the pre-deploy commit and now?
+changed_since_previous() {
+    if [ -z "$PREVIOUS_SHA" ]; then
+        # No baseline to compare against, so do the work rather than silently
+        # skip it -- a needless pip install is cheap, a missing one is not.
+        return 0
+    fi
+    git diff --name-only "$PREVIOUS_SHA" HEAD | grep -q "$1"
+}
+
 echo -e "${GREEN}🚀 Deploying Kanban Board updates${NC}"
 echo "Deploy Directory: $DEPLOY_DIR"
 echo ""
@@ -32,10 +49,13 @@ git_pull() {
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     echo "Current branch: $CURRENT_BRANCH"
 
+    # Captured before the reset, so change detection can see the whole push.
+    PREVIOUS_SHA=$(git rev-parse HEAD)
+
     git fetch origin
     git reset --hard origin/$CURRENT_BRANCH
 
-    echo "Code updated"
+    echo "Code updated ($PREVIOUS_SHA -> $(git rev-parse HEAD))"
 }
 
 # Function to update dependencies (if requirements changed)
@@ -43,7 +63,7 @@ update_dependencies() {
     echo -e "${YELLOW}📦 Checking Python dependencies...${NC}"
 
     # Check if requirements.txt changed
-    if git diff --name-only HEAD~1 HEAD | grep -q "backend/requirements.txt"; then
+    if changed_since_previous "backend/requirements.txt"; then
         echo "Requirements changed, updating..."
         $DEPLOY_DIR/venv/bin/pip install -r $DEPLOY_DIR/backend/requirements.txt
     else
@@ -69,7 +89,7 @@ run_migrations() {
     echo -e "${YELLOW}🗄️ Checking for database migrations...${NC}"
 
     # Check if migration files changed
-    if git diff --name-only HEAD~1 HEAD | grep -q "backend/migrations/"; then
+    if changed_since_previous "backend/migrations/"; then
         echo "Migration files changed, checking database..."
         # Add migration logic here if needed
         echo "Migrations complete"
