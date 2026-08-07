@@ -141,6 +141,62 @@ run_migrations() {
     echo "Migrations complete"
 }
 
+# Function to install the systemd unit when it has changed
+install_unit() {
+    echo -e "${YELLOW}⚙️ Checking systemd unit...${NC}"
+
+    REPO_UNIT="$DEPLOY_DIR/sys/systemd/kanban.service"
+    LIVE_UNIT="/etc/systemd/system/kanban.service"
+
+    if [ ! -f "$REPO_UNIT" ]; then
+        echo "No unit file in the repo, skipping"
+        return 0
+    fi
+
+    # The common case: nothing to do, and no sudo needed to find that out.
+    if cmp -s "$REPO_UNIT" "$LIVE_UNIT"; then
+        echo "Unit unchanged"
+        return 0
+    fi
+
+    if [ -f "$LIVE_UNIT" ]; then
+        echo "Installed unit differs from the repo:"
+        diff "$LIVE_UNIT" "$REPO_UNIT" || true
+    else
+        echo "No unit installed yet, installing for the first time"
+    fi
+
+    # -n so a missing sudoers rule fails immediately instead of blocking on a
+    # password prompt that nothing can answer.
+    if sudo -n cp "$REPO_UNIT" "$LIVE_UNIT" 2>/dev/null &&
+       sudo -n systemctl daemon-reload 2>/dev/null; then
+        echo "Unit installed, systemd reloaded"
+        return 0
+    fi
+
+    # Deliberately fatal. Restarting now would come up on the stale unit and
+    # report success, which is the exact failure this step exists to end: an
+    # EnvironmentFile line sat in the repo for weeks while the running service
+    # knew nothing about it, so /opt/kanban/.env was never read and signup
+    # sent no mail while looking healthy.
+    echo -e "${RED}❌ Cannot install the unit -- deploy user lacks sudo rights${NC}"
+    echo ""
+    echo "Grant them once, as root:"
+    echo "  cat > /etc/sudoers.d/kanban-restart <<'EOF'"
+    echo "kanban ALL=(ALL) NOPASSWD: /bin/systemctl restart kanban"
+    echo "kanban ALL=(ALL) NOPASSWD: /bin/systemctl daemon-reload"
+    echo "kanban ALL=(ALL) NOPASSWD: /bin/cp $REPO_UNIT $LIVE_UNIT"
+    echo "EOF"
+    echo "  chmod 440 /etc/sudoers.d/kanban-restart"
+    echo ""
+    echo "Or apply this one change by hand and re-run the deploy:"
+    echo "  sudo cp $REPO_UNIT $LIVE_UNIT"
+    echo "  sudo systemctl daemon-reload"
+    echo ""
+    echo "Check what is currently permitted with: sudo -n -l"
+    exit 1
+}
+
 # Function to restart service
 restart_service() {
     echo -e "${YELLOW}🔄 Restarting kanban service...${NC}"
@@ -175,7 +231,11 @@ main() {
     echo -e "${GREEN}Step 4: Run migrations${NC}"
     run_migrations
 
-    echo -e "${GREEN}Step 5: Restart service${NC}"
+    # Before the restart, so the restart is what picks up a changed unit.
+    echo -e "${GREEN}Step 5: Install systemd unit${NC}"
+    install_unit
+
+    echo -e "${GREEN}Step 6: Restart service${NC}"
     restart_service
 
     echo ""

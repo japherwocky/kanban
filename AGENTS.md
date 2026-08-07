@@ -311,3 +311,35 @@ kanban/
 ├── pyproject.toml       # Project config & package metadata
 └── pyrightconfig.json   # Type checking config
 ```
+### Deploying systemd and nginx config
+
+`deploy.sh` installs `sys/systemd/kanban.service` itself when it differs from
+`/etc/systemd/system/kanban.service`, then `daemon-reload`s before restarting.
+On an unchanged unit it is a no-op and needs no sudo.
+
+This needs three narrow sudoers rules, written by `install.sh`:
+
+```
+kanban ALL=(ALL) NOPASSWD: /bin/systemctl restart kanban
+kanban ALL=(ALL) NOPASSWD: /bin/systemctl daemon-reload
+kanban ALL=(ALL) NOPASSWD: /bin/cp /opt/kanban/sys/systemd/kanban.service /etc/systemd/system/kanban.service
+```
+
+If they are missing, a deploy carrying a unit change **fails** rather than
+restarting onto the stale unit. That is deliberate. Before this existed, a unit
+edit reached the repo and the box but never the running service and said
+nothing about it — `EnvironmentFile=-/opt/kanban/.env` sat unapplied long
+enough that `RESEND_API_KEY` was set correctly and still ignored, so signup
+returned 201 and sent no mail.
+
+Two things that make this class of bug hard to see:
+
+- `systemctl show kanban --property=Environment` does **not** expand
+  `EnvironmentFile` contents, so it looks identical whether the file is read or
+  not. Use `--property=EnvironmentFiles`, `systemctl cat kanban`, or read
+  `/proc/$(systemctl show kanban --property=MainPID --value)/environ`.
+- The leading `-` in `EnvironmentFile=-` makes a missing or unread file
+  non-fatal by design, so nothing complains.
+
+`sys/nginx/kanban.pearachute.com.conf` is still installed by hand — the deploy
+does not touch it.
