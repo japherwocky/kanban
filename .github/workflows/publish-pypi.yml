@@ -32,6 +32,46 @@ jobs:
       - name: Build package
         run: python -m build
 
+      - name: Verify tag matches packaged version
+        # A tag like v0.3.0 against a tree still saying 0.2.0 would otherwise
+        # build and publish under the wrong number -- and PyPI versions cannot
+        # be reused or reassigned, so that mistake is permanent. Fail before
+        # publishing if the tag disagrees with either version source.
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'EOF'
+          import re
+          import sys
+          from pathlib import Path
+
+          tag = __import__("os").environ["TAG"]
+          if not tag.startswith("v"):
+              sys.exit(f"Tag '{tag}' does not start with 'v'")
+          expected = tag[1:]
+
+          pyproject = Path("pyproject.toml").read_text()
+          m = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', pyproject, re.M)
+          if not m:
+              sys.exit("Could not find version in pyproject.toml")
+          pyproject_version = m.group(1)
+
+          init = Path("kanban/__init__.py").read_text()
+          m = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', init)
+          if not m:
+              sys.exit("Could not find __version__ in kanban/__init__.py")
+          init_version = m.group(1)
+
+          problems = []
+          if pyproject_version != expected:
+              problems.append(f"pyproject.toml says {pyproject_version}, tag says {expected}")
+          if init_version != expected:
+              problems.append(f"kanban/__init__.py says {init_version}, tag says {expected}")
+          if problems:
+              sys.exit("; ".join(problems))
+          print(f"OK: tag {tag} matches pyproject.toml and kanban/__init__.py ({expected})")
+          EOF
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
