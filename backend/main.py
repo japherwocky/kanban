@@ -26,10 +26,21 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
+# CORS allowlist. Auth is a Bearer token in a header, not a cookie, so
+# credentials are not needed -- and the wildcard-plus-credentials combination
+# browsers reject outright is gone. Defaults to the production origin; set
+# CORS_ORIGINS to a comma-separated list to allow more.
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "CORS_ORIGINS", "https://kanban.pearachute.com"
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
