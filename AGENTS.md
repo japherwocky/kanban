@@ -13,16 +13,58 @@ This project uses a remote Kanban server at **kanban.pearachute.com**.
 ### Config
 The CLI is configured to connect to:
 - **Server**: https://kanban.pearachute.com
-- **Auth**: API key (stored in `~/.kanban.yaml`)
+- **Auth**: a JWT token or an API key, stored in `~/.kanban.yaml`
+
+JWTs expire (the stored token expired 2026-08-07); API keys do not. A
+`401 Not authenticated` means re-authenticate: `kanban login`, or use an API
+key as below.
+
+### Running the CLI from this repo
+
+The `kanban` command is not on the PATH unless the venv is activated. From
+this repo root, call the venv binary directly:
+
+```bash
+# Windows
+venv/Scripts/kanban.exe --help
+
+# macOS/Linux
+venv/bin/kanban --help
+```
+
+The CLI is installed in editable mode (`pip install -e .`), so changes under
+`kanban/` take effect immediately. Activating the venv
+(`venv/Scripts/activate` on Windows, `source venv/bin/activate` elsewhere)
+puts plain `kanban` on the PATH.
+
+### Authenticating with an API key
+
+`--api-key <key>` authenticates a single command only. It goes through the
+in-memory runtime key and never touches the config file, so it is safe for
+per-command use by agents and scripts:
+
+```bash
+venv/Scripts/kanban.exe --api-key kanban_1-<KEY> board list --json
+```
+
+The project's key is the `opencode` key (see `kanban apikey list`). Do not
+commit it to this repo — the repo is public. To use it for every command
+without retyping it, save it once with `kanban apikey save kanban_1-<KEY>`.
 
 ### Project Board
-The **Dev** board (id=1) is the board for this project.
+
+The **Dev** board (id=1) is the board for this project. Columns:
+
+- **Todo** (id 4) — backlog
+- **In Progress** (id 5) — being worked on now
+- **Done** (id 6) — completed
 
 ### Useful Commands
 ```bash
 kanban board list                    # List all boards
 kanban board get 1                    # Show Dev board details
 kanban board get <id>                 # Show board with columns & cards
+kanban card get <id>                  # Read one card's full contents
 ```
 
 ### Scripting the CLI
