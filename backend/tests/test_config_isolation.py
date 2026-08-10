@@ -59,3 +59,26 @@ def test_switching_the_env_var_switches_files(tmp_path, monkeypatch):
 def test_falls_back_to_home_when_unset(monkeypatch):
     monkeypatch.delenv("KANBAN_CONFIG_PATH", raising=False)
     assert config.config_file() == Path.home() / ".kanban.yaml"
+
+
+def test_login_does_not_wipe_a_saved_api_key(tmp_path, monkeypatch):
+    """set_token used to replace the whole auth dict, so 'kanban login'
+    silently deleted a saved API key (card #113)."""
+    monkeypatch.setenv("KANBAN_CONFIG_PATH", str(tmp_path / "sandbox.yaml"))
+
+    config.set_api_key("existing-api-key")
+    config.set_token("new-login-token")
+
+    assert config.get_api_key() == "existing-api-key"
+    assert config.get_token() == "new-login-token"
+
+
+def test_logout_does_not_wipe_a_saved_api_key(tmp_path, monkeypatch):
+    monkeypatch.setenv("KANBAN_CONFIG_PATH", str(tmp_path / "sandbox.yaml"))
+
+    config.set_api_key("existing-api-key")
+    config.set_token("session-token")
+    config.clear_token()
+
+    assert config.get_api_key() == "existing-api-key"
+    assert config.get_token() is None

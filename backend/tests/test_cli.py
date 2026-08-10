@@ -152,6 +152,46 @@ def test_cli_login_failure_does_not_change_config(client, test_cli_user):
     assert get_token() is None
 
 
+def test_cli_login_warns_when_a_saved_api_key_will_still_win(
+    client, test_cli_user, capsys, json_mode
+):
+    """KanbanClient prefers api_key over token, so logging in while a key is
+    saved doesn't actually switch identity -- the login should say so instead
+    of quietly no-opping (card #113)."""
+    import json
+    from kanban.cli import cmd_login
+    from kanban.config import set_api_key
+    from kanban.client import KanbanClient
+
+    set_api_key("existing-api-key")
+
+    with patch.object(KanbanClient, "__init__", return_value=None):
+        with patch.object(KanbanClient, "login", return_value="jwt"):
+            cmd_login(username="testuser", password="pw", server=None)
+
+    payload = json.loads(capsys.readouterr().out)
+    assert "warning" in payload
+    assert "apikey clear" in payload["warning"]
+
+
+def test_cli_login_no_warning_without_a_saved_api_key(
+    client, test_cli_user, capsys, json_mode
+):
+    import json
+    from kanban.cli import cmd_login
+    from kanban.config import clear_api_key
+    from kanban.client import KanbanClient
+
+    clear_api_key()
+
+    with patch.object(KanbanClient, "__init__", return_value=None):
+        with patch.object(KanbanClient, "login", return_value="jwt"):
+            cmd_login(username="testuser", password="pw", server=None)
+
+    payload = json.loads(capsys.readouterr().out)
+    assert "warning" not in payload
+
+
 def test_cli_logout_command():
     from kanban.cli import cmd_logout
     from kanban.config import set_token, get_token
@@ -783,3 +823,16 @@ def test_apikey_use_failure_also_leaves_the_config_alone():
 
     assert get_token() == "my-existing-session"
     assert get_api_key() is None
+
+
+def test_apikey_clear_removes_the_saved_key_but_leaves_the_token():
+    from kanban.cli import cmd_apikey_clear
+    from kanban.config import set_token, set_api_key, get_token, get_api_key
+
+    set_token("my-existing-session")
+    set_api_key("stale-api-key")
+
+    cmd_apikey_clear()
+
+    assert get_api_key() is None
+    assert get_token() == "my-existing-session"

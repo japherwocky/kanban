@@ -20,6 +20,7 @@ Complete reference for all Kanban CLI commands.
 API key management commands
 
 - `kanban apikey activate` — Reactivate a deactivated API key.
+- `kanban apikey clear` — Remove the saved API key from config, without revoking it server-side.
 - `kanban apikey create` — Create a new API key. The key is shown only once - save it securely!
 - `kanban apikey list` — List all API keys.
 - `kanban apikey revoke` — Revoke (deactivate) an API key.
