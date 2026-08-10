@@ -65,14 +65,15 @@ def get_token():
 
 def set_token(token):
     config = load_config()
-    config["auth"] = {"token": token}
+    config.setdefault("auth", {})["token"] = token
     save_config(config)
 
 
 def clear_token():
     config = load_config()
-    config["auth"] = {}
-    save_config(config)
+    if "auth" in config:
+        config["auth"].pop("token", None)
+        save_config(config)
 
 
 def get_api_key():

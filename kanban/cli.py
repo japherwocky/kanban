@@ -14,6 +14,7 @@ from kanban.config import (
     clear_token,
     get_api_key,
     set_api_key,
+    clear_api_key,
     get_runtime_api_key,
     set_runtime_api_key,
 )
@@ -162,11 +163,31 @@ def cmd_login(
     set_token(token)
     if server is not None:
         set_server_url(server_url)
+    # KanbanClient prefers api_key over token (see config.get_api_key), so a
+    # saved API key silently outranks the login that just happened -- the new
+    # token is on disk but every command keeps acting as the API key's
+    # identity until that key is cleared.
+    api_key_warning = None
+    if get_api_key():
+        api_key_warning = (
+            "A saved API key is still active and takes precedence over this "
+            "login. Run 'kanban apikey clear' to use this session instead."
+        )
     # The access token is deliberately left out of the JSON: it is already
     # saved to the config file, and stdout is exactly what CI logs capture.
+    def render():
+        rprint(f"Logged in as [green]{username}[/green]")
+        if api_key_warning:
+            rprint(f"[yellow]Warning: {api_key_warning}[/yellow]")
+
     emit(
-        {"ok": True, "username": username, "server_url": server_url},
-        lambda: rprint(f"Logged in as [green]{username}[/green]"),
+        {
+            "ok": True,
+            "username": username,
+            "server_url": server_url,
+            **({"warning": api_key_warning} if api_key_warning else {}),
+        },
+        render,
     )
 
 
@@ -816,6 +837,22 @@ def cmd_apikey_save(key: str = typer.Argument(..., help="API key to save")):
     def render():
         rprint("[green]API key saved to ~/.kanban.yaml[/green]")
         rprint("Run commands without --api-key from now on.")
+
+    emit({"ok": True}, render)
+
+
+@apikey_app.command("clear")
+def cmd_apikey_clear():
+    """Remove the saved API key from config, without revoking it server-side.
+
+    An API key takes precedence over a logged-in session (see 'kanban
+    login'), so a stale saved key silently outranks any later login. This
+    only forgets it locally -- use 'kanban apikey revoke' to invalidate it.
+    """
+    clear_api_key()
+
+    def render():
+        rprint("[green]API key cleared from ~/.kanban.yaml[/green]")
 
     emit({"ok": True}, render)
 
