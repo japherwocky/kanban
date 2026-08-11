@@ -1,6 +1,29 @@
-# Auth & Organization Schema
+# Authentication & Authorization
 
-## Overview
+## Authentication Methods
+
+The API accepts two independent credential types. [`get_current_user_or_api_key`](../backend/auth.py) checks for an `X-API-Key` header first and falls back to a `Bearer` JWT — either is sufficient, you don't need both.
+
+### JWT (session login)
+
+Used by `kanban login` and the web UI.
+
+- `POST /token` (username + password) returns a signed JWT (`create_access_token` in [`backend/auth.py`](../backend/auth.py)), sent back as `Authorization: Bearer <token>`.
+- Signed with HS256 using a server-side secret (`JWT_SECRET_KEY`, or an auto-generated key persisted next to the database — see [`_load_secret_key`](../backend/auth.py)).
+- **Expiration is fixed at issuance, not sliding.** `ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24` (24 hours) is baked into the token's `exp` claim the moment it's created. Using the token does not push the expiry back — after 24 hours from login, the token stops working no matter how recently it was used, and the CLI/user must log in again (`kanban login`).
+- The CLI persists the token in its config file (see `kanban config`); there's no refresh-token flow — expiry just means re-authenticating.
+
+### API Keys (headless / agent access)
+
+Used for CI, bots, and other non-interactive clients — see [`kanban apikey`](commands/apikey.md).
+
+- Created via `kanban apikey create <name>` (`POST /api-keys`), sent as `X-API-Key: <key>`.
+- The raw key is shown only once at creation; the server stores only a hash plus an 8-character lookup prefix.
+- **No expiration by default.** `expires_at` is optional and unset unless explicitly passed at creation — an API key otherwise lives forever until revoked (`kanban apikey revoke`).
+- `last_used_at` is updated on every successful use, but — like the JWT — this is informational only and does not extend `expires_at` if one was set.
+- Keys can be deactivated (`kanban apikey revoke`) and later reactivated (`kanban apikey activate`) without changing the underlying key value.
+
+## Authorization: Organization Schema
 
 Multi-tenant organization model with team-based board sharing.
 
