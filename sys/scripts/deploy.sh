@@ -197,6 +197,98 @@ install_unit() {
     exit 1
 }
 
+# Function to install the nginx config when it has changed
+install_nginx_config() {
+    echo -e "${YELLOW}🌐 Checking nginx config...${NC}"
+
+    REPO_CONF="$DEPLOY_DIR/sys/nginx/kanban.pearachute.com.conf"
+    LIVE_CONF="/etc/nginx/sites-available/kanban.pearachute.com.conf"
+
+    if [ ! -f "$REPO_CONF" ]; then
+        echo "No nginx config in the repo, skipping"
+        return 0
+    fi
+
+    # The common case: nothing to do, and no sudo needed to find that out.
+    if cmp -s "$REPO_CONF" "$LIVE_CONF"; then
+        echo "Nginx config unchanged"
+        return 0
+    fi
+
+    if [ -f "$LIVE_CONF" ]; then
+        echo "Installed nginx config differs from the repo:"
+        diff "$LIVE_CONF" "$REPO_CONF" || true
+    else
+        echo "No nginx config installed yet, installing for the first time"
+    fi
+
+    print_nginx_sudoers_help() {
+        echo ""
+        echo "Grant them once, as root:"
+        echo "  cat > /etc/sudoers.d/kanban-nginx <<'EOF'"
+        echo "kanban ALL=(ALL) NOPASSWD: /bin/cp $REPO_CONF $LIVE_CONF"
+        echo "kanban ALL=(ALL) NOPASSWD: /usr/sbin/nginx -t"
+        echo "kanban ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx"
+        echo "EOF"
+        echo "  chmod 440 /etc/sudoers.d/kanban-nginx"
+        echo ""
+        echo "Or apply this one change by hand and re-run the deploy:"
+        echo "  sudo cp $REPO_CONF $LIVE_CONF"
+        echo "  sudo nginx -t && sudo systemctl reload nginx"
+        echo ""
+        echo "Check what is currently permitted with: sudo -n -l"
+    }
+
+    # -n so a missing sudoers rule fails immediately instead of blocking on a
+    # password prompt that nothing can answer.
+    #
+    # Deliberately fatal, same as install_unit above: this step exists because
+    # a config change (like PR #28's rate limiting) could otherwise sit
+    # unapplied on the box indefinitely while the deploy reports success.
+    if ! sudo -n cp "$REPO_CONF" "$LIVE_CONF" 2>/dev/null; then
+        echo -e "${RED}❌ Cannot install the nginx config -- deploy user lacks sudo rights${NC}"
+        print_nginx_sudoers_help
+        exit 1
+    fi
+
+    # Unlike the systemd unit, a bad config must never reach `systemctl reload`
+    # -- that would take the site down. Test what's now on disk first; if sudo
+    # itself blocked the test (no NOPASSWD rule yet), nginx never runs at all
+    # and its output has no "nginx:" lines, which is how we tell that apart
+    # from a real config error below.
+    # The `if` guards the assignment against `set -e`: a bare
+    # `X=$(cmd)` with a failing cmd would abort the script right here,
+    # before NGINX_TEST_STATUS is ever read below.
+    if NGINX_TEST_OUTPUT=$(sudo -n nginx -t 2>&1); then
+        NGINX_TEST_STATUS=0
+    else
+        NGINX_TEST_STATUS=$?
+    fi
+
+    if [ $NGINX_TEST_STATUS -ne 0 ] && ! echo "$NGINX_TEST_OUTPUT" | grep -q "^nginx:"; then
+        echo -e "${RED}❌ Cannot test the nginx config -- deploy user lacks sudo rights${NC}"
+        echo "$NGINX_TEST_OUTPUT"
+        print_nginx_sudoers_help
+        exit 1
+    fi
+
+    if [ $NGINX_TEST_STATUS -ne 0 ]; then
+        echo -e "${RED}❌ New nginx config failed validation -- NOT reloading:${NC}"
+        echo "$NGINX_TEST_OUTPUT"
+        echo "The previous config is still live in the running nginx process."
+        echo "Fix $REPO_CONF and re-run the deploy."
+        exit 1
+    fi
+
+    if ! sudo -n systemctl reload nginx 2>/dev/null; then
+        echo -e "${RED}❌ Cannot reload nginx -- deploy user lacks sudo rights${NC}"
+        print_nginx_sudoers_help
+        exit 1
+    fi
+
+    echo "Nginx config installed and reloaded"
+}
+
 # Function to restart service
 restart_service() {
     echo -e "${YELLOW}🔄 Restarting kanban service...${NC}"
@@ -235,7 +327,13 @@ main() {
     echo -e "${GREEN}Step 5: Install systemd unit${NC}"
     install_unit
 
-    echo -e "${GREEN}Step 6: Restart service${NC}"
+    # Also before the restart -- reloading nginx is independent of the kanban
+    # service restart below, but keeping config changes together with the
+    # restart step means a deploy either applies everything or fails loudly.
+    echo -e "${GREEN}Step 6: Install nginx config${NC}"
+    install_nginx_config
+
+    echo -e "${GREEN}Step 7: Restart service${NC}"
     restart_service
 
     echo ""
