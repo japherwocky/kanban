@@ -73,7 +73,7 @@
     <button onclick={goBack}>Back to Boards</button>
   </div>
  {:else if board}
-  <BoardView board={board} onBack={goBack} availableTeams={availableTeams} onShare={handleShare} onRename={handleRename} />
+  <BoardView board={board} onBack={goBack} availableTeams={availableTeams} onShare={handleShare} onRename={handleRename} initialCardId={params.cardId} />
  {/if}
 
 <style>

@@ -119,6 +119,12 @@
     </ProtectedRoute>
   </Route>
 
+  <Route path="/boards/:id/card/:cardId" let:params>
+    <ProtectedRoute>
+      <Board {params} />
+    </ProtectedRoute>
+  </Route>
+
   <Route path="/organizations">
     <ProtectedRoute>
       <Organizations />

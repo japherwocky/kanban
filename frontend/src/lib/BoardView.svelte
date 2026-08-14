@@ -6,7 +6,7 @@
   import Comments from './Comments.svelte';
   import { dndzone, TRIGGERS } from 'svelte-dnd-action';
 
-  let { board, onBack, availableTeams = [], onShare, onRename } = $props();
+  let { board, onBack, availableTeams = [], onShare, onRename, initialCardId = null } = $props();
 
   let columns = $state([]);
   let loading = $state(false);
@@ -131,12 +131,36 @@
     showCreateCardModal = true;
   }
 
-  function openEditCard(card) {
+  function cardUrl(cardId) {
+    return `/boards/${board.id}/card/${cardId}`;
+  }
+
+  function openEditCard(card, { updateUrl = true } = {}) {
     editingCard = card;
     editTitle = card.title || '';
     editDescription = card.description || '';
     showEditCardModal = true;
+    if (updateUrl) {
+      history.replaceState(history.state, '', cardUrl(card.id));
+    }
   }
+
+  function closeEditCard() {
+    showEditCardModal = false;
+    editingCard = null;
+    history.replaceState(history.state, '', `/boards/${board.id}`);
+  }
+
+  // Deep-link support: open the card named in the URL once the board has loaded.
+  let didOpenInitialCard = $state(false);
+  $effect(() => {
+    if (didOpenInitialCard || !initialCardId || columns.length === 0) return;
+    didOpenInitialCard = true;
+    const card = columns.flatMap(col => col.cards).find(c => String(c.id) === String(initialCardId));
+    if (card) {
+      openEditCard(card, { updateUrl: false });
+    }
+  });
 
   async function saveCard() {
     if (!editTitle.trim() || !editingCard) return;
@@ -151,8 +175,7 @@
             : c
         )
       }));
-      showEditCardModal = false;
-      editingCard = null;
+      closeEditCard();
     } catch (e) {
       alert('Failed to update card: ' + e.message);
     } finally {
@@ -422,7 +445,7 @@
                     aria-label={card.description ? `Edit card: ${card.title}. ${card.description}` : `Edit card: ${card.title}`}
                   >
                     <div class="card-header">
-                      <span class="card-title">{card.title}</span>
+                      <span class="card-title"><span class="card-id">#{card.id}</span> {card.title}</span>
                       <button class="delete-btn" onclick={(e) => deleteCard(column.id, card.id, e)}>×</button>
                     </div>
                     {#if card.description}
@@ -501,9 +524,9 @@
     {/if}
 
     {#if showEditCardModal}
-      <Modal open={showEditCardModal} onClose={() => showEditCardModal = false} title="Edit Card">
+      <Modal open={showEditCardModal} onClose={closeEditCard} title="Edit Card">
         {#snippet children()}
-          <h2 id="modal-title">Edit Card</h2>
+          <h2 id="modal-title">Edit Card <span class="card-id-badge">#{editingCard?.id}</span></h2>
           <form onsubmit={(e) => { e.preventDefault(); saveCard(); }}>
             <input
               bind:value={editTitle}
@@ -516,7 +539,7 @@
               rows="3"
             ></textarea>
             <div class="modal-actions">
-              <button type="button" class="cancel-btn" onclick={() => showEditCardModal = false}>Cancel</button>
+              <button type="button" class="cancel-btn" onclick={closeEditCard}>Cancel</button>
               <button type="submit" class="create-btn" disabled={editLoading}>
                 {editLoading ? 'Saving...' : 'Save Changes'}
               </button>
@@ -781,6 +804,18 @@
     font-weight: 500;
     color: var(--color-foreground);
     word-break: break-word;
+  }
+
+  .card-id {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--color-muted-foreground);
+  }
+
+  .card-id-badge {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--color-muted-foreground);
   }
 
   .delete-btn {
