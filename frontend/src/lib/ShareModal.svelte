@@ -2,9 +2,20 @@
    import Modal from './Modal.svelte';
 
    let { open, onClose, board, availableTeams, onShare } = $props();
-   let selectedTeamId = $state(board?.shared_team_id || null);
-   let isPublicToOrg = $state(board?.is_public_to_org || false);
+
+   // Seeded by the $effect below rather than from `board` directly. Reading a
+   // prop inside $state() captures only its initial value, so a different
+   // board shown without remounting would keep the first board's settings.
+   let selectedTeamId = $state(null);
+   let isPublicToOrg = $state(false);
    let loading = $state(false);
+
+   // Only reads `board`, so it re-seeds when the board changes and never
+   // clobbers edits the user is making to the form.
+   $effect(() => {
+     selectedTeamId = board?.shared_team_id ?? null;
+     isPublicToOrg = board?.is_public_to_org ?? false;
+   });
 
    async function handleShare() {
      loading = true;

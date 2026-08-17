@@ -3,7 +3,10 @@
 
   let { card, onCommentsUpdate } = $props();
 
-  let comments = $state(card?.comments || []);
+  // Seeded by the $effect below rather than from `card` directly. Reading a
+  // prop inside $state() captures only its initial value, so a card swapped
+  // in later would leave the previous card's comments on screen.
+  let comments = $state([]);
   let newComment = $state('');
   let loading = $state(false);
   let editingCommentId = $state(null);
@@ -21,11 +24,11 @@
     console.error('Failed to decode token:', e);
   }
 
-  // Update comments when card prop changes
+  // Update comments when card prop changes. Unconditional: guarding on
+  // `card?.comments` being present meant a card that arrived without the
+  // field kept the comments of whichever card was shown before it.
   $effect(() => {
-    if (card?.comments) {
-      comments = [...card.comments];
-    }
+    comments = [...(card?.comments ?? [])];
   });
 
   function formatRelativeTime(dateString) {
