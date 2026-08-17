@@ -1,24 +1,7 @@
 <script>
-  import { navigate } from 'svelte-routing';
   import HeroSection from '../components/HeroSection.svelte';
   import FeaturesSection from '../components/FeaturesSection.svelte';
-  import BetaSection from '../components/BetaSection.svelte';
-
-  function goToLogin() {
-    navigate('/login');
-  }
-
-  function goToDocs() {
-    navigate('/docs');
-  }
-
-  function goToQuickstart() {
-    navigate('/docs/quickstart');
-  }
-
-  function goToReference() {
-    navigate('/docs/reference');
-  }
+  import SignupCTA from '../components/SignupCTA.svelte';
 </script>
 
 <div class="landing">
@@ -26,7 +9,7 @@
 
   <FeaturesSection />
 
-  <BetaSection />
+  <SignupCTA />
 </div>
 
 <style>

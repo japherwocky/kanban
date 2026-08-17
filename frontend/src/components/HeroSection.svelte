@@ -1,9 +1,16 @@
 <script>
+  import { link } from 'svelte-routing';
   import TerminalSimulator from './TerminalSimulator.svelte';
   import KanbanDemo from './KanbanDemo.svelte';
 
+  let copied = $state(false);
+  let copyResetTimer;
+
   function copyInstallCommand() {
     navigator.clipboard.writeText('pip install pkanban');
+    copied = true;
+    clearTimeout(copyResetTimer);
+    copyResetTimer = setTimeout(() => (copied = false), 2000);
   }
 </script>
 
@@ -13,11 +20,15 @@
       <h1 class="headline">The Universal Interface for Agents & Humans.</h1>
       <p class="subhead">Orchestrate your AI agents using the universal language of compute: Standard Input/Output. No SDKs, just commands.</p>
 
-      <button class="install-button" onclick={copyInstallCommand}>
-        <span class="button-icon">⬡</span>
-        <code class="button-command">pip install pkanban</code>
-        <span class="button-copy">Copy</span>
-      </button>
+      <div class="hero-actions">
+        <a href="/signup" use:link class="signup-button">Create your account</a>
+
+        <button class="install-button" onclick={copyInstallCommand}>
+          <span class="button-icon">⬡</span>
+          <code class="button-command">pip install pkanban</code>
+          <span class="button-copy">{copied ? 'Copied' : 'Copy'}</span>
+        </button>
+      </div>
     </div>
 
     <div class="demo-container">
@@ -100,6 +111,37 @@
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .signup-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 15px 28px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: var(--color-primary-foreground);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .signup-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+
+  .signup-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
   }
 
   .install-button {
@@ -191,6 +233,18 @@
 
     .subhead {
       font-size: 1rem;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .signup-button {
+      width: 100%;
+      justify-content: center;
+      padding: 13px 20px;
     }
 
     .install-button {

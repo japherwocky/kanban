@@ -1,6 +1,6 @@
 <script>
   import PageLayout from '../lib/PageLayout.svelte';
-  import BetaSection from '../components/BetaSection.svelte';
+  import SignupCTA from '../components/SignupCTA.svelte';
 </script>
 
 <PageLayout title="Contact" description="Get in touch with the pkanban team.">
@@ -32,23 +32,17 @@
       </ul>
     </section>
 
-    <BetaSection
+    <SignupCTA
       marginTop="2rem"
       maxWidth="500px"
       borderRadius="12px"
       padding="2rem"
       h2FontSize="1.5rem"
       descFontSize="1rem"
-      emailPadding="0.75rem 1.5rem"
-      emailBorderRadius="10px"
-      emailFontWeight="600"
-      emailFontSize="0.9375rem"
       subtextFontSize="0.8125rem"
       compactPadding="1rem"
       compactH2FontSize="1.25rem"
       compactDescFontSize="0.875rem"
-      compactEmailPadding="0.625rem 1.25rem"
-      compactEmailFontSize="0.875rem"
     />
   </div>
 </PageLayout>
