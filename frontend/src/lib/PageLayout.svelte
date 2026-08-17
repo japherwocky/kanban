@@ -1,6 +1,4 @@
 <script>
-  import BetaSection from '../components/BetaSection.svelte';
-
   export let title = '';
   export let description = '';
 </script>

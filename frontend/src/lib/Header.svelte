@@ -119,7 +119,7 @@
       {:else}
         <div class="auth-buttons">
           <button class="btn-secondary" onclick={() => goTo('/login')}>Log in</button>
-          <button class="btn-primary" onclick={() => goTo('/login')}>Sign up</button>
+          <button class="btn-primary" onclick={() => goTo('/signup')}>Sign up</button>
         </div>
       {/if}
 
@@ -145,7 +145,7 @@
       <button onclick={() => goTo('/about')}>Contact</button>
       <div class="mobile-divider"></div>
       <button onclick={() => goTo('/login')}>Log in</button>
-      <button onclick={() => goTo('/login')}>Sign up</button>
+      <button onclick={() => goTo('/signup')}>Sign up</button>
     </nav>
   {/if}
 </header>

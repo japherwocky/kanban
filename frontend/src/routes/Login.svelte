@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
-  import BetaSection from '../components/BetaSection.svelte';
+  import SignupCTA from '../components/SignupCTA.svelte';
   import { api } from '../lib/api.js';
 
   // Must match UNVERIFIED_EMAIL_DETAIL in backend/api.py.
@@ -101,23 +101,18 @@
 
     <p class="alt">Need an account? <a href="/signup">Sign up</a></p>
 
-    <BetaSection
+    <SignupCTA
       marginTop="2rem"
       maxWidth="400px"
       borderRadius="12px"
       padding="1.5rem"
       h2FontSize="1.5rem"
       descFontSize="0.9375rem"
-      emailPadding="0.625rem 1.25rem"
-      emailBorderRadius="8px"
-      emailFontWeight="500"
-      emailFontSize="0.875rem"
       subtextFontSize="0.8125rem"
       compactPadding="1rem"
       compactH2FontSize="1.25rem"
       compactDescFontSize="0.875rem"
-      compactEmailPadding="0.625rem 1.25rem"
-      compactEmailFontSize="0.875rem"
+      showLoginLink={false}
     />
   </div>
 </div>
