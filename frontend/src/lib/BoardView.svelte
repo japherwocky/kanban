@@ -498,7 +498,7 @@
     {/if}
 
     {#if showCreateCardModal}
-      <Modal open={showCreateCardModal} onClose={() => showCreateCardModal = false} title="Add Card">
+      <Modal open={showCreateCardModal} onClose={() => showCreateCardModal = false} title="Add Card" wide>
         {#snippet children()}
           <h2 id="modal-title">Add Card</h2>
           <form onsubmit={(e) => { e.preventDefault(); createCard(); }}>
@@ -524,7 +524,7 @@
     {/if}
 
     {#if showEditCardModal}
-      <Modal open={showEditCardModal} onClose={closeEditCard} title="Edit Card">
+      <Modal open={showEditCardModal} onClose={closeEditCard} title="Edit Card" wide>
         {#snippet children()}
           <h2 id="modal-title">Edit Card <span class="card-id-badge">#{editingCard?.id}</span></h2>
           <form onsubmit={(e) => { e.preventDefault(); saveCard(); }}>

@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
 
-  let { open = false, onClose, title = 'Dialog', children } = $props();
+  let { open = false, onClose, title = 'Dialog', wide = false, children } = $props();
 
   let modalRef = $state();
   let previousActiveElement = null;
@@ -97,6 +97,7 @@
   >
     <div
       class="modal"
+      class:wide
       bind:this={modalRef}
       role="dialog"
       aria-modal="true"
@@ -127,6 +128,12 @@
     width: 100%;
     max-width: 400px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (min-width: 768px) {
+    .modal.wide {
+      max-width: 720px;
+    }
   }
 
   :global(.modal form) {
