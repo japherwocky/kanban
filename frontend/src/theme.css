@@ -20,7 +20,9 @@
 
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap');
+/* Fonts are loaded by <link> in index.html, not here: an @import at this
+   point is emitted after Tailwind's @layer statements, which makes it
+   invalid, and postcss drops it from the build without failing it. */
 
 /* --------------------------------------------------------------------------
    Tailwind bridge

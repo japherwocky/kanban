@@ -4,6 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kanban Board</title>
+
+    <!--
+      Fonts load here, not via @import in theme.css.
+
+      An @import inside theme.css is flattened into app.css after Tailwind has
+      already emitted its @layer statements, and CSS requires @import to precede
+      everything except @charset and empty @layer. postcss therefore dropped it
+      from the build entirely -- silently, with the site still compiling and
+      deploying green. The result was a --font-sans naming a face the browser
+      had never been told to fetch, so every page rendered in the system
+      fallback. The previous Inter/JetBrains Mono pair had the same bug.
+
+      A <link> has no ordering constraint, and lets us preconnect.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
     <script>
       // Apply the stored theme before first paint. The Svelte store does this
       // too, but not until it mounts -- which is a full white flash on every
