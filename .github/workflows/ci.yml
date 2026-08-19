@@ -62,15 +62,29 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: frontend/package.json
 
-      # ci, not install: it honours the lockfile and fails on a lockfile that
-      # has drifted from package.json. Note this is deliberately stricter than
-      # production, which deletes the lockfile before installing -- see the
-      # deploy-parity note in the PR.
+      # Mirrors build_frontend() in sys/scripts/deploy.sh, deliberately.
+      #
+      # The committed package-lock.json was generated on Windows, and npm only
+      # records the host platform's optional dependencies (npm/cli#4828). It
+      # therefore pins @rollup/rollup-win32-*, @tailwindcss/oxide-win32-* and
+      # lightningcss-win32-* and nothing else, so `npm ci` on a Linux runner
+      # installs no native binary at all and vite dies with "Cannot find module
+      # @rollup/rollup-linux-x64-gnu". That is exactly what the "avoid native
+      # module issues" line in deploy.sh is working around.
+      #
+      # Dropping the lockfile means CI resolves floating versions -- the same
+      # ones production will resolve. That is the point: this job exists to
+      # rehearse the deploy, so installing differently from the deploy would
+      # defeat it. The tradeoff is that an upstream release can break this job
+      # without the repo changing; on a PR that is a useful early warning
+      # rather than a surprise mid-deploy.
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          rm -f package-lock.json
+          npm install
 
       - name: Build frontend
         working-directory: ./frontend
