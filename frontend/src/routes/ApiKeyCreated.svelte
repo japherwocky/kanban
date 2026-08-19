@@ -126,14 +126,14 @@
   }
 
   h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-foreground);
     margin: 0 0 0.5rem 0;
   }
 
   .key-name-display {
-    font-size: 1rem;
+    font-size: var(--text-base);
     color: var(--color-muted-foreground);
     margin: 0 0 1.5rem 0;
   }
@@ -144,28 +144,28 @@
     padding: 1rem;
     background: rgba(251, 191, 36, 0.1);
     border: 1px solid rgba(251, 191, 36, 0.3);
-    border-radius: 10px;
+    border-radius: var(--radius-xl);
     text-align: left;
     margin-bottom: 1.5rem;
   }
 
   .warning-banner svg {
     flex-shrink: 0;
-    color: #f59e0b;
+    color: var(--color-warning);
     margin-top: 0.125rem;
   }
 
   .warning-banner strong {
     display: block;
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     font-weight: 600;
-    color: #b45309;
+    color: var(--color-warning);
     margin-bottom: 0.25rem;
   }
 
   .warning-banner p {
-    font-size: 0.8125rem;
-    color: #92400e;
+    font-size: var(--text-sm);
+    color: var(--color-warning);
     margin: 0;
     line-height: 1.4;
   }
@@ -177,7 +177,7 @@
     padding: 0.5rem;
     background: var(--color-code-bg);
     border: 1px solid var(--color-border);
-    border-radius: 10px;
+    border-radius: var(--radius-xl);
     margin-bottom: 2rem;
   }
 
@@ -185,7 +185,7 @@
     flex: 1;
     padding: 0.875rem 1rem;
     font-family: var(--font-mono);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-code-fg);
     background: transparent;
     border: none;
@@ -201,8 +201,8 @@
     padding: 0.625rem 1rem;
     background: var(--color-muted);
     border: none;
-    border-radius: 6px;
-    font-size: 0.8125rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--color-foreground);
     cursor: pointer;
@@ -217,7 +217,7 @@
   .no-key {
     flex: 1;
     padding: 0.875rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0;
   }
@@ -227,19 +227,19 @@
     padding: 1.5rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     margin-bottom: 1.5rem;
   }
 
   .usage-section h3 {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.5rem 0;
   }
 
   .usage-section > p {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0 0 0.75rem 0;
   }
@@ -247,19 +247,19 @@
   .code-example {
     padding: 0.75rem 1rem;
     background: var(--color-code-bg);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     margin-bottom: 1rem;
   }
 
   .code-example code {
     font-family: var(--font-mono);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--color-code-fg);
     word-break: break-all;
   }
 
   .header-note {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0 0 0.375rem 0;
   }
@@ -267,8 +267,8 @@
   .header-note code {
     padding: 0.125rem 0.375rem;
     background: var(--color-muted);
-    border-radius: 4px;
-    font-size: 0.75rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
     color: var(--color-foreground);
   }
 
@@ -278,8 +278,8 @@
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;
-    border-radius: 10px;
-    font-size: 1rem;
+    border-radius: var(--radius-xl);
+    font-size: var(--text-base);
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;

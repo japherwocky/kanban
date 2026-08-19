@@ -6,6 +6,7 @@
   let mouseY = $state(0);
 
   const logos = [
+    // Third-party brand colors -- intentionally NOT theme tokens.
     { name: 'LangChain', color: '#0F172A' },
     { name: 'AutoGPT', color: '#4B0082' },
     { name: 'CrewAI', color: '#1E3A5F' },
@@ -175,14 +176,14 @@
   }
 
   .features-header h2 {
-    font-size: 2.5rem;
+    font-size: var(--text-4xl);
     font-weight: 700;
     color: var(--color-foreground);
     margin: 0 0 1rem 0;
   }
 
   .features-header p {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     color: var(--color-muted-foreground);
     margin: 0;
   }
@@ -198,7 +199,7 @@
     position: relative;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: 16px;
+    border-radius: var(--radius-xl);
     padding: 24px;
     overflow: hidden;
     transition: all 0.3s ease;
@@ -219,11 +220,10 @@
     position: absolute;
     width: 200px;
     height: 200px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 15%, transparent) 0%, transparent 70%);
-    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--color-primary) 7%, transparent);
     pointer-events: none;
     transform: translate(-50%, -50%);
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-normal);
     opacity: 0;
   }
 
@@ -244,18 +244,18 @@
   }
 
   .box-icon {
-    font-size: 24px;
+    font-size: var(--text-2xl);
   }
 
   .box-header h3 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0;
   }
 
   .box-description {
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0 0 1.5rem 0;
     line-height: 1.6;
@@ -282,10 +282,10 @@
   /* Code Panel Styles */
   .code-panel {
     background: var(--color-code-bg);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 16px;
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: var(--text-sm);
     line-height: 1.6;
   }
 
@@ -309,9 +309,9 @@
     padding-left: 96px;
   }
 
-  .code-keyword { color: #c084fc; }
-  .code-type { color: #60a5fa; }
-  .code-function { color: #fbbf24; }
+  .code-keyword { color: var(--syntax-keyword); }
+  .code-type { color: var(--syntax-type); }
+  .code-function { color: var(--syntax-function); }
   .code-string { color: var(--color-success); }
   .code-comment { color: var(--color-muted-foreground); opacity: 0.7; }
   .code-prompt { color: var(--color-success); font-weight: 600; margin-right: 8px; }
@@ -339,18 +339,18 @@
   .json-tree {
     flex: 1;
     background: var(--color-code-bg);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 16px;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--text-xs);
     line-height: 1.8;
   }
 
   .json-line { color: var(--color-muted-foreground); }
   .json-brace { color: var(--color-muted-foreground); }
-  .json-key { color: #60a5fa; }
+  .json-key { color: var(--syntax-type); }
   .json-string { color: var(--color-success); }
-  .json-number { color: #fbbf24; }
+  .json-number { color: var(--syntax-number); }
 
   .robot-scanner {
     width: 60px;
@@ -409,10 +409,10 @@
     padding: 12px 24px;
     background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-foreground) 6%, transparent);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     color: var(--color-muted-foreground);
     font-weight: 500;
-    font-size: 14px;
+    font-size: var(--text-sm);
     transition: all 0.3s ease;
   }
 
@@ -451,11 +451,11 @@
     }
 
     .features-header h2 {
-      font-size: 1.75rem;
+      font-size: var(--text-2xl);
     }
 
     .features-header p {
-      font-size: 1rem;
+      font-size: var(--text-base);
     }
 
     .bento-grid {
@@ -467,12 +467,12 @@
     }
 
     .box-header h3 {
-      font-size: 1.125rem;
+      font-size: var(--text-lg);
     }
 
     .code-panel,
     .json-tree {
-      font-size: 11px;
+      font-size: var(--text-xs);
     }
   }
 </style>

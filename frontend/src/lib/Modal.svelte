@@ -123,7 +123,7 @@
   .modal {
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     padding: 1.5rem;
     width: 100%;
     max-width: 400px;

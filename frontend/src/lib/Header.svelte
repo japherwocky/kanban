@@ -176,7 +176,7 @@
     background: none;
     border: none;
     color: var(--color-foreground);
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     cursor: pointer;
     padding: 0;
@@ -201,11 +201,11 @@
     background: none;
     border: none;
     color: var(--color-muted-foreground);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     padding: 0.5rem 0.75rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     transition: all 0.15s ease;
   }
 
@@ -230,11 +230,11 @@
     background: none;
     border: none;
     color: var(--color-muted-foreground);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     padding: 0.5rem 0.875rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     transition: all 0.15s ease;
   }
 
@@ -247,11 +247,11 @@
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     padding: 0.5rem 0.875rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     transition: all 0.15s ease;
   }
 
@@ -267,7 +267,7 @@
     height: 36px;
     background: none;
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     color: var(--color-foreground);
     cursor: pointer;
     transition: all 0.15s ease;
@@ -288,7 +288,7 @@
     background: none;
     border: none;
     color: var(--color-muted-foreground);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     padding: 0.75rem 0;
@@ -317,10 +317,10 @@
     padding: 0.375rem 0.75rem 0.375rem 0.5rem;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     color: var(--color-foreground);
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     transition: all 0.15s ease;
   }
@@ -337,9 +337,9 @@
     justify-content: center;
     background: var(--color-primary);
     color: var(--color-primary-foreground);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .username {
@@ -356,7 +356,7 @@
     min-width: 180px;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0.375rem;
     z-index: 50;
@@ -370,9 +370,9 @@
     padding: 0.625rem 0.75rem;
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     color: var(--color-foreground);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;

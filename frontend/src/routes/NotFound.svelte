@@ -20,23 +20,23 @@
   }
 
   .not-found h1 {
-    font-size: 4rem;
+    font-size: var(--text-4xl);
     font-weight: 700;
     color: var(--color-primary);
     margin: 0;
   }
 
   .not-found p {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     color: var(--color-muted-foreground);
     margin: 0;
   }
 
   button {
     padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
     background: var(--color-primary);

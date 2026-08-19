@@ -198,14 +198,14 @@
   }
 
   .page-header h2 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.375rem 0;
   }
 
   .description {
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0;
     line-height: 1.5;
@@ -219,8 +219,8 @@
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;
-    border-radius: 8px;
-    font-size: 0.9375rem;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     transition: opacity 0.15s ease;
@@ -247,27 +247,27 @@
     padding: 4rem 2rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
   }
 
   .empty-icon {
     display: inline-flex;
     padding: 1rem;
     background: var(--color-muted);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     color: var(--color-muted-foreground);
     margin-bottom: 1.5rem;
   }
 
   .empty-state h3 {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.5rem 0;
   }
 
   .empty-state p {
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0 0 1.5rem 0;
   }
@@ -285,7 +285,7 @@
     padding: 1.25rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     transition: all 0.15s ease;
   }
 
@@ -310,7 +310,7 @@
   }
 
   .key-name {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0;
@@ -319,9 +319,9 @@
   .key-prefix {
     padding: 0.25rem 0.5rem;
     background: var(--color-muted);
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--color-muted-foreground);
   }
 
@@ -335,7 +335,7 @@
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
   }
 
@@ -353,8 +353,8 @@
     padding: 0.5rem 0.875rem;
     background: transparent;
     border: 1px solid var(--color-border);
-    border-radius: 6px;
-    font-size: 0.8125rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -383,21 +383,21 @@
   .inactive-badge {
     padding: 0.375rem 0.625rem;
     background: rgba(239, 68, 68, 0.1);
-    border-radius: 6px;
-    font-size: 0.75rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
     font-weight: 500;
     color: var(--color-error);
   }
 
   #modal-title {
     margin: 0 0 1.25rem 0;
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
   }
 
   .form-hint {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: -0.25rem 0 0 0;
     line-height: 1.4;
@@ -415,8 +415,8 @@
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
     padding: 0.625rem 1rem;
-    border-radius: 8px;
-    font-size: 0.9375rem;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -428,8 +428,8 @@
 
   input {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
@@ -446,7 +446,7 @@
 
   label {
     display: block;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--color-foreground);
     margin-bottom: 0.375rem;

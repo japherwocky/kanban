@@ -135,9 +135,6 @@
               <p class="card-description">{card.description}</p>
             {/if}
           </div>
-          <div class="card-footer">
-            <div class="card-avatar"></div>
-          </div>
         </div>
       {/each}
     </div>
@@ -164,9 +161,6 @@
               <p class="card-description">{card.description}</p>
             {/if}
           </div>
-          <div class="card-footer">
-            <div class="card-avatar in-progress-avatar"></div>
-          </div>
         </div>
       {/each}
     </div>
@@ -188,9 +182,6 @@
               <p class="card-description">{card.description}</p>
             {/if}
           </div>
-          <div class="card-footer">
-            <div class="card-avatar done-avatar"></div>
-          </div>
         </div>
       {/each}
     </div>
@@ -204,7 +195,7 @@
     height: 100%;
     padding: 20px;
     background: var(--color-surface);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     border: 1px solid var(--color-border);
   }
 
@@ -234,8 +225,8 @@
   }
 
   .column-dot.in-progress {
-    background: #f59e0b;
-    box-shadow: 0 0 8px #f59e0b;
+    background: var(--color-warning);
+    box-shadow: 0 0 8px var(--color-warning);
   }
 
   .column-dot.done {
@@ -245,17 +236,17 @@
 
   /* Light mode status dots - more vibrant */
   :global(.light) .column-dot.in-progress {
-    background: #d97706;
-    box-shadow: 0 0 6px #f59e0b80;
+    background: var(--color-warning);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-warning) 50%, transparent);
   }
 
   :global(.light) .column-dot.done {
-    background: #16a34a;
-    box-shadow: 0 0 6px #22c55e80;
+    background: var(--color-success);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-success) 50%, transparent);
   }
 
   .column-title {
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-foreground);
     text-transform: uppercase;
@@ -264,11 +255,11 @@
   }
 
   .column-count {
-    font-size: 12px;
+    font-size: var(--text-xs);
     color: var(--color-muted-foreground);
     background: color-mix(in srgb, var(--color-foreground) 5%, transparent);
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: var(--radius-xl);
   }
 
   .column-content {
@@ -282,7 +273,7 @@
   .card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 14px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
@@ -320,13 +311,13 @@
   }
 
   .card-id {
-    font-size: 11px;
+    font-size: var(--text-xs);
     color: var(--color-muted-foreground);
     font-family: var(--font-mono);
   }
 
   .card-title {
-    font-size: 14px;
+    font-size: var(--text-sm);
     color: var(--color-foreground);
     font-weight: 500;
     margin: 6px 0 0 0;
@@ -334,32 +325,16 @@
   }
 
   .card-description {
-    font-size: 12px;
+    font-size: var(--text-xs);
     color: var(--color-muted-foreground);
     margin: 8px 0 0 0;
     line-height: 1.4;
     font-style: italic;
   }
 
-  .card-footer {
-    display: flex;
-    justify-content: flex-end;
-  }
 
-  .card-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-  }
 
-  .card-avatar.in-progress-avatar {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  }
 
-  .card-avatar.done-avatar {
-    background: linear-gradient(135deg, var(--color-success) 0%, #16a34a 100%);
-  }
 
   @keyframes cardAppear {
     from {
@@ -419,7 +394,7 @@
     }
 
     .card-title {
-      font-size: 13px;
+      font-size: var(--text-sm);
     }
   }
 </style>

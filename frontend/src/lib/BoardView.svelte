@@ -618,7 +618,7 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .back-btn:hover {
@@ -626,7 +626,7 @@
   }
 
   header h1 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0;
@@ -640,7 +640,7 @@
     margin-left: -0.5rem;
     background: none;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     color: var(--color-foreground);
     transition: background 0.15s ease;
@@ -662,7 +662,7 @@
   }
 
   .card-count {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
   }
 
@@ -674,7 +674,7 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .share-btn:hover {
@@ -714,7 +714,7 @@
     display: flex;
     flex-direction: column;
     background: var(--color-muted);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     max-height: 100%;
   }
 
@@ -734,7 +734,7 @@
 
   .column-delete-btn {
     padding: 0.125rem 0.375rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1;
     background: transparent;
     color: var(--color-muted-foreground);
@@ -753,7 +753,7 @@
   }
 
   .column-header h3 {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0;
@@ -778,7 +778,7 @@
   .card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 0.75rem;
     cursor: grab;
     transition: all 0.15s ease;
@@ -800,27 +800,27 @@
   }
 
   .card-title {
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--color-foreground);
     word-break: break-word;
   }
 
   .card-id {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     font-weight: 400;
     color: var(--color-muted-foreground);
   }
 
   .card-id-badge {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 400;
     color: var(--color-muted-foreground);
   }
 
   .delete-btn {
     padding: 0.125rem 0.375rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1;
     background: transparent;
     color: var(--color-muted-foreground);
@@ -839,7 +839,7 @@
   }
 
   .card-description {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0.5rem 0 0 0;
     line-height: 1.5;
@@ -851,7 +851,7 @@
   }
 
   .card-meta {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--color-muted-foreground);
     margin-top: 0.5rem;
   }
@@ -860,7 +860,7 @@
     text-align: center;
     padding: 2rem 1rem;
     color: var(--color-muted-foreground);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .add-card-btn {
@@ -873,7 +873,7 @@
     color: var(--color-muted-foreground);
     border: none;
     border-top: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     transition: all 0.15s ease;
   }
 
@@ -883,7 +883,7 @@
   }
 
   .add-card-btn span {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 300;
   }
 
@@ -897,8 +897,8 @@
     background: transparent;
     color: var(--color-muted-foreground);
     border: 2px dashed var(--color-border);
-    border-radius: 12px;
-    font-size: 0.9375rem;
+    border-radius: var(--radius-xl);
+    font-size: var(--text-sm);
     font-weight: 500;
     transition: all 0.15s ease;
     height: fit-content;
@@ -911,21 +911,21 @@
   }
 
   .add-column-btn span {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 300;
   }
 
   #modal-title {
     margin: 0 0 1.25rem 0;
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
   }
 
   input {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
@@ -939,8 +939,8 @@
 
   textarea {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
@@ -964,9 +964,9 @@
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
   }

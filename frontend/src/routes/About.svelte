@@ -77,13 +77,13 @@
 
 <style>
   .mascot-note {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     font-style: italic;
     margin-bottom: 2rem;
     padding: 0.75rem 1rem;
     background: var(--color-muted);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     border-left: 3px solid var(--color-primary);
   }
 
@@ -96,7 +96,7 @@
   }
 
   h2 {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-muted-foreground);
     margin: 0 0 1.5rem 0;
@@ -108,7 +108,7 @@
 
   p {
     color: var(--color-muted-foreground);
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1.7;
     margin: 0 0 1rem 0;
   }
@@ -120,7 +120,7 @@
   }
 
   li {
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1.7;
     margin-bottom: 0.5rem;
   }
@@ -134,7 +134,7 @@
   .built-for-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     padding: 1.25rem;
     transition: all 0.2s ease;
   }
@@ -146,7 +146,7 @@
   }
 
   .built-for-card h3 {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.5rem 0;
@@ -156,7 +156,7 @@
   }
 
   .built-for-card p {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     line-height: 1.6;
     margin: 0;
@@ -168,7 +168,7 @@
     }
 
     h2 {
-      font-size: 0.875rem;
+      font-size: var(--text-sm);
     }
   }
 </style>

@@ -318,7 +318,7 @@
   }
 
   .tab-header h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-foreground);
     margin: 0;
@@ -343,19 +343,19 @@
   .team-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     padding: 1.25rem;
   }
 
   .team-info h3 {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.25rem 0;
   }
 
   .team-info .org-badge {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0;
   }
@@ -372,13 +372,13 @@
   }
 
   .stat-value {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
   }
 
   .stat-label {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--color-muted-foreground);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -396,11 +396,11 @@
 
   .action-btn {
     padding: 0.5rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     background: var(--color-muted);
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
 
   .action-btn:hover {
@@ -422,7 +422,7 @@
   }
 
   .members-section h3 {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.75rem 0;
@@ -443,9 +443,9 @@
     color: var(--color-primary-foreground);
     border: none;
     padding: 0.75rem 1.25rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     white-space: nowrap;
   }
@@ -476,7 +476,7 @@
     align-items: center;
     padding: 0.75rem 1rem;
     background: var(--color-muted);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
 
   .member-username {
@@ -489,8 +489,8 @@
     color: var(--color-destructive);
     border: 1px solid var(--color-destructive);
     padding: 0.375rem 0.75rem;
-    font-size: 0.75rem;
-    border-radius: 4px;
+    font-size: var(--text-xs);
+    border-radius: var(--radius-md);
     cursor: pointer;
   }
 
@@ -509,15 +509,15 @@
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--color-foreground);
   }
 
   select, input {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
@@ -550,9 +550,9 @@
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
   }

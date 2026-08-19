@@ -50,13 +50,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 60px 24px;
-    background: linear-gradient(
-      180deg,
-      var(--color-background) 0%,
-      color-mix(in srgb, var(--color-primary) 10%, transparent) 50%,
-      var(--color-background) 100%
-    );
+    padding: var(--space-16) var(--space-6);
+    background-color: var(--color-background);
     position: relative;
     overflow: hidden;
   }
@@ -68,9 +63,14 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background:
-      radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in srgb, var(--color-primary) 15%, transparent) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 40% at 80% 60%, color-mix(in srgb, var(--color-success) 8%, transparent) 0%, transparent 40%);
+    background-image:
+      linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+    background-size: 72px 72px;
+    opacity: 0.35;
+    /* Fade the grid out before it reaches the copy, so it stays texture
+       rather than becoming a thing you read. */
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 0%, transparent 75%);
     pointer-events: none;
   }
 
@@ -79,7 +79,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 48px;
+    gap: var(--space-12);
     position: relative;
     z-index: 1;
   }
@@ -91,23 +91,21 @@
   }
 
   .headline {
-    font-size: 3.5rem;
+    font-size: var(--text-4xl);
     font-weight: 700;
     color: var(--color-foreground);
-    margin: 0 0 20px 0;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, var(--color-foreground) 0%, var(--color-muted-foreground) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    margin: 0 0 var(--space-5) 0;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
   }
 
   .subhead {
-    font-size: 1.25rem;
+    font-size: var(--text-lg);
     color: var(--color-muted-foreground);
-    margin: 0 0 32px 0;
-    line-height: 1.6;
+    margin: 0 0 var(--space-8) 0;
+    line-height: var(--leading-relaxed);
+    text-wrap: pretty;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
@@ -118,58 +116,58 @@
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .signup-button {
     display: inline-flex;
     align-items: center;
-    padding: 15px 28px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    background-color: var(--color-primary);
     color: var(--color-primary-foreground);
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: 700;
     text-decoration: none;
-    transition: all 0.2s ease;
+    border: 1px solid var(--color-primary);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
   }
 
   .signup-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px color-mix(in srgb, var(--color-primary) 30%, transparent);
+    background-color: color-mix(in srgb, var(--color-primary) 86%, var(--color-foreground));
+    border-color: color-mix(in srgb, var(--color-primary) 86%, var(--color-foreground));
   }
 
   .signup-button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
+    box-shadow: var(--ring);
   }
 
   .install-button {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 24px;
-    background: var(--color-surface);
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    background-color: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
     font-family: var(--font-mono);
   }
 
   .install-button:hover {
     border-color: var(--color-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px color-mix(in srgb, var(--color-primary) 15%, transparent);
+    background-color: var(--color-muted);
   }
 
   .button-icon {
-    font-size: 18px;
+    font-size: var(--text-lg);
     color: var(--color-primary);
   }
 
   .button-command {
-    font-size: 15px;
+    font-size: var(--text-sm);
     color: var(--color-foreground);
     font-weight: 500;
     background: transparent;
@@ -177,12 +175,14 @@
   }
 
   .button-copy {
-    font-size: 12px;
+    font-size: var(--text-xs);
     color: var(--color-muted-foreground);
-    padding: 4px 10px;
-    background: color-mix(in srgb, var(--color-foreground) 5%, transparent);
-    border-radius: 6px;
-    transition: all 0.2s ease;
+    padding: var(--space-1) var(--space-2);
+    background-color: color-mix(in srgb, var(--color-foreground) 6%, transparent);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
   }
 
   .install-button:hover .button-copy {
@@ -207,14 +207,6 @@
   }
 
   @media (max-width: 1024px) {
-    .headline {
-      font-size: 2.75rem;
-    }
-
-    .subhead {
-      font-size: 1.125rem;
-    }
-
     .demo-grid {
       grid-template-columns: 1fr;
       gap: 16px;
@@ -225,14 +217,6 @@
   @media (max-width: 640px) {
     .hero-section {
       padding: 40px 16px;
-    }
-
-    .headline {
-      font-size: 2rem;
-    }
-
-    .subhead {
-      font-size: 1rem;
     }
 
     .hero-actions {
@@ -254,7 +238,7 @@
     }
 
     .button-command {
-      font-size: 13px;
+      font-size: var(--text-sm);
     }
 
     .demo-grid {

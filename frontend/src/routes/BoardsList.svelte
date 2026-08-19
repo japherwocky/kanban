@@ -204,12 +204,12 @@
   }
 
   .logo-icon {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     color: var(--color-primary);
   }
 
   header h1 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
     margin: 0;
@@ -227,7 +227,7 @@
     color: var(--color-foreground);
     border: 2px solid var(--color-border);
     text-decoration: none;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .nav-btn:hover {
@@ -269,7 +269,7 @@
 
   .empty-state p {
     margin-bottom: 1.5rem;
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
   }
 
   .boards-grid {
@@ -321,7 +321,7 @@
   }
 
   .board-header h3 {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0;
@@ -332,7 +332,7 @@
     top: 0.75rem;
     right: 0.75rem;
     padding: 0.125rem 0.375rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1;
     background: transparent;
     color: var(--color-muted-foreground);
@@ -353,7 +353,7 @@
   }
 
   .board-meta {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     display: flex;
     flex-direction: column;
@@ -365,7 +365,7 @@
     align-items: center;
     gap: 0.25rem;
     color: var(--color-primary);
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 500;
   }
 
@@ -388,7 +388,7 @@
   }
 
   .create-card .plus {
-    font-size: 2rem;
+    font-size: var(--text-3xl);
     font-weight: 300;
   }
 
@@ -409,7 +409,7 @@
 
   #modal-title {
     margin: 0 0 1.25rem 0;
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
   }
@@ -433,8 +433,8 @@
 
   input {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
@@ -450,9 +450,9 @@
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
   }

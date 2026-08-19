@@ -59,7 +59,7 @@
   }
 
   .contact-item h3 {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-muted-foreground);
     margin: 0 0 0.25rem 0;
@@ -69,7 +69,7 @@
 
   .contact-item a,
   .contact-item p {
-    font-size: 1rem;
+    font-size: var(--text-base);
     color: var(--color-foreground);
     margin: 0;
     text-decoration: none;
@@ -84,7 +84,7 @@
   }
 
   .use-cases h2 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.75rem 0;
@@ -97,7 +97,7 @@
   }
 
   li {
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1.7;
     margin-bottom: 0.5rem;
   }

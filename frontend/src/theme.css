@@ -1,27 +1,55 @@
+/* ==========================================================================
+   Kanban Theme System
+   --------------------------------------------------------------------------
+   Three layers, in order:
+
+     1. Brand      -- the pearachute logo colors. Names match
+                      pearachute.com's app.css exactly so the layer stays
+                      portable between the two properties. Never reference
+                      these directly from a component; go through layer 2.
+     2. Semantic   -- what a color MEANS here (background, border, primary).
+                      Components use only these, so retheming is a change to
+                      this file and nowhere else.
+     3. Scales     -- type, spacing, radius, shadow, motion, z-index.
+
+   Direction: terminal-native but restrained. Mono for data (ids, counts,
+   timestamps, code, CLI output), sans for prose. Tight corners, borders
+   doing the work that shadows usually do, and a warm black rather than the
+   blue-violet near-black this used to run.
+   ========================================================================== */
+
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap');
 
+/* --------------------------------------------------------------------------
+   Tailwind bridge
+   Exposes the semantic tokens as Tailwind utilities (bg-background,
+   text-muted-foreground, rounded-md, ...). Tailwind is barely used in this
+   codebase -- components style themselves in scoped <style> blocks -- but
+   where it IS used it must draw from the same well.
+   -------------------------------------------------------------------------- */
 @theme {
   --color-primary: var(--color-primary);
   --color-primary-foreground: var(--color-primary-foreground);
-  --color-secondary: var(--color-secondary);
-  --color-secondary-foreground: var(--color-secondary-foreground);
   --color-accent: var(--color-accent);
   --color-accent-foreground: var(--color-accent-foreground);
   --color-success: var(--color-success);
   --color-success-foreground: var(--color-success-foreground);
+  --color-warning: var(--color-warning);
+  --color-warning-foreground: var(--color-warning-foreground);
   --color-error: var(--color-error);
   --color-error-foreground: var(--color-error-foreground);
+  --color-destructive: var(--color-destructive);
+  --color-destructive-foreground: var(--color-destructive-foreground);
   --color-background: var(--color-background);
   --color-foreground: var(--color-foreground);
   --color-muted: var(--color-muted);
   --color-muted-foreground: var(--color-muted-foreground);
   --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
   --color-card: var(--color-card);
-  --color-card-foreground: var(--color-card-foreground);
   --color-surface: var(--color-surface);
-  --color-surface-foreground: var(--color-surface-foreground);
   --color-code-bg: var(--color-code-bg);
   --color-code-fg: var(--color-code-fg);
   --font-sans: var(--font-sans);
@@ -31,72 +59,297 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", "Monaco", "Menlo", monospace;
+  /* ======================================================================
+     1. BRAND -- pearachute logo colors
+     Shared verbatim with pearachute.com. Theme-independent by design:
+     these five are the identity and do not change between light and dark.
+     ====================================================================== */
+  --pear-primary: #63cdf5;      /* logo canopy    -- cyan   */
+  --pear-dark: #231f20;         /* logo outlines  -- warm black */
+  --pear-accent: #42ba3b;       /* logo accent    -- green  */
+  --pear-light-green: #bfe47e;  /* ground accent           */
+  --pear-pale-blue: #def4fd;    /* inner details           */
 
-  /* Brand Colors */
-  --color-primary: #2563eb;
+  /* ======================================================================
+     2. SEMANTIC -- light theme
+     ====================================================================== */
+
+  /* Surfaces. A warm neutral ramp keyed off --pear-dark's hue, so light and
+     dark are the same family rather than two unrelated greys. */
+  --color-background: #f7f6f4;
+  --color-card: #ffffff;
+  --color-surface: #efedea;
+  --color-muted: #e7e4e0;
+
+  --color-border: #ddd9d4;
+  --color-border-strong: #c4bfb8;
+
+  /* Text */
+  --color-foreground: var(--pear-dark);
+  --color-muted-foreground: #6b6560;
+
+  /* Primary. NOT --pear-primary: the brand cyan is a pale tint that lands
+     near 1.8:1 as text on a light background, well under the 4.5:1 AA floor,
+     and this token is used as a text color far more often than as a fill
+     (63 text uses vs 23 backgrounds at time of writing). Light mode
+     therefore uses a darkened version of the same hue. Matches the
+     --color-link treatment on pearachute.com. */
+  --color-primary: #0b6c91;
   --color-primary-foreground: #ffffff;
-  --color-primary-rgb: 37, 99, 235;
 
-  --color-accent: #8b5cf6;
+  /* Accent / status. The brand green doubles as success -- a terminal-native
+     coincidence worth leaning on. Darkened here for the same AA reason as
+     primary; #42ba3b on white is roughly 2.8:1. */
+  --color-accent: #277322;
   --color-accent-foreground: #ffffff;
 
-  --color-success: #22c55e;
+  --color-success: #277322;
   --color-success-foreground: #ffffff;
 
-  --color-error: #ef4444;
+  --color-warning: #8a5408;
+  --color-warning-foreground: #ffffff;
+
+  --color-error: #c62f2f;
   --color-error-foreground: #ffffff;
 
-  /* Neutrals - Light Mode */
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-muted: #e2e8f0;
-  --color-muted-foreground: #64748b;
-  --color-border: #cbd5e1;
-  --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-  --color-surface: #f1f5f9;
-  --color-surface-foreground: #334155;
+  /* Destructive is an alias of error, not a second red. 38 call sites across
+     15 files referenced --color-destructive with no fallback while the token
+     was never defined anywhere -- an invalid var() computes to unset, so
+     every delete/revoke/remove button was rendering with a transparent
+     background and inherited text. Defining it here fixes all of them. */
+  --color-destructive: var(--color-error);
+  --color-destructive-foreground: var(--color-error-foreground);
 
-  /* Code/Technical Colors */
-  --color-code-bg: #1e293b;
-  --color-code-fg: #e2e8f0;
+  /* Code stays terminal-dark even in light mode. This is a developer tool;
+     a light-on-dark code block is the expected reading surface. */
+  --color-code-bg: var(--pear-dark);
+  --color-code-fg: #f2efec;
+
+  /* Syntax highlighting. Defined once, with no light-mode counterpart:
+     because code always sits on a dark ground (above), these never have to
+     survive a light background. Tuned as an ANSI-style terminal palette,
+     with the brand cyan and green carrying types and strings. */
+  --syntax-keyword: #f0876a;
+  --syntax-type: var(--pear-primary);
+  --syntax-function: #e0c04a;
+  --syntax-string: var(--pear-light-green);
+  --syntax-number: #e0a03a;
+  --syntax-comment: #8a827d;
+  --syntax-punctuation: #b8b0ab;
+
+  /* ======================================================================
+     3. SCALES
+     ====================================================================== */
+
+  /* Typography. Ubuntu matches pearachute.com; Ubuntu Mono is Ubuntu's
+     terminal default. Both are provisional -- swapping faces is a change to
+     these two lines, which is the whole point of routing them through
+     tokens. */
+  --font-sans: 'Ubuntu', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Ubuntu Mono', 'JetBrains Mono', 'Fira Code', Monaco, Menlo, monospace;
+
+  /* Type scale. Replaces 40 distinct ad-hoc font-size values. */
+  --text-xs: 0.75rem;     /* 12px -- metadata, badges */
+  --text-sm: 0.875rem;    /* 14px -- secondary text, controls */
+  --text-base: 1rem;      /* 16px -- body */
+  --text-lg: 1.125rem;    /* 18px -- lead paragraphs */
+  --text-xl: 1.375rem;    /* 22px -- card/section titles */
+  --text-2xl: 1.75rem;    /* 28px -- page titles */
+  --text-3xl: 2.25rem;    /* 36px -- section headers */
+  --text-4xl: 3rem;       /* 48px -- hero headline */
+
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* Terminal-native type detailing: headlines pull tight, small mono labels
+     open up so they stay legible at 12px. */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.06em;
+
+  /* Spacing -- 4px base, shared with pearachute.com */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Radius. Deliberately tighter than the 8/12px this used to run -- the
+     soft-rounded card is a large part of what read as generic. */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-full: 9999px;
+
+  /* Elevation. Restrained on purpose: in a terminal-native UI a border
+     carries the separation and a shadow is a last resort for things that
+     genuinely float (modals, dropdowns, a card mid-drag). */
+  --shadow-sm: 0 1px 2px 0 rgb(35 31 32 / 0.06);
+  --shadow-md: 0 2px 8px -2px rgb(35 31 32 / 0.10);
+  --shadow-lg: 0 12px 32px -8px rgb(35 31 32 / 0.22);
+
+  /* Focus ring -- one definition, used everywhere focus is shown. */
+  --ring: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-primary);
+
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 320ms ease;
+
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-tooltip: 400;
 }
 
+/* ==========================================================================
+   Dark theme -- the default for this app, and its primary surface.
+
+   Built on --pear-dark (#231f20) rather than a blue-black. That warmth is
+   the point: it reads as a terminal rather than as a dark-mode SaaS
+   dashboard, and cyan + green sitting on warm black is the classic terminal
+   palette almost by accident.
+   ========================================================================== */
 .dark {
-  /* Brand Colors */
-  --color-primary: #3b82f6;
-  --color-primary-foreground: #ffffff;
-  --color-primary-rgb: 59, 130, 246;
+  /* Surfaces -- brand black at the base, each step lifting toward the light */
+  --color-background: var(--pear-dark);
+  --color-card: #2b2726;
+  --color-surface: #332e2d;
+  --color-muted: #3a3534;
 
-  --color-accent: #a78bfa;
-  --color-accent-foreground: #0f172a;
+  --color-border: #423c3b;
+  --color-border-strong: #574f4d;
 
-  --color-success: #4ade80;
-  --color-success-foreground: #0f172a;
+  /* Text -- warm off-white, not #fff, so it doesn't buzz against the black */
+  --color-foreground: #f2efec;
+  --color-muted-foreground: #a8a19c;
 
-  --color-error: #f87171;
-  --color-error-foreground: #0f172a;
+  /* On a dark ground the brand colors need no correction -- they are finally
+     doing the job they were drawn for. */
+  --color-primary: var(--pear-primary);
+  --color-primary-foreground: var(--pear-dark);
 
-  /* Neutrals - Dark Mode */
-  --color-background: #0a0a0f;
-  --color-foreground: #f8fafc;
-  --color-muted: #1e293b;
-  --color-muted-foreground: #94a3b8;
-  --color-border: #334155;
-  --color-card: #0f172a;
-  --color-card-foreground: #f8fafc;
-  --color-surface: #1e293b;
-  --color-surface-foreground: #e2e8f0;
+  --color-accent: var(--pear-accent);
+  --color-accent-foreground: var(--pear-dark);
 
-  /* Code/Technical Colors */
-  --color-code-bg: #0f172a;
-  --color-code-fg: #e2e8f0;
+  --color-success: var(--pear-accent);
+  --color-success-foreground: var(--pear-dark);
+
+  --color-warning: #e0a03a;
+  --color-warning-foreground: var(--pear-dark);
+
+  --color-error: #f07171;
+  --color-error-foreground: var(--pear-dark);
+
+  /* Code recedes BELOW the page here, the inverse of light mode */
+  --color-code-bg: #1a1717;
+  --color-code-fg: #f2efec;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.30);
+  --shadow-md: 0 2px 8px -2px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.65);
+}
+
+/* ==========================================================================
+   Base elements
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
+  margin: 0;
   font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
   background-color: var(--color-background);
   color: var(--color-foreground);
+}
+
+/* Data is mono, prose is sans. The single rule that carries most of the
+   terminal-native read: ids, counts, timestamps, keys, CLI output. */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+}
+
+/* One focus treatment for the whole app, keyboard-only. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+/* Scrollbars, so the board's horizontal scroll doesn't punch a bright
+   system-grey hole in a dark surface. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Responsive type
+   Scaling the tokens beats scaling call sites -- every component that reads
+   the scale narrows with it.
+   ========================================================================== */
+@media (max-width: 768px) {
+  :root {
+    --text-4xl: 2.125rem;
+    --text-3xl: 1.75rem;
+    --text-2xl: 1.5rem;
+    --text-xl: 1.25rem;
+  }
 }
