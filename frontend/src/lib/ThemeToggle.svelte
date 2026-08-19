@@ -43,7 +43,7 @@
     background: transparent;
     color: var(--color-foreground);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), outline var(--transition-fast), outline-offset var(--transition-fast);
   }
 
   .theme-toggle:hover {

@@ -285,7 +285,7 @@
     background: var(--color-card);
     border: 2px solid var(--color-border);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: border-color var(--transition-fast);
     text-align: left;
     position: relative;
   }
@@ -454,6 +454,6 @@
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
   }
 </style>

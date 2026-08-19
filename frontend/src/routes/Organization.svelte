@@ -575,7 +575,7 @@
     border-bottom: 2px solid transparent;
     font-size: var(--text-base);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: border-bottom-color var(--transition-fast), color var(--transition-fast);
   }
 
   .tab-btn:hover {
@@ -904,6 +904,6 @@
 
   button {
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
   }
 </style>

@@ -206,7 +206,7 @@
     cursor: pointer;
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
   .nav-desktop button:hover {
@@ -235,7 +235,7 @@
     cursor: pointer;
     padding: 0.5rem 0.875rem;
     border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
   .btn-secondary:hover {
@@ -252,7 +252,7 @@
     cursor: pointer;
     padding: 0.5rem 0.875rem;
     border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
+    transition: opacity var(--transition-fast);
   }
 
   .btn-primary:hover {
@@ -270,7 +270,7 @@
     border-radius: var(--radius-lg);
     color: var(--color-foreground);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast);
   }
 
   .mobile-toggle:hover {
@@ -322,7 +322,7 @@
     cursor: pointer;
     font-size: var(--text-sm);
     font-weight: 500;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast);
   }
 
   .user-menu-trigger:hover {
@@ -375,7 +375,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
     text-align: left;
   }
 

@@ -167,7 +167,7 @@
     max-width: 1200px;
     width: 100%;
     margin: var(--space-16) auto;
-    padding: 0 24px;
+    padding: 0 var(--space-6);
   }
 
   .features-header {
@@ -192,7 +192,7 @@
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     grid-template-rows: auto auto;
-    gap: 20px;
+    gap: var(--space-5);
   }
 
   .bento-box {
@@ -200,9 +200,9 @@
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    padding: 24px;
+    padding: var(--space-6);
     overflow: hidden;
-    transition: all var(--transition-slow);
+    transition: border-color var(--transition-slow), box-shadow var(--transition-slow), transform var(--transition-slow);
     cursor: pointer;
   }
 
@@ -239,8 +239,8 @@
   .box-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
   }
 
   .box-icon {
@@ -283,7 +283,7 @@
   .code-panel {
     background: var(--color-code-bg);
     border-radius: var(--radius-lg);
-    padding: 16px;
+    padding: var(--space-4);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: 1.6;
@@ -294,11 +294,11 @@
   }
 
   .code-indent {
-    padding-left: 24px;
+    padding-left: var(--space-6);
   }
 
   .code-indent-2 {
-    padding-left: 48px;
+    padding-left: var(--space-12);
   }
 
   .code-indent-3 {
@@ -306,7 +306,7 @@
   }
 
   .code-indent-4 {
-    padding-left: 96px;
+    padding-left: var(--space-24);
   }
 
   .code-keyword { color: var(--syntax-keyword); }
@@ -314,15 +314,15 @@
   .code-function { color: var(--syntax-function); }
   .code-string { color: var(--color-success); }
   .code-comment { color: var(--color-muted-foreground); opacity: 0.7; }
-  .code-prompt { color: var(--color-success); font-weight: 600; margin-right: 8px; }
+  .code-prompt { color: var(--color-success); font-weight: 600; margin-right: var(--space-2); }
 
   .code-line.highlight {
     background: color-mix(in srgb, var(--color-success) 10%, transparent);
     margin: 0 -16px;
-    padding: 0 16px;
+    padding: 0 var(--space-4);
     border-left: 3px solid var(--color-success);
     color: var(--color-code-fg);
-    transition: all var(--transition-normal);
+    transition: background-color var(--transition-normal);
   }
 
   .code-line.highlight.active {
@@ -332,7 +332,7 @@
   /* JSON Tree Styles */
   .structure-display {
     display: flex;
-    gap: 20px;
+    gap: var(--space-5);
     align-items: flex-start;
   }
 
@@ -340,7 +340,7 @@
     flex: 1;
     background: var(--color-code-bg);
     border-radius: var(--radius-lg);
-    padding: 16px;
+    padding: var(--space-4);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     line-height: 1.8;
@@ -356,7 +356,7 @@
     width: 60px;
     height: 60px;
     color: var(--color-muted-foreground);
-    transition: all var(--transition-slow);
+    transition: color var(--transition-slow);
   }
 
   .robot-scanner.scanning {
@@ -386,12 +386,12 @@
   /* Logo Marquee Styles */
   .logo-marquee {
     overflow: hidden;
-    padding: 16px 0;
+    padding: var(--space-4) 0;
   }
 
   .logo-track {
     display: flex;
-    gap: 32px;
+    gap: var(--space-8);
     animation: scroll 20s linear infinite;
   }
 
@@ -406,14 +406,14 @@
 
   .logo-item {
     flex-shrink: 0;
-    padding: 12px 24px;
+    padding: var(--space-3) var(--space-6);
     background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-foreground) 6%, transparent);
     border-radius: var(--radius-lg);
     color: var(--color-muted-foreground);
     font-weight: 500;
     font-size: var(--text-sm);
-    transition: all var(--transition-slow);
+    transition: background-color var(--transition-slow), border-color var(--transition-slow), color var(--transition-slow);
   }
 
   .logo-item:hover,
@@ -447,7 +447,7 @@
 
   @media (max-width: 640px) {
     .features-section {
-      padding: 0 16px;
+      padding: 0 var(--space-4);
     }
 
     .features-header h2 {
@@ -459,11 +459,11 @@
     }
 
     .bento-grid {
-      gap: 16px;
+      gap: var(--space-4);
     }
 
     .bento-box {
-      padding: 20px;
+      padding: var(--space-5);
     }
 
     .box-header h3 {
