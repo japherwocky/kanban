@@ -32,7 +32,7 @@
 
   .pricing-placeholder p {
     color: var(--color-muted-foreground);
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1.6;
     margin: 0;
   }

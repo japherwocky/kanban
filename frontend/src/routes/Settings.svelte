@@ -63,9 +63,9 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     transition: all 0.15s ease;
   }
 
@@ -74,7 +74,7 @@
   }
 
   .settings-header h1 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
     margin: 0;
@@ -93,9 +93,9 @@
     padding: 0.75rem 1.25rem;
     background: transparent;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     color: var(--color-muted-foreground);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;

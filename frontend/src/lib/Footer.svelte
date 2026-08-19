@@ -86,7 +86,7 @@
     background: none;
     border: none;
     color: var(--color-foreground);
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     cursor: pointer;
     padding: 0;
@@ -103,7 +103,7 @@
 
   .tagline {
     color: var(--color-muted-foreground);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     line-height: 1.6;
     margin: 0;
   }
@@ -122,7 +122,7 @@
 
   .link-group h4 {
     color: var(--color-foreground);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 600;
     margin: 0;
   }
@@ -131,7 +131,7 @@
     background: none;
     border: none;
     color: var(--color-muted-foreground);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     cursor: pointer;
     padding: 0;
     text-align: left;
@@ -156,7 +156,7 @@
 
   .footer-bottom p {
     color: var(--color-muted-foreground);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     margin: 0;
   }
 

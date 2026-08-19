@@ -147,7 +147,7 @@
   }
 
   header h1 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-destructive);
   }
@@ -163,7 +163,7 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .nav-btn:hover {
@@ -205,7 +205,7 @@
     background: transparent;
     border: none;
     color: var(--color-foreground);
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     cursor: pointer;
     transition: all 0.15s ease;
   }
@@ -233,15 +233,15 @@
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
   }
 
   .coming-soon h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-foreground);
     margin-bottom: 0.5rem;

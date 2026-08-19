@@ -137,7 +137,7 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .back-btn:hover {
@@ -145,7 +145,7 @@
   }
 
   header h1 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
   }
@@ -164,7 +164,7 @@
 
   .empty-state p {
     margin-bottom: 1.5rem;
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
   }
 
   .organizations-grid {
@@ -179,7 +179,7 @@
     padding: 1.5rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     cursor: pointer;
     transition: all 0.15s ease;
     text-align: left;
@@ -192,14 +192,14 @@
   }
 
   .org-card h3 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.5rem 0;
   }
 
   .org-slug {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin-bottom: 0.5rem;
     font-family: monospace;
@@ -207,7 +207,7 @@
 
   .org-meta {
     margin-top: auto;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
   }
 
@@ -230,7 +230,7 @@
   }
 
   .create-card .plus {
-    font-size: 2rem;
+    font-size: var(--text-3xl);
     font-weight: 300;
   }
 
@@ -251,7 +251,7 @@
 
   #modal-title {
     margin: 0 0 1.25rem 0;
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
   }
@@ -275,8 +275,8 @@
 
   input {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
@@ -292,9 +292,9 @@
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
   }

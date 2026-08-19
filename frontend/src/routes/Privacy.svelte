@@ -48,7 +48,7 @@
 
   .last-updated {
     color: var(--color-muted-foreground);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-style: italic;
     margin: 0 0 2rem 0;
   }
@@ -58,7 +58,7 @@
   }
 
   h2 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.75rem 0;
@@ -66,7 +66,7 @@
 
   p {
     color: var(--color-muted-foreground);
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1.7;
     margin: 0 0 1rem 0;
   }
@@ -82,7 +82,7 @@
 
   @media (max-width: 640px) {
     h2 {
-      font-size: 1.125rem;
+      font-size: var(--text-lg);
     }
   }
 </style>

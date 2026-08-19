@@ -29,7 +29,7 @@
   }
 
   h1 {
-    font-size: 2.5rem;
+    font-size: var(--text-4xl);
     font-weight: 700;
     color: var(--color-foreground);
     margin: 0 0 1rem 0;
@@ -37,7 +37,7 @@
   }
 
   .description {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     color: var(--color-muted-foreground);
     line-height: 1.6;
     margin: 0 0 2rem 0;
@@ -50,7 +50,7 @@
     }
 
     h1 {
-      font-size: 1.75rem;
+      font-size: var(--text-2xl);
     }
   }
 </style>

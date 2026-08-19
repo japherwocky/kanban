@@ -109,7 +109,7 @@
 <style>
    #modal-title {
      margin: 0 0 1.25rem 0;
-     font-size: 1.25rem;
+     font-size: var(--text-xl);
      font-weight: 600;
      color: var(--color-foreground);
    }
@@ -125,7 +125,7 @@
      flex-direction: column;
      gap: 0.5rem;
      padding: 1rem;
-     border-radius: 8px;
+     border-radius: var(--radius-lg);
      background: var(--color-muted);
    }
 
@@ -133,7 +133,7 @@
      display: flex;
      align-items: center;
      gap: 0.75rem;
-     font-size: 1rem;
+     font-size: var(--text-base);
      font-weight: 500;
      color: var(--color-foreground);
      cursor: pointer;
@@ -146,21 +146,21 @@
    }
 
    .share-help {
-     font-size: 0.875rem;
+     font-size: var(--text-sm);
      color: var(--color-muted-foreground);
      margin: 0;
    }
 
    .share-label {
-     font-size: 0.875rem;
+     font-size: var(--text-sm);
      font-weight: 500;
      color: var(--color-foreground);
    }
 
    .team-select {
      padding: 0.75rem 1rem;
-     font-size: 1rem;
-     border-radius: 8px;
+     font-size: var(--text-base);
+     border-radius: var(--radius-lg);
      border: 1px solid var(--color-border);
      background: var(--color-card);
      color: var(--color-foreground);
@@ -179,16 +179,16 @@
    }
 
    .share-info p {
-     font-size: 0.875rem;
+     font-size: var(--text-sm);
      margin: 0;
      padding: 0.75rem;
-     border-radius: 6px;
+     border-radius: var(--radius-md);
    }
 
    .share-info .warning {
-     background: var(--color-destructive, #fef2f2);
-     color: var(--color-destructive, #991b1b);
-     border:1px solid var(--color-destructive, #fecaca);
+     background-color: color-mix(in srgb, var(--color-error) 12%, transparent);
+     color: var(--color-error);
+     border: 1px solid color-mix(in srgb, var(--color-error) 40%, transparent);
    }
 
     .share-info .info {
@@ -206,19 +206,19 @@
     }
 
     .message-icon {
-      font-size: 3rem;
+      font-size: var(--text-4xl);
       opacity: 0.5;
     }
 
     .no-teams-message h3 {
-      font-size: 1.25rem;
+      font-size: var(--text-xl);
       font-weight: 600;
       color: var(--color-foreground);
       margin: 0;
     }
 
     .no-teams-message p {
-      font-size: 0.9rem;
+      font-size: var(--text-sm);
       color: var(--color-muted-foreground);
       margin: 0;
       line-height: 1.5;
@@ -230,8 +230,8 @@
       background: var(--color-primary);
       color: var(--color-primary-foreground);
       border: none;
-      font-size: 0.875rem;
-      border-radius: 8px;
+      font-size: var(--text-sm);
+      border-radius: var(--radius-lg);
     }
 
     .create-org-btn:hover {

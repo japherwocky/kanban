@@ -268,7 +268,7 @@
   }
 
   .tab-header h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-foreground);
     margin: 0;
@@ -293,19 +293,19 @@
   .user-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     padding: 1.25rem;
   }
 
   .user-info h3 {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.25rem 0;
   }
 
   .user-info p {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0;
   }
@@ -318,9 +318,9 @@
 
   .badge {
     padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
   }
 
   .admin-badge {
@@ -337,11 +337,11 @@
   .action-btn {
     flex: 1;
     padding: 0.5rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     background: var(--color-muted);
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
 
   .action-btn:hover {
@@ -368,7 +368,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--color-foreground);
   }
@@ -386,8 +386,8 @@
 
   input {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
@@ -420,9 +420,9 @@
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
   }

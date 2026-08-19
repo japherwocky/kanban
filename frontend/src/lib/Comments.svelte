@@ -206,74 +206,88 @@
 </div>
 
 <style>
+  /* Everything here reads from the theme tokens, which already flip on
+     .dark -- so the parallel light block and the :global(.dark) overrides
+     this file used to carry (a full duplicate of every rule, in Bootstrap
+     colors that never matched the rest of the app) are gone. */
+
   .comments-section {
-    margin-top: 1rem;
-    border-top: 1px solid var(--border-color, #e0e0e0);
-    padding-top: 1rem;
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-4);
   }
 
   .comments-title {
-    margin: 0 0 1rem 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-color, #333);
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-muted-foreground);
+    font-family: var(--font-mono);
   }
 
   .comments-list {
     max-height: 300px;
     overflow-y: auto;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
   }
 
   .comment {
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: var(--comment-bg, #f8f9fa);
-    border-radius: 8px;
-    border: 1px solid var(--border-color, #e0e0e0);
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
   }
 
   .comment-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
   }
 
   .comment-author {
-    font-weight: 600;
-    color: var(--primary-color, #007bff);
+    font-weight: 700;
+    color: var(--color-primary);
   }
 
+  /* Timestamps are data, so they get the mono face and tabular figures --
+     which also stops the list jittering as relative times tick over. */
   .comment-time {
-    font-size: 0.875rem;
-    color: var(--text-muted, #6c757d);
+    font-size: var(--text-xs);
+    color: var(--color-muted-foreground);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 
   .comment-actions {
     margin-left: auto;
     display: flex;
-    gap: 0.25rem;
+    gap: var(--space-1);
   }
 
   .comment-action-btn {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
+    padding: var(--space-1);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
     opacity: 0.7;
-    transition: opacity 0.2s;
+    color: var(--color-muted-foreground);
+    transition: opacity var(--transition-fast), background-color var(--transition-fast);
   }
 
   .comment-action-btn:hover {
     opacity: 1;
-    background: var(--hover-bg, rgba(0, 0, 0, 0.1));
+    background-color: var(--color-muted);
   }
 
   .comment-action-btn.delete:hover {
-    background: var(--danger-bg, rgba(220, 53, 69, 0.1));
+    background-color: color-mix(in srgb, var(--color-error) 15%, transparent);
+    color: var(--color-error);
   }
 
   .comment-content {
@@ -282,14 +296,15 @@
 
   .comment-text {
     margin: 0;
-    line-height: 1.4;
+    line-height: var(--leading-normal);
     white-space: pre-wrap;
     word-wrap: break-word;
+    color: var(--color-foreground);
   }
 
   .comment-edited {
-    font-size: 0.75rem;
-    color: var(--text-muted, #6c757d);
+    font-size: var(--text-xs);
+    color: var(--color-muted-foreground);
     font-style: italic;
   }
 
@@ -297,62 +312,63 @@
     margin: 0;
   }
 
-  .edit-textarea {
+  .edit-textarea,
+  .new-comment-input {
     width: 100%;
-    min-height: 60px;
-    padding: 0.5rem;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 4px;
+    padding: var(--space-2);
+    background-color: var(--color-card);
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     font-family: inherit;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     resize: vertical;
-    margin-bottom: 0.5rem;
+    transition: border-color var(--transition-fast);
+  }
+
+  .edit-textarea {
+    min-height: 60px;
+    margin-bottom: var(--space-2);
+  }
+
+  .new-comment-input {
+    min-height: 80px;
+    padding: var(--space-3);
+  }
+
+  .edit-textarea:focus,
+  .new-comment-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 30%, transparent);
   }
 
   .edit-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .no-comments {
     text-align: center;
-    color: var(--text-muted, #6c757d);
+    color: var(--color-muted-foreground);
     font-style: italic;
-    margin: 2rem 0;
+    margin: var(--space-8) 0;
   }
 
   .new-comment-form {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .new-comment-input {
-    width: 100%;
-    min-height: 80px;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 0.875rem;
-    resize: vertical;
-    transition: border-color 0.2s;
-  }
-
-  .new-comment-input:focus {
-    outline: none;
-    border-color: var(--primary-color, #007bff);
-    box-shadow: 0 0 0 2px var(--primary-color-alpha, rgba(0, 123, 255, 0.25));
+    gap: var(--space-2);
   }
 
   .btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
     align-self: flex-start;
   }
 
@@ -362,115 +378,28 @@
   }
 
   .btn-primary {
-    background: var(--primary-color, #007bff);
-    color: white;
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-primary-foreground);
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--primary-color-dark, #0056b3);
+    background-color: color-mix(in srgb, var(--color-primary) 86%, var(--color-foreground));
+    border-color: color-mix(in srgb, var(--color-primary) 86%, var(--color-foreground));
   }
 
   .btn-secondary {
-    background: var(--secondary-color, #6c757d);
-    color: white;
+    background-color: transparent;
+    border-color: var(--color-border-strong);
+    color: var(--color-foreground);
   }
 
   .btn-secondary:hover:not(:disabled) {
-    background: var(--secondary-color-dark, #545b62);
+    background-color: var(--color-muted);
   }
 
   .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  /* Light theme (default) */
-  .comments-title {
-    color: #333;
-  }
-
-  .comment {
-    background: #f8f9fa;
-    border-color: #e0e0e0;
-  }
-
-  .comment-author {
-    color: #007bff;
-  }
-
-  .comment-time, .comment-edited, .no-comments {
-    color: #6c757d;
-  }
-
-  .comment-text {
-    color: #333;
-  }
-
-  .edit-textarea, .new-comment-input {
-    background: white;
-    border-color: #e0e0e0;
-    color: #333;
-  }
-
-  .edit-textarea:focus, .new-comment-input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  .comment-action-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
-  }
-
-  .comment-action-btn.delete:hover {
-    background: rgba(220, 53, 69, 0.1);
-  }
-
-  /* Dark theme */
-  :global(.dark) .comments-section {
-    border-top-color: #444;
-  }
-
-  :global(.dark) .comments-title {
-    color: #e0e0e0;
-  }
-
-  :global(.dark) .comment {
-    background: #2a2a2a;
-    border-color: #444;
-  }
-
-  :global(.dark) .comment-author {
-    color: #4dabf7;
-  }
-
-  :global(.dark) .comment-time, 
-  :global(.dark) .comment-edited, 
-  :global(.dark) .no-comments {
-    color: #adb5bd;
-  }
-
-  :global(.dark) .comment-text {
-    color: #e0e0e0;
-  }
-
-  :global(.dark) .edit-textarea, 
-  :global(.dark) .new-comment-input {
-    background: #1a1a1a;
-    border-color: #444;
-    color: #e0e0e0;
-  }
-
-  :global(.dark) .edit-textarea:focus, 
-  :global(.dark) .new-comment-input:focus {
-    border-color: #4dabf7;
-    box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
-  }
-
-  :global(.dark) .comment-action-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  :global(.dark) .comment-action-btn.delete:hover {
-    background: rgba(220, 53, 69, 0.2);
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-xs);
   }
 </style>

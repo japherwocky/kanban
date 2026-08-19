@@ -101,9 +101,9 @@
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
     background: var(--color-primary);

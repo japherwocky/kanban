@@ -70,12 +70,12 @@
     padding: 2rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     text-align: center;
   }
 
   h1 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
     margin: 0;
@@ -92,17 +92,17 @@
   }
 
   .loading {
-    color: var(--color-muted);
+    color: var(--color-muted-foreground);
   }
 
   .error {
     color: var(--color-destructive);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
   }
 
   .hint {
-    color: var(--color-muted);
-    font-size: 0.8125rem;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-sm);
   }
 
   .back-link {

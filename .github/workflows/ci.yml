@@ -41,3 +41,69 @@ jobs:
         working-directory: ./backend
         run: |
           pytest tests/test_cli.py
+
+  # The frontend is served from backend/static, which is gitignored and built
+  # on the server by sys/scripts/deploy.sh. Nothing here used to compile it, so
+  # a Svelte or CSS error reached production without a single check failing --
+  # the deploy's only gate is /api/health, which the backend answers happily
+  # while the bundle is broken.
+  #
+  # Runs as its own job rather than as steps on `test` so it goes in parallel:
+  # the Python suite gates nothing here, and vice versa.
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Before the build, because it needs no node_modules and because the
+      # build cannot catch this class of fault: an undefined var(--x) compiles
+      # cleanly and only fails in the browser, where it resolves to 'unset'
+      # and silently blanks whatever it styled.
+      - name: Check CSS custom properties are defined
+        run: python3 scripts/check_css_tokens.py
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package.json
+
+      # Mirrors build_frontend() in sys/scripts/deploy.sh, deliberately.
+      #
+      # The committed package-lock.json was generated on Windows, and npm only
+      # records the host platform's optional dependencies (npm/cli#4828). It
+      # therefore pins @rollup/rollup-win32-*, @tailwindcss/oxide-win32-* and
+      # lightningcss-win32-* and nothing else, so `npm ci` on a Linux runner
+      # installs no native binary at all and vite dies with "Cannot find module
+      # @rollup/rollup-linux-x64-gnu". That is exactly what the "avoid native
+      # module issues" line in deploy.sh is working around.
+      #
+      # Dropping the lockfile means CI resolves floating versions -- the same
+      # ones production will resolve. That is the point: this job exists to
+      # rehearse the deploy, so installing differently from the deploy would
+      # defeat it. The tradeoff is that an upstream release can break this job
+      # without the repo changing; on a PR that is a useful early warning
+      # rather than a surprise mid-deploy.
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          rm -f package-lock.json
+          npm install
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      # vite exits 0 as long as it emitted something, so assert the bundle is
+      # actually there. Catches an output-path or config change that silently
+      # stops populating backend/static.
+      - name: Verify build output
+        run: |
+          test -f backend/static/index.html || { echo "::error::no index.html in backend/static"; exit 1; }
+          ls backend/static/assets/*.js >/dev/null 2>&1 || { echo "::error::no JS bundle in backend/static/assets"; exit 1; }
+          ls backend/static/assets/*.css >/dev/null 2>&1 || { echo "::error::no CSS bundle in backend/static/assets"; exit 1; }
+          echo "Build output:"
+          ls -la backend/static backend/static/assets

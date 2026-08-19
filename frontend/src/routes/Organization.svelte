@@ -523,7 +523,7 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .back-btn:hover {
@@ -537,14 +537,14 @@
   }
 
   .org-header h1 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
     margin: 0;
   }
 
   .org-slug {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     font-family: monospace;
   }
@@ -573,7 +573,7 @@
     color: var(--color-muted-foreground);
     border: none;
     border-bottom: 2px solid transparent;
-    font-size: 1rem;
+    font-size: var(--text-base);
     cursor: pointer;
     transition: all 0.15s ease;
   }
@@ -601,7 +601,7 @@
   }
 
   .section-header h2 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0;
@@ -626,7 +626,7 @@
     padding: 1rem 1.25rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
   }
 
   .member-info {
@@ -636,17 +636,17 @@
   }
 
   .member-username {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
     color: var(--color-foreground);
   }
 
   .owner-badge {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     padding: 0.25rem 0.5rem;
     background: var(--color-primary);
     color: var(--color-primary-foreground);
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     font-weight: 600;
     text-transform: uppercase;
   }
@@ -663,18 +663,18 @@
     padding: 1.25rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
   }
 
   .team-info h3 {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.25rem 0;
   }
 
   .team-meta {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
   }
 
@@ -688,7 +688,7 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .members-btn:hover {
@@ -701,7 +701,7 @@
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .add-btn:hover {
@@ -710,10 +710,10 @@
 
   .remove-btn, .delete-team-btn {
     padding: 0.5rem 1rem;
-    background: var(--color-destructive, #ef4444);
-    color: white;
+    background-color: var(--color-error);
+    color: var(--color-error-foreground);
     border: none;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .remove-btn:hover, .delete-team-btn:hover {
@@ -725,7 +725,7 @@
     background: transparent;
     color: var(--color-muted-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .leave-btn:hover {
@@ -746,7 +746,7 @@
     padding: 1rem 1.25rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
   }
 
   .invite-info {
@@ -756,13 +756,13 @@
   }
 
   .invite-email {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
     color: var(--color-foreground);
   }
 
   .invite-meta {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
   }
 
@@ -776,7 +776,7 @@
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .copy-btn:hover {
@@ -786,10 +786,10 @@
 
   .revoke-btn {
     padding: 0.5rem 1rem;
-    background: var(--color-destructive, #ef4444);
-    color: white;
+    background-color: var(--color-error);
+    color: var(--color-error-foreground);
     border: none;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .revoke-btn:hover {
@@ -811,7 +811,7 @@
     align-items: center;
     padding: 0.75rem 1rem;
     background: var(--color-muted);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
 
   .add-member-section {
@@ -821,7 +821,7 @@
   }
 
   .add-member-section h3 {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
     margin: 0 0 0.5rem 0;
@@ -841,14 +841,14 @@
   }
 
   .modal-help {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0 0 1rem 0;
   }
 
   #modal-title {
     margin: 0 0 1.25rem 0;
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
   }
@@ -887,8 +887,8 @@
 
   input, select {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 8px;
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);

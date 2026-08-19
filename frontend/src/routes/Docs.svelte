@@ -145,7 +145,6 @@
   <div class="docs-content">
     <!-- Glow effect behind title -->
     <div class="docs-title-wrapper">
-      <div class="docs-title-glow"></div>
       <div class="docs-title-content">
         <h1>Documentation</h1>
         <p class="docs-subtitle">Everything you need to build with Kanban CLI</p>
@@ -160,7 +159,7 @@
         </div>
       </div>
     {:else if error}
-      <div class="rounded-lg p-4" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171;">
+      <div class="docs-callout docs-callout--danger">
         {error}
       </div>
     {:else}
@@ -173,6 +172,19 @@
 </div>
 
 <style>
+  .docs-callout {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    border-left: 3px solid transparent;
+    font-size: var(--text-sm);
+  }
+
+  .docs-callout--danger {
+    background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+    border-color: var(--color-error);
+    color: var(--color-error);
+  }
+
   .docs-layout {
     display: flex;
     min-height: calc(100vh - 4rem);
@@ -217,39 +229,25 @@
     margin-bottom: 2rem;
   }
 
-  .docs-title-glow {
-    position: absolute;
-    inset: -1rem;
-    border-radius: 0.75rem;
-    opacity: 0.5;
-    filter: blur(1rem);
-    background: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-primary) 20%, transparent) 0%,
-      color-mix(in srgb, var(--color-accent) 15%, transparent) 50%,
-      transparent 100%
-    );
-  }
-
   .docs-title-content {
     position: relative;
     z-index: 1;
   }
 
   .docs-title-content h1 {
-    font-size: 2.25rem;
+    font-size: var(--text-3xl);
     font-weight: 700;
     color: var(--color-foreground);
     margin-bottom: 0.75rem;
   }
 
   .docs-subtitle {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     color: var(--color-muted-foreground);
   }
 
   :global(.markdown-body h1) {
-    font-size: 1.875rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: white;
     margin-bottom: 1.5rem;
@@ -257,7 +255,7 @@
   }
 
   :global(.markdown-body h2) {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin-bottom: 1rem;
@@ -267,7 +265,7 @@
   }
 
   :global(.markdown-body h3) {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
     margin-bottom: 0.75rem;
@@ -275,7 +273,7 @@
   }
 
   :global(.markdown-body h4) {
-    font-size: 1.125rem;
+    font-size: var(--text-lg);
     font-weight: 500;
     color: var(--color-foreground);
     margin-bottom: 0.5rem;
@@ -323,20 +321,20 @@
   :global(.markdown-body code) {
     background-color: var(--color-code-bg);
     border: 1px solid var(--color-border);
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     padding: 0.125rem 0.375rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-family: monospace;
-    color: #22c55e;
+    color: var(--color-success);
   }
 
   :global(.markdown-body pre) {
     background-color: var(--color-code-bg);
     border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     padding: 1rem;
     font-family: monospace;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     margin-bottom: 1.5rem;
     overflow-x: auto;
   }
@@ -370,7 +368,7 @@
 
   :global(.markdown-body th) {
     text-align: left;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     text-transform: uppercase;
     color: var(--color-muted-foreground);
     font-weight: 500;
@@ -396,7 +394,7 @@
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
     background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 0 0.5rem 0.5rem 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
     color: var(--color-muted-foreground);
   }
 
@@ -409,7 +407,7 @@
 
   /* Inline code in tables */
   :global(.markdown-body td code) {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
   }
 
   /* Responsive */
@@ -432,11 +430,11 @@
     }
 
     .docs-title-content h1 {
-      font-size: 1.5rem;
+      font-size: var(--text-2xl);
     }
 
     :global(.markdown-body h2) {
-      font-size: 1.25rem;
+      font-size: var(--text-xl);
     }
   }
 </style>

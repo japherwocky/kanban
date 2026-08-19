@@ -95,19 +95,19 @@
     padding: 2rem;
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     text-align: center;
   }
 
   h1 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
     margin: 0;
   }
 
   .invite-text {
-    font-size: 1rem;
+    font-size: var(--text-base);
     color: var(--color-foreground);
     line-height: 1.6;
   }
@@ -118,8 +118,8 @@
   }
 
   .loading {
-    color: var(--color-muted);
-    font-size: 1rem;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-base);
   }
 
   .error h1 {
@@ -127,7 +127,7 @@
   }
 
   .error p {
-    color: var(--color-muted);
+    color: var(--color-muted-foreground);
     margin: 0.5rem 0;
   }
 
@@ -149,16 +149,16 @@
   }
 
   .auth-prompt {
-    font-size: 0.875rem;
-    color: var(--color-muted);
+    font-size: var(--text-sm);
+    color: var(--color-muted-foreground);
     margin: 0;
   }
 
   button {
     padding: 0.75rem 1rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.15s ease;
     border: none;
