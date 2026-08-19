@@ -104,6 +104,12 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # Before the build: these are the units the build cannot check. A broken
+      # drag reorder or a mis-resolved auth redirect compiles perfectly.
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: npm test
+
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
