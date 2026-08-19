@@ -91,10 +91,22 @@ build_frontend() {
     echo -e "${YELLOW}🏗️ Building frontend...${NC}"
 
     cd $DEPLOY_DIR/frontend
-    # Remove package-lock.json and node_modules to avoid native module issues
-    rm -f package-lock.json
+    # npm ci, not npm install: the build is reproducible now.
+    #
+    # This used to delete package-lock.json first, because the committed
+    # lockfile had been generated on Windows and npm records only the optional
+    # dependencies of the platform it resolved on (npm/cli#4828). It listed
+    # @rollup/rollup-win32-* and nothing else, so npm ci installed no native
+    # binary here and vite died with "Cannot find module
+    # @rollup/rollup-linux-x64-gnu". Deleting it worked, at the cost of
+    # re-resolving floating versions on every deploy -- two deploys of the same
+    # commit could ship different dependency trees.
+    #
+    # The lockfile now carries the whole platform matrix (linux, win32, darwin
+    # -- see frontend/LOCKFILE.md), so npm ci picks the linux binaries
+    # here and the win32 ones on a dev laptop, from the same file.
     rm -rf node_modules
-    npm install
+    npm ci
     npm run build
     echo "Frontend rebuilt"
 }

@@ -64,34 +64,45 @@ jobs:
       - name: Check CSS custom properties are defined
         run: python3 scripts/check_css_tokens.py
 
+      # npm prunes optional dependencies to the host platform when it
+      # regenerates a lockfile against an existing tree (npm/cli#4828), and
+      # npm ci then installs no native binary on every other OS. A lockfile
+      # pruned to linux would build fine in this job and in the deploy, and
+      # only break contributors on Windows and macOS -- so assert the whole
+      # matrix survived rather than trusting the build to notice.
+      - name: Check lockfile covers all platforms
+        working-directory: ./frontend
+        run: |
+          for plat in linux win32 darwin; do
+            n=$(grep -c "\"node_modules/@rollup/rollup-$plat" package-lock.json || true)
+            echo "@rollup $plat binaries: $n"
+            [ "$n" -gt 0 ] || { echo "::error::package-lock.json records no $plat rollup binary; regenerate it per frontend/LOCKFILE.md"; exit 1; }
+          done
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/package.json
+          cache-dependency-path: frontend/package-lock.json
 
-      # Mirrors build_frontend() in sys/scripts/deploy.sh, deliberately.
+      # Mirrors build_frontend() in sys/scripts/deploy.sh, deliberately: this
+      # job exists to rehearse the deploy, so it must install the same way.
       #
-      # The committed package-lock.json was generated on Windows, and npm only
-      # records the host platform's optional dependencies (npm/cli#4828). It
-      # therefore pins @rollup/rollup-win32-*, @tailwindcss/oxide-win32-* and
-      # lightningcss-win32-* and nothing else, so `npm ci` on a Linux runner
-      # installs no native binary at all and vite dies with "Cannot find module
-      # @rollup/rollup-linux-x64-gnu". That is exactly what the "avoid native
-      # module issues" line in deploy.sh is working around.
+      # Both used to delete the lockfile and run `npm install`, because the
+      # committed lockfile was generated on Windows and npm records only the
+      # optional dependencies of the platform it resolved on (npm/cli#4828) --
+      # @rollup/rollup-win32-* and nothing else, so `npm ci` on a Linux runner
+      # installed no native binary and vite died with "Cannot find module
+      # @rollup/rollup-linux-x64-gnu".
       #
-      # Dropping the lockfile means CI resolves floating versions -- the same
-      # ones production will resolve. That is the point: this job exists to
-      # rehearse the deploy, so installing differently from the deploy would
-      # defeat it. The tradeoff is that an upstream release can break this job
-      # without the repo changing; on a PR that is a useful early warning
-      # rather than a surprise mid-deploy.
+      # The lockfile is now generated from a clean slate, which keeps the full
+      # platform matrix instead of pruning to the host, so npm ci resolves the
+      # linux binaries here and win32 ones on a dev laptop from one file. See
+      # frontend/LOCKFILE.md before regenerating it.
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: |
-          rm -f package-lock.json
-          npm install
+        run: npm ci
 
       - name: Build frontend
         working-directory: ./frontend
