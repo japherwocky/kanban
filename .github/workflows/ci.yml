@@ -57,6 +57,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Before the build, because it needs no node_modules and because the
+      # build cannot catch this class of fault: an undefined var(--x) compiles
+      # cleanly and only fails in the browser, where it resolves to 'unset'
+      # and silently blanks whatever it styled.
+      - name: Check CSS custom properties are defined
+        run: python3 scripts/check_css_tokens.py
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
