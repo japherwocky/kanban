@@ -80,8 +80,8 @@
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     font-style: italic;
-    margin-bottom: 2rem;
-    padding: 0.75rem 1rem;
+    margin-bottom: var(--space-8);
+    padding: var(--space-3) var(--space-4);
     background: var(--color-muted);
     border-radius: var(--radius-lg);
     border-left: 3px solid var(--color-primary);
@@ -92,14 +92,14 @@
   }
 
   section {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
   }
 
   h2 {
     font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-muted-foreground);
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 var(--space-6) 0;
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -110,33 +110,33 @@
     color: var(--color-muted-foreground);
     font-size: var(--text-base);
     line-height: 1.7;
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--space-4) 0;
   }
 
   ul {
     margin: 0;
-    padding-left: 1.25rem;
+    padding-left: var(--space-5);
     color: var(--color-muted-foreground);
   }
 
   li {
     font-size: var(--text-base);
     line-height: 1.7;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
   }
 
   .built-for-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .built-for-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    padding: 1.25rem;
-    transition: all 0.2s ease;
+    padding: var(--space-5);
+    transition: all var(--transition-normal);
   }
 
   .built-for-card:hover {
@@ -149,10 +149,10 @@
     font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-2) 0;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .built-for-card p {
@@ -164,7 +164,7 @@
 
   @media (max-width: 640px) {
     section {
-      margin-bottom: 1.5rem;
+      margin-bottom: var(--space-6);
     }
 
     h2 {

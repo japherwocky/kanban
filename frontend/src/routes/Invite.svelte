@@ -82,17 +82,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem 1rem;
+    padding: var(--space-8) var(--space-4);
   }
 
   .invite-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
+    gap: var(--space-6);
     width: 100%;
     max-width: 400px;
-    padding: 2rem;
+    padding: var(--space-8);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
@@ -128,7 +128,7 @@
 
   .error p {
     color: var(--color-muted-foreground);
-    margin: 0.5rem 0;
+    margin: var(--space-2) 0;
   }
 
   .back-link {
@@ -143,9 +143,9 @@
   .actions {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
     width: 100%;
-    margin-top: 1rem;
+    margin-top: var(--space-4);
   }
 
   .auth-prompt {
@@ -155,12 +155,12 @@
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     border: none;
   }
 

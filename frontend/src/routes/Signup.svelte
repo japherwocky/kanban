@@ -87,7 +87,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem 1rem;
+    padding: var(--space-8) var(--space-4);
   }
 
   .signup {
@@ -95,7 +95,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: var(--space-4);
     width: 100%;
     max-width: 400px;
     text-align: center;
@@ -110,19 +110,19 @@
   .signup form {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
     width: 100%;
     max-width: 320px;
   }
 
   input {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
-    transition: border-color 0.15s ease;
+    transition: border-color var(--transition-fast);
   }
 
   input:focus {
@@ -132,12 +132,12 @@
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     border: none;
   }
 

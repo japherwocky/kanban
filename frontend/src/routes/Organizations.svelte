@@ -109,7 +109,7 @@
 
 <style>
   .app {
-    padding: 1.5rem;
+    padding: var(--space-6);
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -118,22 +118,22 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--color-border);
   }
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .back-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -152,36 +152,36 @@
 
   .loading {
     text-align: center;
-    padding: 3rem;
+    padding: var(--space-12);
     color: var(--color-muted-foreground);
   }
 
   .empty-state {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: var(--space-16) var(--space-8);
     color: var(--color-muted-foreground);
   }
 
   .empty-state p {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     font-size: var(--text-lg);
   }
 
   .organizations-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .org-card {
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
+    padding: var(--space-6);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     text-align: left;
     min-height: 140px;
   }
@@ -195,13 +195,13 @@
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-2) 0;
   }
 
   .org-slug {
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
     font-family: monospace;
   }
 
@@ -216,7 +216,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     min-height: 140px;
     border: 2px dashed var(--color-border);
     background: transparent;
@@ -250,7 +250,7 @@
   }
 
   #modal-title {
-    margin: 0 0 1.25rem 0;
+    margin: 0 0 var(--space-5) 0;
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
@@ -259,8 +259,8 @@
   .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
   }
 
   .cancel-btn {
@@ -274,13 +274,13 @@
   }
 
   input {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
-    transition: border-color 0.15s ease;
+    transition: border-color var(--transition-fast);
     width: 100%;
   }
 
@@ -291,11 +291,11 @@
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 </style>

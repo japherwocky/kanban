@@ -162,17 +162,17 @@
   .header-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0.75rem 1.5rem;
+    padding: var(--space-3) var(--space-6);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .logo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     background: none;
     border: none;
     color: var(--color-foreground);
@@ -180,7 +180,7 @@
     font-weight: 600;
     cursor: pointer;
     padding: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--transition-fast);
   }
 
   .logo:hover {
@@ -194,7 +194,7 @@
   .nav-desktop {
     display: none;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .nav-desktop button {
@@ -204,9 +204,9 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    padding: 0.5rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-md);
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .nav-desktop button:hover {
@@ -217,13 +217,13 @@
   .header-right {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .auth-buttons {
     display: none;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .btn-secondary {
@@ -235,7 +235,7 @@
     cursor: pointer;
     padding: 0.5rem 0.875rem;
     border-radius: var(--radius-md);
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .btn-secondary:hover {
@@ -252,7 +252,7 @@
     cursor: pointer;
     padding: 0.5rem 0.875rem;
     border-radius: var(--radius-md);
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .btn-primary:hover {
@@ -270,7 +270,7 @@
     border-radius: var(--radius-lg);
     color: var(--color-foreground);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .mobile-toggle:hover {
@@ -280,7 +280,7 @@
   .nav-mobile {
     display: flex;
     flex-direction: column;
-    padding: 0.75rem 1.5rem 1rem;
+    padding: var(--space-3) var(--space-6) var(--space-4);
     border-top: 1px solid var(--color-border);
   }
 
@@ -291,9 +291,9 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    padding: 0.75rem 0;
+    padding: var(--space-3) 0;
     text-align: left;
-    transition: color 0.15s ease;
+    transition: color var(--transition-fast);
   }
 
   .nav-mobile button:hover {
@@ -303,7 +303,7 @@
   .mobile-divider {
     height: 1px;
     background: var(--color-border);
-    margin: 0.5rem 0;
+    margin: var(--space-2) 0;
   }
 
   .user-menu-container {
@@ -313,7 +313,7 @@
   .user-menu-trigger {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     padding: 0.375rem 0.75rem 0.375rem 0.5rem;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -322,7 +322,7 @@
     cursor: pointer;
     font-size: var(--text-sm);
     font-weight: 500;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .user-menu-trigger:hover {
@@ -375,7 +375,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     text-align: left;
   }
 

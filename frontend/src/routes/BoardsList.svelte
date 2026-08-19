@@ -177,7 +177,7 @@
 
 <style>
   .app {
-    padding: 1.5rem;
+    padding: var(--space-6);
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -186,15 +186,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
     border: 2px solid var(--color-border);
-    padding: 1rem 1.5rem;
+    padding: var(--space-4) var(--space-6);
   }
 
   .logo-link {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     text-decoration: none;
     color: inherit;
   }
@@ -218,11 +218,11 @@
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .nav-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: transparent;
     color: var(--color-foreground);
     border: 2px solid var(--color-border);
@@ -245,7 +245,7 @@
   }
 
   .logout-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: var(--color-muted);
     color: var(--color-foreground);
     border: 2px solid var(--color-border);
@@ -257,25 +257,25 @@
 
   .loading {
     text-align: center;
-    padding: 3rem;
+    padding: var(--space-12);
     color: var(--color-muted-foreground);
   }
 
   .empty-state {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: var(--space-16) var(--space-8);
     color: var(--color-muted-foreground);
   }
 
   .empty-state p {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     font-size: var(--text-lg);
   }
 
   .boards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .board-card {
@@ -285,7 +285,7 @@
     background: var(--color-card);
     border: 2px solid var(--color-border);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     text-align: left;
     position: relative;
   }
@@ -302,7 +302,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 1.25rem;
+    padding: var(--space-5);
     background: transparent;
     border: none;
     text-align: left;
@@ -317,7 +317,7 @@
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
   }
 
   .board-header h3 {
@@ -338,7 +338,7 @@
     color: var(--color-muted-foreground);
     border: none;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--transition-fast);
     cursor: pointer;
     z-index: 1;
   }
@@ -357,13 +357,13 @@
     color: var(--color-muted-foreground);
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-1);
   }
 
   .shared-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: var(--space-1);
     color: var(--color-primary);
     font-size: var(--text-xs);
     font-weight: 500;
@@ -374,7 +374,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     min-height: 120px;
     border: 2px dashed var(--color-border);
     background: transparent;
@@ -408,7 +408,7 @@
   }
 
   #modal-title {
-    margin: 0 0 1.25rem 0;
+    margin: 0 0 var(--space-5) 0;
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
@@ -417,8 +417,8 @@
   .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
   }
 
   .cancel-btn {
@@ -432,13 +432,13 @@
   }
 
   input {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
-    transition: border-color 0.15s ease;
+    transition: border-color var(--transition-fast);
     width: 100%;
   }
 
@@ -449,11 +449,11 @@
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 </style>

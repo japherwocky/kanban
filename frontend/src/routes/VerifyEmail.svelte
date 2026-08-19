@@ -57,17 +57,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem 1rem;
+    padding: var(--space-8) var(--space-4);
   }
 
   .verify-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
     width: 100%;
     max-width: 400px;
-    padding: 2rem;
+    padding: var(--space-8);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);

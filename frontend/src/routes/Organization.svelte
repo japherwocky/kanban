@@ -495,7 +495,7 @@
 
 <style>
   .app {
-    padding: 1.5rem;
+    padding: var(--space-6);
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -504,22 +504,22 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--color-border);
   }
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .back-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -533,7 +533,7 @@
   .org-header {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-1);
   }
 
   .org-header h1 {
@@ -551,31 +551,31 @@
 
   .loading {
     text-align: center;
-    padding: 3rem;
+    padding: var(--space-12);
     color: var(--color-muted-foreground);
   }
 
   .content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-6);
   }
 
   .tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
     border-bottom: 1px solid var(--color-border);
   }
 
   .tab-btn {
-    padding: 0.75rem 1.5rem;
+    padding: var(--space-3) var(--space-6);
     background: transparent;
     color: var(--color-muted-foreground);
     border: none;
     border-bottom: 2px solid transparent;
     font-size: var(--text-base);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .tab-btn:hover {
@@ -590,14 +590,14 @@
   .section {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
   }
 
   .section-header h2 {
@@ -609,21 +609,21 @@
 
   .empty-state {
     text-align: center;
-    padding: 3rem;
+    padding: var(--space-12);
     color: var(--color-muted-foreground);
   }
 
   .members-list, .teams-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .member-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem;
+    padding: var(--space-4) var(--space-5);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -632,7 +632,7 @@
   .member-info {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .member-username {
@@ -643,7 +643,7 @@
 
   .owner-badge {
     font-size: var(--text-xs);
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border-radius: var(--radius-md);
@@ -653,14 +653,14 @@
 
   .member-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .team-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem;
+    padding: var(--space-5);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -670,7 +670,7 @@
     font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 var(--space-1) 0;
   }
 
   .team-meta {
@@ -680,11 +680,11 @@
 
   .team-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .members-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -697,7 +697,7 @@
   }
 
   .add-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;
@@ -709,7 +709,7 @@
   }
 
   .remove-btn, .delete-team-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background-color: var(--color-error);
     color: var(--color-error-foreground);
     border: none;
@@ -721,7 +721,7 @@
   }
 
   .leave-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: transparent;
     color: var(--color-muted-foreground);
     border: 1px solid var(--color-border);
@@ -736,14 +736,14 @@
   .invites-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .invite-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem;
+    padding: var(--space-4) var(--space-5);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -752,7 +752,7 @@
   .invite-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-1);
   }
 
   .invite-email {
@@ -768,11 +768,11 @@
 
   .invite-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .copy-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -785,7 +785,7 @@
   }
 
   .revoke-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background-color: var(--color-error);
     color: var(--color-error-foreground);
     border: none;
@@ -801,39 +801,39 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
   }
 
   .team-member-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     background: var(--color-muted);
     border-radius: var(--radius-md);
   }
 
   .add-member-section {
     border-top: 1px solid var(--color-border);
-    padding-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding-top: var(--space-6);
+    margin-bottom: var(--space-6);
   }
 
   .add-member-section h3 {
     font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-2) 0;
   }
 
   .add-member-form {
-    margin-top: 1rem;
+    margin-top: var(--space-4);
   }
 
   .input-group {
     display: flex;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .input-group input {
@@ -843,11 +843,11 @@
   .modal-help {
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--space-4) 0;
   }
 
   #modal-title {
-    margin: 0 0 1.25rem 0;
+    margin: 0 0 var(--space-5) 0;
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
@@ -856,8 +856,8 @@
   .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
   }
 
   .cancel-btn {
@@ -886,13 +886,13 @@
   }
 
   input, select {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
-    transition: border-color 0.15s ease;
+    transition: border-color var(--transition-fast);
     width: 100%;
   }
 
@@ -904,6 +904,6 @@
 
   button {
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 </style>

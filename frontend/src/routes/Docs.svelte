@@ -205,7 +205,7 @@
 
   .docs-content {
     flex: 1;
-    padding: 2rem;
+    padding: var(--space-8);
     max-width: 56rem;
     overflow-y: auto;
   }
@@ -226,7 +226,7 @@
 
   .docs-title-wrapper {
     position: relative;
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
   }
 
   .docs-title-content {
@@ -238,7 +238,7 @@
     font-size: var(--text-3xl);
     font-weight: 700;
     color: var(--color-foreground);
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--space-3);
   }
 
   .docs-subtitle {
@@ -250,17 +250,17 @@
     font-size: var(--text-2xl);
     font-weight: 700;
     color: white;
-    margin-bottom: 1.5rem;
-    margin-top: 2rem;
+    margin-bottom: var(--space-6);
+    margin-top: var(--space-8);
   }
 
   :global(.markdown-body h2) {
     font-size: var(--text-2xl);
     font-weight: 600;
     color: var(--color-foreground);
-    margin-bottom: 1rem;
-    margin-top: 2.5rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: var(--space-4);
+    margin-top: var(--space-10);
+    padding-bottom: var(--space-2);
     border-bottom: 1px solid var(--color-border);
   }
 
@@ -268,27 +268,27 @@
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
-    margin-bottom: 0.75rem;
-    margin-top: 2rem;
+    margin-bottom: var(--space-3);
+    margin-top: var(--space-8);
   }
 
   :global(.markdown-body h4) {
     font-size: var(--text-lg);
     font-weight: 500;
     color: var(--color-foreground);
-    margin-bottom: 0.5rem;
-    margin-top: 1.5rem;
+    margin-bottom: var(--space-2);
+    margin-top: var(--space-6);
   }
 
   :global(.markdown-body p) {
     color: var(--color-muted-foreground);
     line-height: 1.625;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
   }
 
   :global(.markdown-body a) {
     color: var(--color-primary);
-    transition: color 0.2s;
+    transition: color var(--transition-normal);
   }
 
   :global(.markdown-body a:hover) {
@@ -297,15 +297,15 @@
 
   :global(.markdown-body ul) {
     list-style-type: disc;
-    padding-left: 1rem;
-    margin-bottom: 1.5rem;
+    padding-left: var(--space-4);
+    margin-bottom: var(--space-6);
     color: var(--color-muted-foreground);
   }
 
   :global(.markdown-body ol) {
     list-style-type: decimal;
-    padding-left: 1rem;
-    margin-bottom: 1.5rem;
+    padding-left: var(--space-4);
+    margin-bottom: var(--space-6);
     color: var(--color-muted-foreground);
   }
 
@@ -332,10 +332,10 @@
     background-color: var(--color-code-bg);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    padding: 1rem;
+    padding: var(--space-4);
     font-family: monospace;
     font-size: var(--text-sm);
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     overflow-x: auto;
   }
 
@@ -358,7 +358,7 @@
   /* Table styling */
   :global(.markdown-body table) {
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     border-collapse: collapse;
   }
 
@@ -372,11 +372,11 @@
     text-transform: uppercase;
     color: var(--color-muted-foreground);
     font-weight: 500;
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
   }
 
   :global(.markdown-body td) {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--color-border);
     color: var(--color-muted-foreground);
   }
@@ -388,11 +388,11 @@
   /* Blockquotes */
   :global(.markdown-body blockquote) {
     border-left: 4px solid var(--color-primary);
-    padding-left: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding-left: var(--space-4);
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-6);
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     color: var(--color-muted-foreground);
@@ -401,8 +401,8 @@
   /* Horizontal rules */
   :global(.markdown-body hr) {
     border-color: var(--color-border);
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-8);
   }
 
   /* Inline code in tables */
@@ -426,7 +426,7 @@
     }
 
     .docs-content {
-      padding: 1.5rem;
+      padding: var(--space-6);
     }
 
     .docs-title-content h1 {

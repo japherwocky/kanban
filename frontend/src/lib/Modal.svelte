@@ -116,7 +116,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding: var(--space-4);
     z-index: 50;
   }
 
@@ -124,7 +124,7 @@
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    padding: 1.5rem;
+    padding: var(--space-6);
     width: 100%;
     max-width: 400px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -139,6 +139,6 @@
   :global(.modal form) {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 </style>

@@ -20,7 +20,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 3rem 1.5rem;
+    padding: var(--space-12) var(--space-6);
   }
 
   .page-container {
@@ -32,7 +32,7 @@
     font-size: var(--text-4xl);
     font-weight: 700;
     color: var(--color-foreground);
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--space-4) 0;
     text-align: center;
   }
 
@@ -40,13 +40,13 @@
     font-size: var(--text-lg);
     color: var(--color-muted-foreground);
     line-height: 1.6;
-    margin: 0 0 2rem 0;
+    margin: 0 0 var(--space-8) 0;
     text-align: center;
   }
 
   @media (max-width: 640px) {
     .page {
-      padding: 2rem 1rem;
+      padding: var(--space-8) var(--space-4);
     }
 
     h1 {

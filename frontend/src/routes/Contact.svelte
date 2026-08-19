@@ -54,15 +54,15 @@
 
   .contact-info {
     display: grid;
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
   }
 
   .contact-item h3 {
     font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-muted-foreground);
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 var(--space-1) 0;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -80,31 +80,31 @@
   }
 
   .use-cases {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
   }
 
   .use-cases h2 {
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 var(--space-3) 0;
   }
 
   ul {
     margin: 0;
-    padding-left: 1.25rem;
+    padding-left: var(--space-5);
     color: var(--color-muted-foreground);
   }
 
   li {
     font-size: var(--text-base);
     line-height: 1.7;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
   }
 
   @media (max-width: 640px) {
     .contact-info {
-      gap: 1.25rem;
+      gap: var(--space-5);
     }
   }
 </style>

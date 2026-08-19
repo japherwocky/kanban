@@ -41,7 +41,7 @@
 
 <style>
   .settings-layout {
-    padding: 1.5rem;
+    padding: var(--space-6);
     max-width: 900px;
     margin: 0 auto;
   }
@@ -49,24 +49,24 @@
   .settings-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--color-border);
   }
 
   .back-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
     font-size: var(--text-sm);
     cursor: pointer;
     border-radius: var(--radius-lg);
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .back-btn:hover {
@@ -82,15 +82,15 @@
 
   .settings-nav {
     display: flex;
-    gap: 0.25rem;
-    margin-bottom: 2rem;
-    padding-bottom: 0.75rem;
+    gap: var(--space-1);
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--color-border);
     overflow-x: auto;
   }
 
   .nav-tab {
-    padding: 0.75rem 1.25rem;
+    padding: var(--space-3) var(--space-5);
     background: transparent;
     border: none;
     border-radius: var(--radius-lg);
@@ -98,7 +98,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     white-space: nowrap;
   }
 

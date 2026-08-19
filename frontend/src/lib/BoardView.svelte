@@ -599,7 +599,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: var(--space-4) var(--space-6);
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
   }
@@ -607,14 +607,14 @@
   .header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .back-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -635,15 +635,15 @@
   .board-title-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0.5rem;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
     margin-left: -0.5rem;
     background: none;
     border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
     color: var(--color-foreground);
-    transition: background 0.15s ease;
+    transition: background var(--transition-fast);
   }
 
   .board-title-btn:hover {
@@ -653,7 +653,7 @@
   .rename-icon {
     opacity: 0;
     color: var(--color-muted-foreground);
-    transition: opacity 0.15s ease;
+    transition: opacity var(--transition-fast);
   }
 
   .board-title-btn:hover .rename-icon,
@@ -669,8 +669,8 @@
   .share-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -703,8 +703,8 @@
   .columns-container {
     flex: 1;
     display: flex;
-    gap: 1rem;
-    padding: 1.5rem;
+    gap: var(--space-4);
+    padding: var(--space-6);
     overflow-x: auto;
     min-height: 0;
   }
@@ -722,14 +722,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: var(--space-4);
     border-bottom: 1px solid var(--color-border);
   }
 
   .column-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .column-delete-btn {
@@ -740,7 +740,7 @@
     color: var(--color-muted-foreground);
     border: none;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--transition-fast);
   }
 
   .column:hover .column-delete-btn {
@@ -764,14 +764,14 @@
   .column-content {
     flex: 1;
     overflow-y: auto;
-    padding: 0.75rem;
+    padding: var(--space-3);
     min-height: 100px;
   }
 
   .cards-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
     min-height: 50px;
   }
 
@@ -779,9 +779,9 @@
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    padding: 0.75rem;
+    padding: var(--space-3);
     cursor: grab;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .card:hover {
@@ -796,7 +796,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .card-title {
@@ -826,7 +826,7 @@
     color: var(--color-muted-foreground);
     border: none;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--transition-fast);
   }
 
   .card:hover .delete-btn {
@@ -841,7 +841,7 @@
   .card-description {
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
-    margin: 0.5rem 0 0 0;
+    margin: var(--space-2) 0 0 0;
     line-height: 1.5;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -853,12 +853,12 @@
   .card-meta {
     font-size: var(--text-xs);
     color: var(--color-muted-foreground);
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
   }
 
   .empty-column {
     text-align: center;
-    padding: 2rem 1rem;
+    padding: var(--space-8) var(--space-4);
     color: var(--color-muted-foreground);
     font-size: var(--text-sm);
   }
@@ -867,14 +867,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-3);
     background: transparent;
     color: var(--color-muted-foreground);
     border: none;
     border-top: 1px solid var(--color-border);
     font-size: var(--text-sm);
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .add-card-btn:hover {
@@ -892,15 +892,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem;
+    gap: var(--space-2);
+    padding: var(--space-4);
     background: transparent;
     color: var(--color-muted-foreground);
     border: 2px dashed var(--color-border);
     border-radius: var(--radius-xl);
     font-size: var(--text-sm);
     font-weight: 500;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     height: fit-content;
   }
 
@@ -916,14 +916,14 @@
   }
 
   #modal-title {
-    margin: 0 0 1.25rem 0;
+    margin: 0 0 var(--space-5) 0;
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
   }
 
   input {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
@@ -938,7 +938,7 @@
   }
 
   textarea {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
@@ -958,17 +958,17 @@
   .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .cancel-btn {

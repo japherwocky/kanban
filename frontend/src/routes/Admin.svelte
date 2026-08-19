@@ -121,14 +121,14 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 2rem;
+    padding: var(--space-16) var(--space-8);
     text-align: center;
     color: var(--color-muted-foreground);
   }
 
   .not-admin h2 {
     color: var(--color-destructive);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
   }
 
   .admin-app {
@@ -141,7 +141,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: var(--space-4) var(--space-6);
     border-bottom: 1px solid var(--color-border);
     background: var(--color-card);
   }
@@ -155,11 +155,11 @@
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .nav-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: transparent;
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -171,7 +171,7 @@
   }
 
   .logout-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background: var(--color-muted);
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
@@ -190,7 +190,7 @@
     width: 240px;
     background: var(--color-muted);
     border-right: 1px solid var(--color-border);
-    padding: 1rem 0;
+    padding: var(--space-4) 0;
   }
 
   .sidebar nav {
@@ -200,14 +200,14 @@
 
   .sidebar button {
     width: 100%;
-    padding: 0.75rem 1.5rem;
+    padding: var(--space-3) var(--space-6);
     text-align: left;
     background: transparent;
     border: none;
     color: var(--color-foreground);
     font-size: var(--text-base);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .sidebar button:hover:not(:disabled) {
@@ -228,22 +228,22 @@
 
   .content {
     flex: 1;
-    padding: 2rem;
+    padding: var(--space-8);
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .coming-soon h2 {
     font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-foreground);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
   }
 </style>
