@@ -4,7 +4,8 @@
   import Modal from './Modal.svelte';
   import ShareModal from './ShareModal.svelte';
   import Comments from './Comments.svelte';
-  import { dndzone, TRIGGERS } from 'svelte-dnd-action';
+  import { dndzone } from 'svelte-dnd-action';
+  import { createBoardDnd } from './boardDnd.js';
 
   let { board, onBack, availableTeams = [], onShare, onRename, initialCardId = null } = $props();
 
@@ -225,121 +226,14 @@
     }
   }
 
-  // Track original column state at the start of each drag
-  let originalColumnsState = null;
-  
-  // Track if a drag operation is in progress to prevent race conditions
-  let isDragInProgress = false;
-
-  function handleDndConsider(columnId, e) {
-    const { items, info } = e.detail;
-    
-    // Capture original state when drag first starts
-    if (info.trigger === TRIGGERS.DRAG_STARTED) {
-      originalColumnsState = JSON.parse(JSON.stringify(columns));
-      isDragInProgress = true;
-    }
-    
-    // Reset if drag was cancelled or dropped elsewhere
-    if (info.trigger === TRIGGERS.DRAG_STOPPED) {
-      isDragInProgress = false;
-      originalColumnsState = null;
-    }
-    
-    columns = columns.map(col => {
-      if (col.id === columnId) {
-        return { ...col, cards: items };
-      }
-      return col;
-    });
-  }
-
-  async function handleDndFinalize(columnId, e) {
-    // Prevent race conditions: if another drag is in progress, ignore this one
-    if (!isDragInProgress) {
-      return;
-    }
-    
-    const { items } = e.detail;
-    
-    // Get the original cards in this column BEFORE this drag started
-    // If we haven't captured original state yet, capture it now
-    if (!originalColumnsState) {
-      originalColumnsState = JSON.parse(JSON.stringify(columns));
-    }
-    
-    const originalColumn = originalColumnsState.find(col => col.id === columnId);
-    const originalCardIds = new Set(originalColumn?.cards.map(c => c.id) || []);
-    
-    const columnCards = items.map((card, index) => ({
-      ...card,
-      position: index
-    }));
-
-    // Update local state optimistically
-    columns = columns.map(col => {
-      if (col.id === columnId) {
-        return { ...col, cards: columnCards };
-      }
-      return col;
-    });
-
-    // Find cards that are new to this column (moved from another column)
-    const newCards = columnCards.filter(card => !originalCardIds.has(card.id));
-
-    // Prepare reorder request for this column's cards
-    const reorderItems = columnCards.map((card, index) => ({
-      id: card.id,
-      position: index
-    }));
-
-    try {
-      await api.cards.reorder(reorderItems);
-
-      // Update column_id for cards that moved from another column
-      for (const card of newCards) {
-        await api.cards.update(
-          card.id,
-          card.title,
-          card.description || null,
-          card.position,
-          columnId
-        );
-      }
-    } catch (e) {
-      console.error('Failed to reorder cards:', e);
-      loadBoard();
-    } finally {
-      // Clear the original state and drag flag after finalize is complete
-      originalColumnsState = null;
-      isDragInProgress = false;
-    }
-  }
-
-  function handleColumnConsider(e) {
-    columns = e.detail.items;
-  }
-
-  async function handleColumnFinalize(e) {
-    const newColumns = e.detail.items.map((col, index) => ({
-      ...col,
-      position: index
-    }));
-    columns = newColumns;
-
-    // Sync column order to backend
-    const reorderItems = newColumns.map((col, index) => ({
-      id: col.id,
-      position: index
-    }));
-
-    try {
-      await api.columns.reorder(reorderItems);
-    } catch (e) {
-      console.error('Failed to reorder columns:', e);
-      loadBoard();
-    }
-  }
+  // Drag-and-drop lives in boardDnd.js so its cross-column and rollback
+  // behaviour can be tested without driving a real drag. See boardDnd.test.js.
+  const dnd = createBoardDnd({
+    getColumns: () => columns,
+    setColumns: (next) => { columns = next; },
+    api,
+    reload: loadBoard,
+  });
 
   // Sync columns with board changes
   $effect(() => {
@@ -403,9 +297,9 @@
     <div class="loading">Loading board...</div>
   {:else}
     <div class="columns-container"
-      dndzone={{ items: columns, flipDurationMs: 200 }}
-      onconsider={handleColumnConsider}
-      onfinalize={handleColumnFinalize}
+      use:dndzone={{ items: columns, flipDurationMs: 200 }}
+      onconsider={dnd.considerColumns}
+      onfinalize={dnd.finalizeColumns}
     >
       {#each columns as column (column.id)}
         <div
@@ -425,9 +319,9 @@
             {#if column.cards.length > 0}
               <div
                 class="cards-list"
-                dndzone={{ items: column.cards, flipDurationMs: 200 }}
-                onconsider={(e) => handleDndConsider(column.id, e)}
-                onfinalize={(e) => handleDndFinalize(column.id, e)}
+                use:dndzone={{ items: column.cards, flipDurationMs: 200 }}
+                onconsider={(e) => dnd.considerCards(column.id, e)}
+                onfinalize={(e) => dnd.finalizeCards(column.id, e)}
               >
                 {#each column.cards as card (card.id)}
                   <div

@@ -8,12 +8,24 @@ export default defineConfig({
   resolve: {
     alias: {
       '$lib': fileURLToPath(new URL('./src/lib', import.meta.url))
-    }
+    },
+    // Under vitest, svelte otherwise resolves to its server build and any
+    // component render fails with "mount(...) is not available on the server".
+    // Scoped to VITEST so the production build keeps its normal resolution.
+    ...(process.env.VITEST ? { conditions: ['browser'] } : {}),
   },
   base: process.env.NODE_ENV === 'production' ? '/static/' : '/',
   build: {
     outDir: '../backend/static',
     emptyOutDir: true
+  },
+  // Vitest reads this file too. jsdom because the units under test touch
+  // localStorage, document.documentElement and window.location.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
+    include: ['src/**/*.test.js'],
   },
   server: {
     // Not 8080: that is the backend's own default (manage.py --port), so the
