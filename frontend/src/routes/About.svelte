@@ -136,7 +136,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     padding: var(--space-5);
-    transition: all var(--transition-normal);
+    transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal);
   }
 
   .built-for-card:hover {

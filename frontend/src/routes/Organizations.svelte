@@ -181,7 +181,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     text-align: left;
     min-height: 140px;
   }
@@ -296,6 +296,6 @@
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
   }
 </style>

@@ -38,7 +38,7 @@
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;

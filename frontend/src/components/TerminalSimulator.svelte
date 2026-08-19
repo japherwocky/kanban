@@ -173,7 +173,7 @@ function resetAnimation() {
 
   .window-controls {
     display: flex;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .control {
@@ -198,7 +198,7 @@ function resetAnimation() {
   }
 
   .terminal-content {
-    padding: 16px 20px;
+    padding: var(--space-4) var(--space-5);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: 1.5;
@@ -208,7 +208,7 @@ function resetAnimation() {
   }
 
   .command-entry {
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
   }
 
   .command-entry:last-of-type {
@@ -223,7 +223,7 @@ function resetAnimation() {
 
   .prompt {
     color: var(--color-success);
-    margin-right: 8px;
+    margin-right: var(--space-2);
     font-weight: 600;
   }
 
@@ -232,7 +232,7 @@ function resetAnimation() {
   }
 
   .output {
-    margin: 4px 0 8px 24px;
+    margin: var(--space-1) 0 var(--space-2) var(--space-6);
     color: var(--color-muted-foreground);
     font-size: var(--text-sm);
     white-space: pre-wrap;
@@ -269,11 +269,11 @@ function resetAnimation() {
 
     .terminal-content {
       font-size: var(--text-sm);
-      padding: 12px 16px;
+      padding: var(--space-3) var(--space-4);
     }
 
     .output {
-      margin-left: 20px;
+      margin-left: var(--space-5);
       font-size: var(--text-xs);
     }
   }

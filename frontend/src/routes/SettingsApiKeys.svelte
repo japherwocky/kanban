@@ -286,7 +286,7 @@
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    transition: all var(--transition-fast);
+    transition: border-color var(--transition-fast), opacity var(--transition-fast);
   }
 
   .key-card:hover {
@@ -357,7 +357,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   }
 
   .action-btn.revoke {
@@ -419,7 +419,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast);
   }
 
   .cancel-btn:hover {

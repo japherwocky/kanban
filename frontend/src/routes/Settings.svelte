@@ -66,7 +66,7 @@
     font-size: var(--text-sm);
     cursor: pointer;
     border-radius: var(--radius-lg);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast);
   }
 
   .back-btn:hover {
@@ -98,7 +98,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
     white-space: nowrap;
   }
 

@@ -191,9 +191,9 @@
 <style>
   .kanban-board {
     display: flex;
-    gap: 16px;
+    gap: var(--space-4);
     height: 100%;
-    padding: 20px;
+    padding: var(--space-5);
     background: var(--color-surface);
     border-radius: var(--radius-xl);
     border: 1px solid var(--color-border);
@@ -209,9 +209,9 @@
   .column-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 4px;
-    margin-bottom: 12px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-1);
+    margin-bottom: var(--space-3);
   }
 
   .column-dot {
@@ -275,7 +275,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: 14px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     backdrop-filter: blur(8px);
   }
@@ -307,7 +307,7 @@
   }
 
   .card-content {
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
   }
 
   .card-id {
@@ -327,7 +327,7 @@
   .card-description {
     font-size: var(--text-xs);
     color: var(--color-muted-foreground);
-    margin: 8px 0 0 0;
+    margin: var(--space-2) 0 0 0;
     line-height: 1.4;
     font-style: italic;
   }
@@ -381,8 +381,8 @@
   @media (max-width: 768px) {
     .kanban-board {
       flex-direction: column;
-      gap: 12px;
-      padding: 16px;
+      gap: var(--space-3);
+      padding: var(--space-4);
     }
 
     .column {
@@ -390,7 +390,7 @@
     }
 
     .card {
-      padding: 12px;
+      padding: var(--space-3);
     }
 
     .card-title {

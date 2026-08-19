@@ -197,7 +197,7 @@
   .demo-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: var(--space-6);
     min-height: 400px;
   }
 
@@ -209,20 +209,20 @@
   @media (max-width: 1024px) {
     .demo-grid {
       grid-template-columns: 1fr;
-      gap: 16px;
+      gap: var(--space-4);
       min-height: 700px;
     }
   }
 
   @media (max-width: 640px) {
     .hero-section {
-      padding: 40px 16px;
+      padding: var(--space-10) var(--space-4);
     }
 
     .hero-actions {
       flex-direction: column;
       align-items: stretch;
-      gap: 12px;
+      gap: var(--space-3);
     }
 
     .signup-button {
@@ -234,7 +234,7 @@
     .install-button {
       width: 100%;
       justify-content: center;
-      padding: 12px 20px;
+      padding: var(--space-3) var(--space-5);
     }
 
     .button-command {

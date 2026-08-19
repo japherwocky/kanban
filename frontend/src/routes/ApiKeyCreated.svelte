@@ -206,7 +206,7 @@
     font-weight: 500;
     color: var(--color-foreground);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast);
     white-space: nowrap;
   }
 
@@ -282,7 +282,7 @@
     font-size: var(--text-base);
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: opacity var(--transition-fast);
   }
 
   .done-btn:hover {

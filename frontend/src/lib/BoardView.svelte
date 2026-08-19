@@ -781,7 +781,7 @@
     border-radius: var(--radius-lg);
     padding: var(--space-3);
     cursor: grab;
-    transition: all var(--transition-fast);
+    transition: border-color var(--transition-fast);
   }
 
   .card:hover {
@@ -874,7 +874,7 @@
     border: none;
     border-top: 1px solid var(--color-border);
     font-size: var(--text-sm);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
   .add-card-btn:hover {
@@ -900,7 +900,7 @@
     border-radius: var(--radius-xl);
     font-size: var(--text-sm);
     font-weight: 500;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
     height: fit-content;
   }
 
@@ -968,7 +968,7 @@
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
   }
 
   .cancel-btn {
