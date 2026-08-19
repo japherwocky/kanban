@@ -108,7 +108,7 @@
 
 <style>
    #modal-title {
-     margin: 0 0 1.25rem 0;
+     margin: 0 0 var(--space-5) 0;
      font-size: var(--text-xl);
      font-weight: 600;
      color: var(--color-foreground);
@@ -117,14 +117,14 @@
    .share-content {
      display: flex;
      flex-direction: column;
-     gap: 1.25rem;
+     gap: var(--space-5);
    }
 
    .share-option {
      display: flex;
      flex-direction: column;
-     gap: 0.5rem;
-     padding: 1rem;
+     gap: var(--space-2);
+     padding: var(--space-4);
      border-radius: var(--radius-lg);
      background: var(--color-muted);
    }
@@ -132,7 +132,7 @@
    .checkbox-label {
      display: flex;
      align-items: center;
-     gap: 0.75rem;
+     gap: var(--space-3);
      font-size: var(--text-base);
      font-weight: 500;
      color: var(--color-foreground);
@@ -158,7 +158,7 @@
    }
 
    .team-select {
-     padding: 0.75rem 1rem;
+     padding: var(--space-3) var(--space-4);
      font-size: var(--text-base);
      border-radius: var(--radius-lg);
      border: 1px solid var(--color-border);
@@ -181,7 +181,7 @@
    .share-info p {
      font-size: var(--text-sm);
      margin: 0;
-     padding: 0.75rem;
+     padding: var(--space-3);
      border-radius: var(--radius-md);
    }
 
@@ -200,8 +200,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.5rem;
-      padding: 2rem;
+      gap: var(--space-6);
+      padding: var(--space-8);
       text-align: center;
     }
 
@@ -225,8 +225,8 @@
     }
 
     .create-org-btn {
-      margin-top: 1rem;
-      padding: 0.75rem 1.5rem;
+      margin-top: var(--space-4);
+      padding: var(--space-3) var(--space-6);
       background: var(--color-primary);
       color: var(--color-primary-foreground);
       border: none;
@@ -241,8 +241,8 @@
     .modal-actions {
      display: flex;
      justify-content: flex-end;
-     gap: 0.75rem;
-     margin-top: 1rem;
+     gap: var(--space-3);
+     margin-top: var(--space-4);
    }
 
    .cancel-btn {

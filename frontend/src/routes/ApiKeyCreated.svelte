@@ -122,31 +122,31 @@
     background: rgba(34, 197, 94, 0.1);
     border-radius: 50%;
     color: var(--color-success);
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
   }
 
   h2 {
     font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-foreground);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-2) 0;
   }
 
   .key-name-display {
     font-size: var(--text-base);
     color: var(--color-muted-foreground);
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 var(--space-6) 0;
   }
 
   .warning-banner {
     display: flex;
     gap: 0.875rem;
-    padding: 1rem;
+    padding: var(--space-4);
     background: rgba(251, 191, 36, 0.1);
     border: 1px solid rgba(251, 191, 36, 0.3);
     border-radius: var(--radius-xl);
     text-align: left;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
   }
 
   .warning-banner svg {
@@ -160,7 +160,7 @@
     font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-warning);
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--space-1);
   }
 
   .warning-banner p {
@@ -173,12 +173,12 @@
   .key-display {
     display: flex;
     align-items: stretch;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    gap: var(--space-2);
+    padding: var(--space-2);
     background: var(--color-code-bg);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
   }
 
   .key-value {
@@ -206,7 +206,7 @@
     font-weight: 500;
     color: var(--color-foreground);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     white-space: nowrap;
   }
 
@@ -224,31 +224,31 @@
 
   .usage-section {
     text-align: left;
-    padding: 1.5rem;
+    padding: var(--space-6);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
   }
 
   .usage-section h3 {
     font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-2) 0;
   }
 
   .usage-section > p {
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 var(--space-3) 0;
   }
 
   .code-example {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     background: var(--color-code-bg);
     border-radius: var(--radius-md);
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
   }
 
   .code-example code {
@@ -282,7 +282,7 @@
     font-size: var(--text-base);
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .done-btn:hover {

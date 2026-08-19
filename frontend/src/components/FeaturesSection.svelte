@@ -166,20 +166,20 @@
   .features-section {
     max-width: 1200px;
     width: 100%;
-    margin: 4rem auto;
+    margin: var(--space-16) auto;
     padding: 0 24px;
   }
 
   .features-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: var(--space-12);
   }
 
   .features-header h2 {
     font-size: var(--text-4xl);
     font-weight: 700;
     color: var(--color-foreground);
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--space-4) 0;
   }
 
   .features-header p {
@@ -202,7 +202,7 @@
     border-radius: var(--radius-xl);
     padding: 24px;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all var(--transition-slow);
     cursor: pointer;
   }
 
@@ -257,7 +257,7 @@
   .box-description {
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 var(--space-6) 0;
     line-height: 1.6;
   }
 
@@ -322,7 +322,7 @@
     padding: 0 16px;
     border-left: 3px solid var(--color-success);
     color: var(--color-code-fg);
-    transition: all 0.2s ease;
+    transition: all var(--transition-normal);
   }
 
   .code-line.highlight.active {
@@ -356,7 +356,7 @@
     width: 60px;
     height: 60px;
     color: var(--color-muted-foreground);
-    transition: all 0.3s ease;
+    transition: all var(--transition-slow);
   }
 
   .robot-scanner.scanning {
@@ -370,7 +370,7 @@
 
   .scanner-beam {
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-slow);
   }
 
   .robot-scanner.scanning .scanner-beam {
@@ -413,7 +413,7 @@
     color: var(--color-muted-foreground);
     font-weight: 500;
     font-size: var(--text-sm);
-    transition: all 0.3s ease;
+    transition: all var(--transition-slow);
   }
 
   .logo-item:hover,

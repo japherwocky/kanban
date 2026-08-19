@@ -305,7 +305,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 2rem;
+    padding: var(--space-16) var(--space-8);
     text-align: center;
     color: var(--color-muted-foreground);
   }
@@ -314,7 +314,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
   }
 
   .tab-header h2 {
@@ -337,21 +337,21 @@
   .teams-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .team-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    padding: 1.25rem;
+    padding: var(--space-5);
   }
 
   .team-info h3 {
     font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 var(--space-1) 0;
   }
 
   .team-info .org-badge {
@@ -362,8 +362,8 @@
 
   .team-stats {
     display: flex;
-    gap: 1.5rem;
-    margin: 1rem 0;
+    gap: var(--space-6);
+    margin: var(--space-4) 0;
   }
 
   .stat {
@@ -386,8 +386,8 @@
 
   .team-actions {
     display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
   }
 
   .team-actions button {
@@ -395,7 +395,7 @@
   }
 
   .action-btn {
-    padding: 0.5rem;
+    padding: var(--space-2);
     font-size: var(--text-sm);
     background: var(--color-muted);
     color: var(--color-foreground);
@@ -418,19 +418,19 @@
   }
 
   .members-section {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
   }
 
   .members-section h3 {
     font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 var(--space-3) 0;
   }
 
   .add-member-form {
     display: flex;
-    gap: 0.75rem;
+    gap: var(--space-3);
     align-items: flex-end;
   }
 
@@ -442,7 +442,7 @@
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;
-    padding: 0.75rem 1.25rem;
+    padding: var(--space-3) var(--space-5);
     font-size: var(--text-sm);
     font-weight: 500;
     border-radius: var(--radius-lg);
@@ -467,14 +467,14 @@
   .members-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .member-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     background: var(--color-muted);
     border-radius: var(--radius-md);
   }
@@ -502,7 +502,7 @@
   form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   label {
@@ -515,13 +515,13 @@
   }
 
   select, input {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
-    transition: border-color 0.15s ease;
+    transition: border-color var(--transition-fast);
     width: 100%;
   }
 
@@ -534,8 +534,8 @@
   .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
   }
 
   .cancel-btn {
@@ -549,11 +549,11 @@
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 </style>

@@ -193,8 +193,8 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
   }
 
   .page-header h2 {
@@ -214,7 +214,7 @@
   .create-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     padding: 0.625rem 1rem;
     background: var(--color-primary);
     color: var(--color-primary-foreground);
@@ -223,7 +223,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--transition-fast);
     white-space: nowrap;
   }
 
@@ -238,13 +238,13 @@
 
   .loading {
     text-align: center;
-    padding: 3rem;
+    padding: var(--space-12);
     color: var(--color-muted-foreground);
   }
 
   .empty-state {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: var(--space-16) var(--space-8);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
@@ -252,41 +252,41 @@
 
   .empty-icon {
     display: inline-flex;
-    padding: 1rem;
+    padding: var(--space-4);
     background: var(--color-muted);
     border-radius: var(--radius-xl);
     color: var(--color-muted-foreground);
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
   }
 
   .empty-state h3 {
     font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-2) 0;
   }
 
   .empty-state p {
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 var(--space-6) 0;
   }
 
   .keys-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .key-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem;
+    padding: var(--space-5);
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .key-card:hover {
@@ -305,8 +305,8 @@
   .key-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
   }
 
   .key-name {
@@ -317,7 +317,7 @@
   }
 
   .key-prefix {
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
     background: var(--color-muted);
     border-radius: var(--radius-md);
     font-family: var(--font-mono);
@@ -327,7 +327,7 @@
 
   .key-meta {
     display: flex;
-    gap: 1rem;
+    gap: var(--space-4);
     flex-wrap: wrap;
   }
 
@@ -342,8 +342,8 @@
   .key-actions {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-left: 1rem;
+    gap: var(--space-3);
+    margin-left: var(--space-4);
   }
 
   .action-btn {
@@ -357,7 +357,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .action-btn.revoke {
@@ -390,7 +390,7 @@
   }
 
   #modal-title {
-    margin: 0 0 1.25rem 0;
+    margin: 0 0 var(--space-5) 0;
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
@@ -406,8 +406,8 @@
   .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
   }
 
   .cancel-btn {
@@ -419,7 +419,7 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .cancel-btn:hover {
@@ -427,13 +427,13 @@
   }
 
   input {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-foreground);
-    transition: border-color 0.15s ease;
+    transition: border-color var(--transition-fast);
     width: 100%;
     box-sizing: border-box;
   }
@@ -461,7 +461,7 @@
     .key-card {
       flex-direction: column;
       align-items: flex-start;
-      gap: 1rem;
+      gap: var(--space-4);
     }
 
     .key-actions {

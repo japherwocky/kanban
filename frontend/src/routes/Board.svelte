@@ -83,7 +83,7 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    gap: 1rem;
+    gap: var(--space-4);
     text-align: center;
   }
 
@@ -92,7 +92,7 @@
   }
 
   .error {
-    padding: 2rem;
+    padding: var(--space-8);
   }
 
   .error p {
@@ -100,12 +100,12 @@
   }
 
   button {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-base);
     font-weight: 500;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     border: none;

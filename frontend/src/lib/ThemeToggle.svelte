@@ -43,7 +43,7 @@
     background: transparent;
     color: var(--color-foreground);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
   }
 
   .theme-toggle:hover {

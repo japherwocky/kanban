@@ -50,25 +50,25 @@
     color: var(--color-muted-foreground);
     font-size: var(--text-sm);
     font-style: italic;
-    margin: 0 0 2rem 0;
+    margin: 0 0 var(--space-8) 0;
   }
 
   section {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
   }
 
   h2 {
     font-size: var(--text-xl);
     font-weight: 600;
     color: var(--color-foreground);
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 var(--space-3) 0;
   }
 
   p {
     color: var(--color-muted-foreground);
     font-size: var(--text-base);
     line-height: 1.7;
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--space-4) 0;
   }
 
   a {
