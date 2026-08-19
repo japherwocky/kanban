@@ -41,3 +41,48 @@ jobs:
         working-directory: ./backend
         run: |
           pytest tests/test_cli.py
+
+  # The frontend is served from backend/static, which is gitignored and built
+  # on the server by sys/scripts/deploy.sh. Nothing here used to compile it, so
+  # a Svelte or CSS error reached production without a single check failing --
+  # the deploy's only gate is /api/health, which the backend answers happily
+  # while the bundle is broken.
+  #
+  # Runs as its own job rather than as steps on `test` so it goes in parallel:
+  # the Python suite gates nothing here, and vice versa.
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # ci, not install: it honours the lockfile and fails on a lockfile that
+      # has drifted from package.json. Note this is deliberately stricter than
+      # production, which deletes the lockfile before installing -- see the
+      # deploy-parity note in the PR.
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      # vite exits 0 as long as it emitted something, so assert the bundle is
+      # actually there. Catches an output-path or config change that silently
+      # stops populating backend/static.
+      - name: Verify build output
+        run: |
+          test -f backend/static/index.html || { echo "::error::no index.html in backend/static"; exit 1; }
+          ls backend/static/assets/*.js >/dev/null 2>&1 || { echo "::error::no JS bundle in backend/static/assets"; exit 1; }
+          ls backend/static/assets/*.css >/dev/null 2>&1 || { echo "::error::no CSS bundle in backend/static/assets"; exit 1; }
+          echo "Build output:"
+          ls -la backend/static backend/static/assets
