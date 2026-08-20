@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from backend.api import api
+from backend.auth import RENEWED_TOKEN_HEADER, renew_access_token
 from backend.database import init_db
 
 STATIC_PATH = os.environ.get(
@@ -42,8 +43,32 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
+    # Without this the browser hides the renewal header from the app entirely,
+    # and every session would still die at its 24h cliff.
+    expose_headers=[RENEWED_TOKEN_HEADER],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def renew_session_token(request, call_next):
+    """Hand back a fresh token when the one presented is nearing expiry.
+
+    Middleware rather than the auth dependency: there are three of those
+    (get_current_user, get_current_admin, get_current_user_or_api_key) and a
+    session should renew on any authenticated request, whichever one guarded
+    it. API keys arrive as X-API-Key, never as a Bearer token, so they never
+    reach this path -- they do not expire and have nothing to renew.
+    """
+    response = await call_next(request)
+
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        renewed = renew_access_token(auth_header[7:])
+        if renewed:
+            response.headers[RENEWED_TOKEN_HEADER] = renewed
+
+    return response
 
 if os.path.exists(STATIC_PATH):
     app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")

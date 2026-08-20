@@ -15,8 +15,15 @@ function stubLocation(pathname) {
   return loc;
 }
 
-function jsonResponse(body, { ok = true, status = 200 } = {}) {
-  return { ok, status, json: () => Promise.resolve(body) };
+function jsonResponse(body, { ok = true, status = 200, headers = {} } = {}) {
+  return {
+    ok,
+    status,
+    // apiFetch reads the renewal header on every response, so the stub needs a
+    // Headers-shaped object even when a test does not care about headers.
+    headers: { get: (name) => headers[name] ?? null },
+    json: () => Promise.resolve(body),
+  };
 }
 
 beforeEach(() => {
@@ -79,7 +86,10 @@ describe('apiFetch - errors', () => {
 
   it('falls back to a generic message when the error body is not JSON', async () => {
     fetch.mockResolvedValue({
-      ok: false, status: 500, json: () => Promise.reject(new Error('not json')),
+      ok: false,
+      status: 500,
+      headers: { get: () => null },
+      json: () => Promise.reject(new Error('not json')),
     });
     const { apiFetch } = await freshApi();
 
@@ -179,5 +189,74 @@ describe('api surface', () => {
     const [url, opts] = fetch.mock.calls[0];
     expect(url).toBe('/api/cards/reorder');
     expect(JSON.parse(opts.body)).toEqual({ cards: [{ id: 1, position: 0 }, { id: 2, position: 1 }] });
+  });
+});
+
+
+describe('apiFetch - session renewal', () => {
+  // Sessions used to die exactly 24h after login: the token's expiry is
+  // absolute and nothing re-issued it. The server now returns a replacement on
+  // X-Renewed-Token once the current one is close to expiring, and apiFetch is
+  // the single place every request passes through to pick it up.
+
+  it('stores a renewed token', async () => {
+    localStorage.setItem('token', 'old-token');
+    fetch.mockResolvedValue(
+      jsonResponse({}, { headers: { 'X-Renewed-Token': 'new-token' } }),
+    );
+    const { apiFetch } = await freshApi();
+
+    await apiFetch('/api/boards');
+
+    expect(localStorage.getItem('token')).toBe('new-token');
+  });
+
+  it('sends the renewed token on the next request', async () => {
+    localStorage.setItem('token', 'old-token');
+    fetch.mockResolvedValueOnce(
+      jsonResponse({}, { headers: { 'X-Renewed-Token': 'new-token' } }),
+    );
+    fetch.mockResolvedValueOnce(jsonResponse({}));
+    const { apiFetch } = await freshApi();
+
+    await apiFetch('/api/boards');
+    await apiFetch('/api/boards');
+
+    expect(fetch.mock.calls[1][1].headers.Authorization).toBe('Bearer new-token');
+  });
+
+  it('leaves the token alone when no renewal is offered', async () => {
+    localStorage.setItem('token', 'old-token');
+    fetch.mockResolvedValue(jsonResponse({}));
+    const { apiFetch } = await freshApi();
+
+    await apiFetch('/api/boards');
+
+    expect(localStorage.getItem('token')).toBe('old-token');
+  });
+
+  it('picks up a renewal on a response that failed on its own merits', async () => {
+    localStorage.setItem('token', 'old-token');
+    fetch.mockResolvedValue(
+      jsonResponse(
+        { detail: 'Board not found' },
+        { ok: false, status: 404, headers: { 'X-Renewed-Token': 'new-token' } },
+      ),
+    );
+    const { apiFetch } = await freshApi();
+
+    await expect(apiFetch('/api/boards/99')).rejects.toThrow('Board not found');
+    expect(localStorage.getItem('token')).toBe('new-token');
+  });
+
+  it('does not store a renewal for a request it sent no token with', async () => {
+    fetch.mockResolvedValue(
+      jsonResponse({}, { headers: { 'X-Renewed-Token': 'new-token' } }),
+    );
+    const { apiFetch } = await freshApi();
+
+    await apiFetch('/api/beta-signup', { method: 'POST' });
+
+    expect(localStorage.getItem('token')).toBeNull();
   });
 });
