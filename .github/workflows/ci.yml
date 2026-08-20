@@ -109,6 +109,10 @@ jobs:
       # that might arrive at error severity later. A lint finding must not fail
       # the workflow -- the point is visibility, not enforcement.
       #
+      # No annotation plumbing needed: eslint emits GitHub workflow commands
+      # itself, so each finding already lands on its line in the PR's Files
+      # view. (GitHub renders at most 10 per step; the log carries all of them.)
+      #
       # It earns the slot: run against BoardView.svelte as it stood before
       # PR #40 and no-unused-vars reports both defects that took a browser
       # session to find, including `dndzone` written as an attribute rather
@@ -116,11 +120,7 @@ jobs:
       - name: Lint frontend (advisory)
         working-directory: ./frontend
         continue-on-error: true
-        run: |
-          npm run lint || true
-          npx eslint src -f json > eslint-report.json 2>/dev/null || true
-          python3 ../scripts/eslint_annotations.py eslint-report.json frontend/
-          rm -f eslint-report.json
+        run: npm run lint
 
       # Before the build: these are the units the build cannot check. A broken
       # drag reorder or a mis-resolved auth redirect compiles perfectly.
