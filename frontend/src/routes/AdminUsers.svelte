@@ -148,9 +148,8 @@
 {/if}
 
 {#if showCreateUserModal}
-  <Modal open={showCreateUserModal} onClose={() => showCreateUserModal = false} title="Create User">
+  <Modal open={showCreateUserModal} onClose={() => showCreateUserModal = false} title="Create New User">
     {#snippet children()}
-      <h2>Create New User</h2>
       <form onsubmit={(e) => { e.preventDefault(); createUser(); }}>
         <label>
           Username
@@ -192,9 +191,8 @@
 {/if}
 
 {#if showEditUserModal}
-  <Modal open={showEditUserModal} onClose={() => showEditUserModal = false} title="Edit User">
+  <Modal open={showEditUserModal} onClose={() => showEditUserModal = false} title={selectedUser?.username ? `Edit User: ${selectedUser.username}` : 'Edit User'}>
     {#snippet children()}
-      <h2>Edit User: {selectedUser?.username}</h2>
       <form onsubmit={(e) => { e.preventDefault(); updateUser(); }}>
         <label>
           Username
@@ -227,9 +225,8 @@
 {/if}
 
 {#if showResetPasswordModal}
-  <Modal open={showResetPasswordModal} onClose={() => showResetPasswordModal = false} title="Reset Password">
+  <Modal open={showResetPasswordModal} onClose={() => showResetPasswordModal = false} title={resetPasswordForUser?.username ? `Reset Password for ${resetPasswordForUser.username}` : 'Reset Password'}>
     {#snippet children()}
-      <h2>Reset Password for {resetPasswordForUser?.username}</h2>
       <form onsubmit={(e) => { e.preventDefault(); resetPassword(); }}>
         <label>
           New Password

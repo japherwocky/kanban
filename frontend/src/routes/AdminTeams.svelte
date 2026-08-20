@@ -190,9 +190,8 @@
 {/if}
 
 {#if showCreateTeamModal}
-  <Modal open={showCreateTeamModal} onClose={() => showCreateTeamModal = false} title="Create Team">
+  <Modal open={showCreateTeamModal} onClose={() => showCreateTeamModal = false} title="Create New Team">
     {#snippet children()}
-      <h2>Create New Team</h2>
       <form onsubmit={(e) => { e.preventDefault(); createTeam(); }}>
         <label>
           Name
@@ -222,9 +221,8 @@
 {/if}
 
 {#if showEditTeamModal}
-  <Modal open={showEditTeamModal} onClose={() => showEditTeamModal = false} title="Edit Team">
+  <Modal open={showEditTeamModal} onClose={() => showEditTeamModal = false} title={selectedTeam?.name ? `Edit Team: ${selectedTeam.name}` : 'Edit Team'}>
     {#snippet children()}
-      <h2>Edit Team: {selectedTeam?.name}</h2>
       <form onsubmit={(e) => { e.preventDefault(); updateTeam(); }}>
         <label>
           Name
@@ -254,10 +252,8 @@
 {/if}
 
 {#if showMembersModal}
-  <Modal open={showMembersModal} onClose={() => showMembersModal = false} title="Manage Members">
+  <Modal open={showMembersModal} onClose={() => showMembersModal = false} title={selectedTeam?.name ? `Team Members: ${selectedTeam.name}` : 'Manage Members'}>
     {#snippet children()}
-      <h2>Team Members: {selectedTeam?.name}</h2>
-
       <div class="members-section">
         <h3>Add Member</h3>
         <form onsubmit={(e) => { e.preventDefault(); addMember(); }}>

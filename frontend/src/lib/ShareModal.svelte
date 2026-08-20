@@ -40,10 +40,8 @@
  </script>
 
 {#if open}
-  <Modal open={open} onClose={onClose} title="Share Board">
+  <Modal open={open} onClose={onClose} title={board?.name ? `Share Board: ${board.name}` : 'Share Board'}>
     {#snippet children()}
-      <h2 id="modal-title">Share Board: {board?.name}</h2>
-
       {#if availableTeams.length === 0}
         <div class="no-teams-message">
           <div class="message-icon">📋</div>
@@ -107,13 +105,6 @@
 {/if}
 
 <style>
-   #modal-title {
-     margin: 0 0 var(--space-5) 0;
-     font-size: var(--text-xl);
-     font-weight: 600;
-     color: var(--color-foreground);
-   }
-
    .share-content {
      display: flex;
      flex-direction: column;

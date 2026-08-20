@@ -155,9 +155,8 @@
 {/if}
 
 {#if showCreateBoardModal}
-  <Modal open={showCreateBoardModal} onClose={() => showCreateBoardModal = false} title="Create Board">
+  <Modal open={showCreateBoardModal} onClose={() => showCreateBoardModal = false} title="Create New Board">
     {#snippet children()}
-      <h2>Create New Board</h2>
       <form onsubmit={(e) => { e.preventDefault(); createBoard(); }}>
         <label>
           Name
@@ -187,9 +186,8 @@
 {/if}
 
 {#if showEditBoardModal}
-  <Modal open={showEditBoardModal} onClose={() => showEditBoardModal = false} title="Edit Board">
+  <Modal open={showEditBoardModal} onClose={() => showEditBoardModal = false} title={selectedBoard?.name ? `Edit Board: ${selectedBoard.name}` : 'Edit Board'}>
     {#snippet children()}
-      <h2>Edit Board: {selectedBoard?.name}</h2>
       <form onsubmit={(e) => { e.preventDefault(); updateBoard(); }}>
         <label>
           Name

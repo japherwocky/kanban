@@ -135,9 +135,8 @@
 {/if}
 
 {#if showCreateOrgModal}
-  <Modal open={showCreateOrgModal} onClose={() => showCreateOrgModal = false} title="Create Organization">
+  <Modal open={showCreateOrgModal} onClose={() => showCreateOrgModal = false} title="Create New Organization">
     {#snippet children()}
-      <h2>Create New Organization</h2>
       <form onsubmit={(e) => { e.preventDefault(); createOrganization(); }}>
         <label>
           Name
@@ -167,9 +166,8 @@
 {/if}
 
 {#if showEditOrgModal}
-  <Modal open={showEditOrgModal} onClose={() => showEditOrgModal = false} title="Edit Organization">
+  <Modal open={showEditOrgModal} onClose={() => showEditOrgModal = false} title={selectedOrg?.name ? `Edit Organization: ${selectedOrg.name}` : 'Edit Organization'}>
     {#snippet children()}
-      <h2>Edit Organization: {selectedOrg?.name}</h2>
       <form onsubmit={(e) => { e.preventDefault(); updateOrganization(); }}>
         <label>
           Name

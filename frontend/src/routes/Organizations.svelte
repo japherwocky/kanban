@@ -89,7 +89,6 @@
 {#if showCreateModal}
   <Modal open={showCreateModal} onClose={() => showCreateModal = false} title="Create New Organization">
     {#snippet children()}
-      <h2 id="modal-title">Create New Organization</h2>
       <form onsubmit={(e) => { e.preventDefault(); createOrganization(); }}>
         <input
           bind:value={newOrgName}
@@ -247,13 +246,6 @@
   .create-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  #modal-title {
-    margin: 0 0 var(--space-5) 0;
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-foreground);
   }
 
   .modal-actions {
