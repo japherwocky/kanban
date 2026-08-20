@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from 'svelte';
   import { api } from './api.js';
   import Modal from './Modal.svelte';
   import ShareModal from './ShareModal.svelte';

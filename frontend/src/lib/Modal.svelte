@@ -1,5 +1,4 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
 
   let { open = false, onClose, title = 'Dialog', wide = false, children } = $props();
 

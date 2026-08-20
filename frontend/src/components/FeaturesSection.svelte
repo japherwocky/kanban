@@ -1,5 +1,4 @@
 <script>
-  import { fade, fly } from 'svelte/transition';
 
   let hoveredBox = $state(null);
   let mouseX = $state(0);
