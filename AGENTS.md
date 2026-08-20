@@ -1,3 +1,58 @@
+# AGENTS.md
+
+**This is the file to edit.** AGENTS.md is the cross-agent standard and is read
+by every agent that works here; CLAUDE.md is a four-line shim that imports it.
+Guidance written only into CLAUDE.md is invisible to all but one agent, and the
+two then drift -- so put it here, and leave CLAUDE.md alone.
+
+## Read this first
+
+Rules whose violation produces no error, no failing test, and no failing build
+-- just work that quietly did nothing. Each one has already cost this repo real
+time. Nothing else belongs in this section; if CI or a test catches it, it does
+not need a slot here.
+
+- **`svelte-dnd-action` is an action: `use:dndzone={...}`, never
+  `dndzone={...}`.** Written as a bare attribute it compiles, renders, deploys
+  and does nothing at all. Drag-and-drop was dead from f75f15a until PR #40 --
+  through three commits (b97c8d3, 0a04dac, f0f145f) fixing logic that was never
+  reached. `BoardView.test.js` guards it now; the rule is here because the
+  failure mode is invisible.
+
+- **Never load fonts with `@import` from a CSS file.** An `@import` in
+  `theme.css` is flattened into `app.css` after Tailwind has emitted its
+  `@layer` statements, which makes it invalid -- and postcss drops it from the
+  build without failing it. Web fonts never loaded at all until PR #36, and
+  every page rendered in the system fallback. Use `<link>` in `index.html`.
+
+- **Svelte trims literal whitespace at element and `{#if}` boundaries.** A space
+  written in the markup between a value and an adjacent tag simply vanishes, so
+  `{title} <span>{badge}</span>` renders as `Edit Card#42`. Interpolate the
+  space when it matters -- see the heading in `Modal.svelte`.
+
+- **Sending mail from an unverified domain fails silently.** `RESEND_FROM` must
+  name a domain verified in Resend, and a subdomain counts as a separate domain
+  there -- hence the apex. Get it wrong and signup still returns success, the
+  user simply never receives the verification mail; the rejection appears only
+  in the service log.
+
+- **A 401 is not an empty board.** `kanban board get 1` answering
+  `Not authenticated` means the session ended, not that the board has no cards.
+  Sessions renew while in use, so this takes a day away or a login older than
+  30 days -- both of which happen. Re-authenticate before concluding anything
+  about a board's contents.
+
+- **Run the CLI from the venv: `venv/Scripts/kanban.exe`.** Plain `kanban` is
+  not on PATH unless the venv is activated, and if `pkanban` happens to be
+  installed globally it answers instead -- a different version, reading a
+  different config, with nothing to indicate the substitution.
+
+Caught elsewhere, so deliberately not repeated above: an undefined
+`var(--token)` resolves to `unset` and blanks whatever it styled
+(`scripts/check_css_tokens.py`), and a `package-lock.json` regenerated in place
+is pruned to one platform and breaks `npm ci` everywhere else (CI's lockfile
+check; the recipe is in `frontend/LOCKFILE.md`).
+
 ## Project Overview
 
 The Kanban project is a full-stack application with:
