@@ -10,6 +10,14 @@ Always exits 0. A lint finding must never fail the workflow, and neither may a
 problem with this script -- an unreadable or missing report says so and moves
 on, rather than turning an advisory step into a broken one.
 
+GitHub caps annotations at 10 per level per step, so a large report is
+truncated in the Files view. The step log always carries the full list, and
+the trailing count line says how many there really were.
+
+The rule name goes in the message rather than the annotation's title property:
+GitHub accepts title= but returns it empty, so the rule would be lost exactly
+where you need it -- deciding what to fix or suppress.
+
 Usage:
     python3 scripts/eslint_annotations.py <report.json> [path-prefix]
 
@@ -51,7 +59,7 @@ def main() -> int:
             text = " ".join(str(msg.get("message", "")).split())
             rule = msg.get("ruleId") or "eslint"
             line = msg.get("line", 1)
-            print(f"::warning file={rel},line={line},title=ESLint {rule}::{text}")
+            print(f"::warning file={rel},line={line}::{text} ({rule})")
 
     print(f"ESLint: {total} advisory finding(s)")
     return 0
