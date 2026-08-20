@@ -104,6 +104,24 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # Advisory, never blocking. Every severity in eslint.config.js is 'warn'
+      # so eslint exits 0 on findings, and continue-on-error covers anything
+      # that might arrive at error severity later. A lint finding must not fail
+      # the workflow -- the point is visibility, not enforcement.
+      #
+      # No annotation plumbing needed: eslint emits GitHub workflow commands
+      # itself, so each finding already lands on its line in the PR's Files
+      # view. (GitHub renders at most 10 per step; the log carries all of them.)
+      #
+      # It earns the slot: run against BoardView.svelte as it stood before
+      # PR #40 and no-unused-vars reports both defects that took a browser
+      # session to find, including `dndzone` written as an attribute rather
+      # than use:dndzone, which left drag-and-drop dead since f75f15a.
+      - name: Lint frontend (advisory)
+        working-directory: ./frontend
+        continue-on-error: true
+        run: npm run lint
+
       # Before the build: these are the units the build cannot check. A broken
       # drag reorder or a mis-resolved auth redirect compiles perfectly.
       - name: Run frontend tests

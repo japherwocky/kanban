@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint src"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.0.0",
@@ -17,9 +18,12 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/svelte": "^5.4.2",
     "autoprefixer": "^10.4.23",
+    "eslint": "^10.8.1",
+    "eslint-plugin-svelte": "^3.23.0",
     "jsdom": "^30.0.1",
     "postcss": "^8.5.6",
     "svelte": "^5.0.0",
+    "svelte-eslint-parser": "^1.8.1",
     "tailwindcss": "^4.1.18",
     "vite": "^6.0.0",
     "vitest": "^4.1.11"
