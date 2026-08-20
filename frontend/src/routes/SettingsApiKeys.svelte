@@ -158,7 +158,6 @@
 {#if showCreateModal}
   <Modal open={showCreateModal} onClose={() => showCreateModal = false} title="Create API Key">
     {#snippet children()}
-      <h2 id="modal-title">Create API Key</h2>
       <form onsubmit={(e) => { e.preventDefault(); createKey(); }}>
         <label for="key-name">Key name</label>
         <input
@@ -387,13 +386,6 @@
     font-size: var(--text-xs);
     font-weight: 500;
     color: var(--color-error);
-  }
-
-  #modal-title {
-    margin: 0 0 var(--space-5) 0;
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-foreground);
   }
 
   .form-hint {

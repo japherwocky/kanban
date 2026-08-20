@@ -370,7 +370,6 @@
     {#if showRenameBoardModal}
       <Modal open={showRenameBoardModal} onClose={() => showRenameBoardModal = false} title="Rename Board">
         {#snippet children()}
-          <h2 id="modal-title">Rename Board</h2>
           <form onsubmit={(e) => { e.preventDefault(); saveRenameBoard(); }}>
             <!-- svelte-ignore a11y_autofocus -->
             <input
@@ -393,7 +392,6 @@
     {#if showCreateCardModal}
       <Modal open={showCreateCardModal} onClose={() => showCreateCardModal = false} title="Add Card" wide>
         {#snippet children()}
-          <h2 id="modal-title">Add Card</h2>
           <form onsubmit={(e) => { e.preventDefault(); createCard(); }}>
             <input
               bind:value={newCardTitle}
@@ -417,9 +415,8 @@
     {/if}
 
     {#if showEditCardModal}
-      <Modal open={showEditCardModal} onClose={closeEditCard} title="Edit Card" wide>
+      <Modal open={showEditCardModal} onClose={closeEditCard} title="Edit Card" titleBadge={`#${editingCard?.id}`} wide>
         {#snippet children()}
-          <h2 id="modal-title">Edit Card <span class="card-id-badge">#{editingCard?.id}</span></h2>
           <form onsubmit={(e) => { e.preventDefault(); saveCard(); }}>
             <input
               bind:value={editTitle}
@@ -452,7 +449,6 @@
     {#if showCreateColumnModal}
       <Modal open={showCreateColumnModal} onClose={() => showCreateColumnModal = false} title="Add Column">
         {#snippet children()}
-          <h2 id="modal-title">Add Column</h2>
           <form onsubmit={(e) => { e.preventDefault(); createColumn(); }}>
             <input
               bind:value={newColumnName}
@@ -705,12 +701,6 @@
     color: var(--color-muted-foreground);
   }
 
-  .card-id-badge {
-    font-size: var(--text-base);
-    font-weight: 400;
-    color: var(--color-muted-foreground);
-  }
-
   .delete-btn {
     padding: 0.125rem 0.375rem;
     font-size: var(--text-base);
@@ -806,13 +796,6 @@
   .add-column-btn span {
     font-size: var(--text-2xl);
     font-weight: 300;
-  }
-
-  #modal-title {
-    margin: 0 0 var(--space-5) 0;
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-foreground);
   }
 
   input {

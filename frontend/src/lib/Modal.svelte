@@ -1,6 +1,6 @@
 <script>
 
-  let { open = false, onClose, title = 'Dialog', wide = false, children } = $props();
+  let { open = false, onClose, title = 'Dialog', titleBadge = '', wide = false, children } = $props();
 
   let modalRef = $state();
   let previousActiveElement = null;
@@ -102,6 +102,12 @@
       aria-modal="true"
       aria-labelledby="modal-title"
     >
+      <!-- The heading aria-labelledby has always pointed at. The badge's leading
+           space is interpolated rather than literal because svelte trims literal
+           whitespace at an {#if} boundary, which would render "Edit Card#42". -->
+      <h2 id="modal-title">
+        {title}{#if titleBadge}<span class="title-badge">{` ${titleBadge}`}</span>{/if}
+      </h2>
       {@render children()}
     </div>
   </div>
@@ -127,6 +133,19 @@
     width: 100%;
     max-width: 400px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  #modal-title {
+    margin: 0 0 var(--space-5) 0;
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-foreground);
+  }
+
+  .title-badge {
+    font-size: var(--text-base);
+    font-weight: 400;
+    color: var(--color-muted-foreground);
   }
 
   @media (min-width: 768px) {

@@ -363,7 +363,6 @@
 {#if showAddMemberModal}
   <Modal open={showAddMemberModal} onClose={() => showAddMemberModal = false} title="Add Member">
     {#snippet children()}
-      <h2 id="modal-title">Add Member</h2>
       <p class="modal-help">Enter the username of the person you want to add to this organization.</p>
       <form onsubmit={(e) => { e.preventDefault(); addMember(); }}>
         <input
@@ -386,7 +385,6 @@
 {#if showCreateTeamModal}
   <Modal open={showCreateTeamModal} onClose={() => showCreateTeamModal = false} title="Create Team">
     {#snippet children()}
-      <h2 id="modal-title">Create Team</h2>
       <p class="modal-help">Teams allow you to share boards with a subset of organization members.</p>
       <form onsubmit={(e) => { e.preventDefault(); createTeam(); }}>
         <input
@@ -407,10 +405,8 @@
 
 <!-- Team Members Modal -->
 {#if showAddTeamMemberModal}
-  <Modal open={showAddTeamMemberModal} onClose={() => showAddTeamMemberModal = false} title="Team Members">
+  <Modal open={showAddTeamMemberModal} onClose={() => showAddTeamMemberModal = false} title={selectedTeam?.name ? `Team Members: ${selectedTeam.name}` : 'Team Members'}>
     {#snippet children()}
-      <h2 id="modal-title">Team Members: {selectedTeam?.name}</h2>
-
       <div class="team-members-list">
         {#if teamMembersLoading}
           <div class="loading">Loading members...</div>
@@ -474,7 +470,6 @@
 {#if showCreateInviteModal}
   <Modal open={showCreateInviteModal} onClose={() => showCreateInviteModal = false} title="Create Invite">
     {#snippet children()}
-      <h2 id="modal-title">Create Invite</h2>
       <p class="modal-help">Generate an invite link to share with someone. They'll be able to join this organization.</p>
       <form onsubmit={(e) => { e.preventDefault(); createInvite(); }}>
         <input
@@ -844,13 +839,6 @@
     font-size: var(--text-sm);
     color: var(--color-muted-foreground);
     margin: 0 0 var(--space-4) 0;
-  }
-
-  #modal-title {
-    margin: 0 0 var(--space-5) 0;
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-foreground);
   }
 
   .modal-actions {

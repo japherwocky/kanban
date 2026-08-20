@@ -157,7 +157,6 @@
 {#if showCreateModal}
   <Modal open={showCreateModal} onClose={() => showCreateModal = false} title="Create New Board">
     {#snippet children()}
-      <h2 id="modal-title">Create New Board</h2>
       <form onsubmit={(e) => { e.preventDefault(); createBoard(); }}>
         <input
           bind:value={newBoardName}
@@ -405,13 +404,6 @@
   .create-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  #modal-title {
-    margin: 0 0 var(--space-5) 0;
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-foreground);
   }
 
   .modal-actions {
