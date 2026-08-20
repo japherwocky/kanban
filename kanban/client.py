@@ -1,10 +1,14 @@
 import requests
 
-from kanban.config import get_server_url, get_token, get_api_key
+from kanban.config import get_server_url, get_token, get_api_key, set_token
 
 # Seconds before giving up on the server. Without this a hung or black-holed
 # host makes the CLI wait forever with no output.
 DEFAULT_TIMEOUT = 30
+
+# Matches backend.auth.RENEWED_TOKEN_HEADER. Not imported from there: the CLI
+# is published as a standalone package and does not ship the server.
+RENEWED_TOKEN_HEADER = "X-Renewed-Token"
 
 
 class KanbanError(Exception):
@@ -16,6 +20,13 @@ class KanbanClient:
         self.server_url = server_url or get_server_url()
         self.token = token or get_token()
         self.api_key = api_key or get_api_key()
+        # A renewed token is written back to the config only if what we are
+        # using is what the config holds. Compared by value rather than by
+        # "was it passed in", because make_client() reads the config itself and
+        # passes the token explicitly -- a token from somewhere else belongs to
+        # its caller, and silently rewriting the user's config with it is the
+        # bug --api-key already had.
+        self._token_from_config = self.token is not None and self.token == get_token()
         self.session = requests.Session()
         if self.api_key:
             self.session.headers.update({"X-API-Key": self.api_key})
@@ -53,10 +64,31 @@ class KanbanClient:
                 f"(see: kanban config)."
             )
 
+        self._store_renewed_token(response)
+
         # HTTPError is left alone: individual commands catch it to explain
         # domain-specific failures, and main() handles whatever they don't.
         response.raise_for_status()
         return response.json()
+
+    def _store_renewed_token(self, response):
+        """Save a replacement token the server offered.
+
+        JWTs expire; the server hands back a fresh one on this header when the
+        current one is close to its expiry, which is what keeps a CLI that gets
+        used regularly from having to `kanban login` every day. API-key auth
+        never sees the header and is left alone.
+        """
+        if self.api_key or not self._token_from_config:
+            return
+
+        renewed = response.headers.get(RENEWED_TOKEN_HEADER)
+        if not renewed or renewed == self.token:
+            return
+
+        self.token = renewed
+        self.session.headers.update({"Authorization": f"Bearer {renewed}"})
+        set_token(renewed)
 
     def login(self, username, password):
         data = self._request(

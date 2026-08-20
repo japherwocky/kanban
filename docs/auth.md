@@ -10,8 +10,10 @@ Used by `kanban login` and the web UI.
 
 - `POST /token` (username + password) returns a signed JWT (`create_access_token` in [`backend/auth.py`](../backend/auth.py)), sent back as `Authorization: Bearer <token>`.
 - Signed with HS256 using a server-side secret (`JWT_SECRET_KEY`, or an auto-generated key persisted next to the database — see [`_load_secret_key`](../backend/auth.py)).
-- **Expiration is fixed at issuance, not sliding.** `ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24` (24 hours) is baked into the token's `exp` claim the moment it's created. Using the token does not push the expiry back — after 24 hours from login, the token stops working no matter how recently it was used, and the CLI/user must log in again (`kanban login`).
-- The CLI persists the token in its config file (see `kanban config`); there's no refresh-token flow — expiry just means re-authenticating.
+- **Expiration slides while the session is in use.** `ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24` (24 hours) is still baked into the `exp` claim at issuance, but a token presented with less than `TOKEN_RENEWAL_WINDOW_MINUTES` (12 hours) of life left is replaced: the server returns a fresh one on the `X-Renewed-Token` response header, and both clients persist it. A session in continuous use therefore does not hit the 24-hour cliff; one left alone for a full day does.
+- **Renewal is capped.** Every token carries `auth_time`, the moment the user actually authenticated, and renewal carries it forward unchanged rather than resetting it. Past `SESSION_ABSOLUTE_MAX_DAYS` (30 days) the server stops renewing and a real login is required. These JWTs are stateless and cannot be revoked, so without the cap a stolen token could be kept alive indefinitely.
+- Renewal happens in a single middleware (`renew_session_token` in [`backend/main.py`](../backend/main.py)) rather than in the auth dependencies, so it applies to every authenticated request whichever dependency guarded it. API keys arrive on `X-API-Key`, never as a Bearer token, so they never reach it.
+- The CLI persists the token in its config file (see `kanban config`); there's no refresh-token flow and no server-side session — expiry past the cap just means re-authenticating.
 
 ### API Keys (headless / agent access)
 

@@ -15,9 +15,12 @@ The CLI is configured to connect to:
 - **Server**: https://kanban.pearachute.com
 - **Auth**: a JWT token or an API key, stored in `~/.kanban.yaml`
 
-JWTs expire (the stored token expired 2026-08-07); API keys do not. A
-`401 Not authenticated` means re-authenticate: `kanban login`, or use an API
-key as below.
+JWTs expire; API keys do not. A session in regular use now renews itself --
+the server returns a replacement on `X-Renewed-Token` once a token is within
+12 hours of expiring, and the CLI saves it to `~/.kanban.yaml`. More than 24
+hours between commands still expires the session, as does a login older than
+30 days. A `401 Not authenticated` means re-authenticate: `kanban login`, or
+use an API key as below.
 
 ### Running the CLI from this repo
 

@@ -112,6 +112,21 @@ SECRET_KEY = _load_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
+# Sliding expiration. The window above is absolute from the moment a token is
+# minted, so without renewal an actively-used session dies exactly 24h after
+# login. A token presented with less than this much life left is replaced.
+TOKEN_RENEWAL_WINDOW_MINUTES = 60 * 12
+
+# ...but not forever. These JWTs are stateless and cannot be revoked, so
+# unbounded renewal would let a stolen token be kept alive indefinitely by
+# whoever holds it. Every token carries the original login time as `auth_time`,
+# and renewal stops there -- past this, the user authenticates again for real.
+SESSION_ABSOLUTE_MAX_DAYS = 30
+
+# Response header carrying a replacement token. Clients that persist it get a
+# session that survives; clients that ignore it are exactly as they were.
+RENEWED_TOKEN_HEADER = "X-Renewed-Token"
+
 
 class Token(BaseModel):
     access_token: str
@@ -127,6 +142,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if "sub" in to_encode:
         to_encode["sub"] = str(to_encode["sub"])
+    # When the user last proved who they are. Renewal carries it forward
+    # unchanged, so the absolute cap is measured from the real login and not
+    # from the most recent renewal.
+    to_encode.setdefault("auth_time", int(datetime.now(timezone.utc).timestamp()))
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -150,6 +169,46 @@ def decode_token(token: str):
             headers={"WWW-Authenticate": "Bearer"},
         )
     return TokenData(user_id=user_id, username=username)
+
+
+def renew_access_token(token: str) -> Optional[str]:
+    """Return a replacement for a token nearing expiry, or None to leave it be.
+
+    None covers every uninteresting case -- the token is invalid, it has plenty
+    of life left, or the session has run past its absolute cap -- so a caller
+    can hand this any Authorization header it happens to see.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return None
+
+    expires_at = payload.get("exp")
+    if not expires_at:
+        return None
+
+    now = datetime.now(timezone.utc).timestamp()
+    if expires_at - now > TOKEN_RENEWAL_WINDOW_MINUTES * 60:
+        return None
+
+    # Tokens minted before this claim existed derive one from their expiry:
+    # they were issued exactly one expiry window before they run out. Without
+    # this, every session live at deploy time would be refused renewal and cut
+    # off at its next cliff -- the exact failure this is meant to remove.
+    auth_time = payload.get("auth_time")
+    if auth_time is None:
+        auth_time = expires_at - ACCESS_TOKEN_EXPIRE_MINUTES * 60
+
+    if now - auth_time > SESSION_ABSOLUTE_MAX_DAYS * 24 * 60 * 60:
+        return None
+
+    return create_access_token(
+        data={
+            "sub": payload.get("sub"),
+            "username": payload.get("username", ""),
+            "auth_time": auth_time,
+        }
+    )
 
 
 async def get_current_user(

@@ -30,6 +30,15 @@ export async function apiFetch(endpoint, options = {}) {
     headers,
   });
 
+  // Sliding expiration: the server replaces a token that is nearing its expiry
+  // and returns the replacement on this header, so a session in continuous use
+  // never reaches the cliff. Read before the error branch -- a request can fail
+  // on its own merits and still come back with a renewed token.
+  const renewedToken = response.headers.get('X-Renewed-Token');
+  if (renewedToken && token) {
+    localStorage.setItem('token', renewedToken);
+  }
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Request failed' }));
     // A 401 on a request we sent a token with means the session is no longer

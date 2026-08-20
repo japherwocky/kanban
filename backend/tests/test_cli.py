@@ -836,3 +836,104 @@ def test_apikey_clear_removes_the_saved_key_but_leaves_the_token():
 
     assert get_api_key() is None
     assert get_token() == "my-existing-session"
+
+
+# === Session renewal (sliding expiration) ===
+#
+# The server replaces a token nearing its expiry and returns the replacement on
+# X-Renewed-Token. The CLI persists it so a regularly-used install stops having
+# to `kanban login` every day.
+
+
+def _client_returning(headers, token="stored-token"):
+    """A KanbanClient whose session returns a response carrying `headers`."""
+    from kanban.client import KanbanClient
+
+    kanban_client = KanbanClient(server_url="http://localhost:9999", token=token)
+    kanban_client.session = MagicMock()
+    response = MagicMock()
+    response.headers = headers
+    response.json.return_value = []
+    kanban_client.session.request.return_value = response
+    return kanban_client
+
+
+def test_client_persists_a_renewed_token():
+    from kanban.client import RENEWED_TOKEN_HEADER
+    from kanban.config import get_token, set_token
+
+    set_token("stored-token")
+    kanban_client = _client_returning({RENEWED_TOKEN_HEADER: "fresher-token"})
+
+    kanban_client.boards()
+
+    assert get_token() == "fresher-token"
+    # And the live session picks it up, so a long-running process does not keep
+    # presenting the old one for the rest of its life.
+    assert kanban_client.token == "fresher-token"
+    assert (
+        kanban_client.session.headers.update.call_args[0][0]["Authorization"]
+        == "Bearer fresher-token"
+    )
+
+
+def test_client_leaves_config_alone_without_the_header():
+    from kanban.config import get_token, set_token
+
+    set_token("stored-token")
+    _client_returning({}).boards()
+
+    assert get_token() == "stored-token"
+
+
+def test_client_does_not_persist_a_renewal_for_someone_elses_token():
+    """A token the caller supplied is not the config's to overwrite -- the same
+    trap --api-key fell into."""
+    from kanban.client import RENEWED_TOKEN_HEADER
+    from kanban.config import get_token, set_token
+
+    set_token("stored-token")
+    kanban_client = _client_returning(
+        {RENEWED_TOKEN_HEADER: "fresher-token"}, token="a-different-token"
+    )
+
+    kanban_client.boards()
+
+    assert get_token() == "stored-token"
+
+
+def test_api_key_auth_ignores_a_renewed_token():
+    """API keys do not expire. Persisting a JWT here would quietly downgrade an
+    agent's non-expiring credential to one that runs out."""
+    from kanban.client import KanbanClient, RENEWED_TOKEN_HEADER
+    from kanban.config import get_token, set_token
+
+    set_token("stored-token")
+    kanban_client = KanbanClient(
+        server_url="http://localhost:9999", token="stored-token", api_key="kanban_x"
+    )
+    kanban_client.session = MagicMock()
+    response = MagicMock()
+    response.headers = {RENEWED_TOKEN_HEADER: "fresher-token"}
+    response.json.return_value = []
+    kanban_client.session.request.return_value = response
+
+    kanban_client.boards()
+
+    assert get_token() == "stored-token"
+
+
+def test_expired_session_401_names_expiry():
+    """'Not authenticated' alone reads like the credentials were never there."""
+    import requests
+    from kanban.cli import describe_http_error
+
+    response = MagicMock()
+    response.status_code = 401
+    response.json.return_value = {"detail": "Not authenticated"}
+    error = requests.exceptions.HTTPError(response=response)
+
+    message = describe_http_error(error)
+
+    assert "expired" in message.lower()
+    assert "kanban login" in message

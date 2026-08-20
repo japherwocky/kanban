@@ -78,9 +78,13 @@ def describe_http_error(e):
 
     status = response.status_code
     if status == 401:
+        # Naming expiry first: with sliding renewal, a token only reaches its
+        # expiry after a real absence, so that is the likely cause -- and "not
+        # authenticated" alone reads like the credentials were never there.
         return (
-            "Not authenticated. Run 'kanban login', or check that your API key "
-            "is still active (kanban apikey list)."
+            "Not authenticated -- your session may have expired. Run "
+            "'kanban login', or check that your API key is still active "
+            "(kanban apikey list)."
         )
     if status == 403:
         return detail or "You don't have permission to do that."
